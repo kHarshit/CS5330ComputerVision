@@ -60,9 +60,13 @@ int displayVideo(int videoDeviceIndex) {
         if (key == 'q') {
             break;
         } else if (key == 's') {
+            cout << key << " pressed: Saving frame to captured_frame.png." << endl;
             cv::imwrite("captured_frame.png", frame);
+        } else if (key == 'o') {
+            lastKeypress = 'o';  // update last keypress variable
+            cout << lastKeypress << " pressed: Converting to original colors." << endl;
         } else if (key == 'g') {
-            lastKeypress = 'g';  // update last keypress variable
+            lastKeypress = 'g';
             cout << lastKeypress << " pressed: Converting to opencv greyscale." << endl;
         } else if (key == 'h') {
             lastKeypress = 'h';

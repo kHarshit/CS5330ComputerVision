@@ -36,3 +36,5 @@ build
 
 # ignore vscode configuration
 *.vscode
+
+.DS_Store

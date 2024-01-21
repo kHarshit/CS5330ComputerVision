@@ -7,7 +7,7 @@
 
 using namespace cv;
 
-int main()
+int main(int argc, char** argv)
 {
     // displayImage("/Users/harshit/Documents/CS5330ComputerVision/test_app/starry_night.jpg");
     displayVideo();
