@@ -16,7 +16,6 @@
  * @param videoDeviceIndex Index of the video device (e.g., 0 for the default camera). 
  * @return 0 if the operation is successful.
  */
-
 int displayVideo(int videoDeviceIndex=0);
 
 #endif // VIDDISPLAY_H

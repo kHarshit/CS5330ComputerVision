@@ -5,7 +5,11 @@
  * 
 */
 
+#include <iostream>
 #include "vidDisplay.h"
+#include "filter.h"
+
+using namespace std;
 
 int displayVideo(int videoDeviceIndex) {
     // Open the video device
@@ -35,20 +39,25 @@ int displayVideo(int videoDeviceIndex) {
         // Check the last keypress and modify the image accordingly
         if (lastKeypress == 'g') {
             cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+        } else if (lastKeypress == 'h') {
+            // Use the custom greyscale function
+            greyscale(frame, frame);
         }
 
         cv::imshow("Video", frame);
 
-        // See if there is a waiting keystroke
+        // check waiting keystroke
         char key = cv::waitKey(10);
         if (key == 'q') {
             break;
         } else if (key == 's') {
             cv::imwrite("captured_frame.png", frame);
         } else if (key == 'g') {
-            lastKeypress = 'g';  // Update the last keypress variable
-        } else {
-            // lastKeypress = '\0';  // Reset last keypress if not 'g'
+            lastKeypress = 'g';  // update last keypress variable
+            cout << lastKeypress << " pressed: Converting to opencv greyscale." << endl;
+        } else if (key == 'h') {
+            lastKeypress = 'h';  // update last keypress variable
+            cout << lastKeypress << " pressed: Converting to custom greyscale." << endl;
         }
     }
 

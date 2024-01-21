@@ -9,7 +9,7 @@ using namespace cv;
 
 int main()
 {
-    displayImage("/Users/harshit/Documents/CS5330ComputerVision/test_app/starry_night.jpg");
+    // displayImage("/Users/harshit/Documents/CS5330ComputerVision/test_app/starry_night.jpg");
     displayVideo();
     return 0;
 }
