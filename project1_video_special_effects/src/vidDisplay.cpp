@@ -42,6 +42,15 @@ int displayVideo(int videoDeviceIndex) {
         } else if (lastKeypress == 'h') {
             // Use the custom greyscale function
             greyscale(frame, frame);
+        } else if (lastKeypress == 't') {
+            // Use the custom sepia function
+            sepia(frame, frame);
+        } else if (lastKeypress == 'b') {
+            // Use the custom blur function
+            blur5x5_1(frame, frame);
+        } else if (lastKeypress == 'B') {
+            // Use the custom (faster) blur function
+            blur5x5_2(frame, frame);
         }
 
         cv::imshow("Video", frame);
@@ -56,8 +65,17 @@ int displayVideo(int videoDeviceIndex) {
             lastKeypress = 'g';  // update last keypress variable
             cout << lastKeypress << " pressed: Converting to opencv greyscale." << endl;
         } else if (key == 'h') {
-            lastKeypress = 'h';  // update last keypress variable
+            lastKeypress = 'h';
             cout << lastKeypress << " pressed: Converting to custom greyscale." << endl;
+        } else if (key == 't') {
+            lastKeypress = 't';
+            cout << lastKeypress << " pressed: Converting to custom sepia." << endl;
+        } else if (key == 'b') {
+            lastKeypress = 'b';
+            cout << lastKeypress << " pressed: Converting to custom blur." << endl;
+        } else if (key == 'B') {
+            lastKeypress = 'B';
+            cout << lastKeypress << " pressed: Converting to custom (faster) blur." << endl;
         }
     }
 
