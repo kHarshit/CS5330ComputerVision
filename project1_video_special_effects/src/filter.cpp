@@ -91,9 +91,20 @@ int blur5x5_1(cv::Mat& src, cv::Mat& dst) {
 
 
 
-
 int blur5x5_2(cv::Mat & src, cv::Mat & dst) {
+    if (src.empty()) {
+        return -1; // Error: Empty source image
+    }
+
+    // Create a temporary image for intermediate results
+    cv::Mat temp(src.rows, src.cols, src.type());
+
+    // Define the 1x5 kernel for blur
+    float kernel[] = { 1, 2, 4, 2, 1 };
+
+    cv::filter2D(src, temp, -1, cv::Mat(1, 5, CV_32F, kernel), cv::Point(-1, -1), 0, cv::BORDER_CONSTANT);
+
+    cv::filter2D(temp, dst, -1, cv::Mat(5, 1, CV_32F, kernel), cv::Point(-1, -1), 0, cv::BORDER_CONSTANT);
 
     return 0;
 }
-
