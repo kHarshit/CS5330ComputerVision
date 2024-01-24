@@ -48,14 +48,52 @@ int sepia(cv::Mat &src, cv::Mat &dst) {
 
     return 0;
 }
+int blur5x5_1(cv::Mat& src, cv::Mat& dst) {
+    dst = src.clone();
 
-int blur5x5_1( cv::Mat &src, cv::Mat &dst ) {
+    // Gaussian kernel
+    int kernel[5][5] = {
+        {1, 2, 4, 2, 1},
+        {2, 4, 8, 4, 2},
+        {4, 8, 16, 8, 4},
+        {2, 4, 8, 4, 2},
+        {1, 2, 4, 2, 1}
+    };
 
+    // Loop through each pixel, excluding the first two and last two rows and columns
+    for (int i = 2; i < src.rows - 2; ++i) {
+        for (int j = 2; j < src.cols - 2; ++j) {
+            // Separate channels
+            for (int c = 0; c < src.channels(); ++c) {
+                int sum = 0;
+                // Apply the blur filter
+                for (int m = -2; m <= 2; ++m) {
+                    for (int n = -2; n <= 2; ++n) {
+                        sum += src.at<cv::Vec3b>(i + m, j + n)[c] * kernel[m + 2][n + 2];
+                    }
+                }
+                // Normalize and set the pixel value in the destination image
+                //dst.at<cv::Vec3b>(i, j)[c] = <cv::uchar>(sum / 84); 
+                float normalizedValue = static_cast<float>(sum) / 84.0; // 84 is the sum of the kernel values
+                // Clip the value to the valid range [0, 255]
+                if (normalizedValue < 0.0)
+                    normalizedValue = 0.0;
+                else if (normalizedValue > 255.0)
+                    normalizedValue = 255.0;
+
+                // Set the pixel value in the destination image
+                dst.at<cv::Vec3b>(i, j)[c] = static_cast<uchar>(normalizedValue);
+            }
+        }
+    }
     return 0;
 }
 
 
-int blur5x5_2( cv::Mat &src, cv::Mat &dst ) {
+
+
+int blur5x5_2(cv::Mat & src, cv::Mat & dst) {
 
     return 0;
 }
+
