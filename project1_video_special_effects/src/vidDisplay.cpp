@@ -69,13 +69,10 @@ int displayVideo(int videoDeviceIndex) {
             // use facedetect
             // convert the image to greyscale
             cv::cvtColor( frame, grey, cv::COLOR_BGR2GRAY, 0);
-
             // detect faces
             detectFaces( grey, faces );
-
             // draw boxes around the faces
             drawBoxes( frame, faces );
-
             // add a little smoothing by averaging the last two detections
             if( faces.size() > 0 ) {
             last.x = (faces[0].x + last.x)/2;
@@ -83,6 +80,35 @@ int displayVideo(int videoDeviceIndex) {
             last.width = (faces[0].width + last.width)/2;
             last.height = (faces[0].height + last.height)/2;
             }
+        } else if (lastKeypress == 'c') {
+            // Make the face colorful, while the rest of the image is greyscale.
+            // use facedetect
+            // convert the image to greyscale
+            cv::cvtColor( frame, grey, cv::COLOR_BGR2GRAY, 0);
+            // detect faces
+            detectFaces( grey, faces );
+            // draw boxes around the faces
+            drawBoxes( frame, faces );
+            // add a little smoothing by averaging the last two detections
+            if( faces.size() > 0 ) {
+            last.x = (faces[0].x + last.x)/2;
+            last.y = (faces[0].y + last.y)/2;
+            last.width = (faces[0].width + last.width)/2;
+            last.height = (faces[0].height + last.height)/2;
+            }
+            // Create a grayscale version of the frame
+            cv::Mat gray;
+            cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+            cv::cvtColor(gray, gray, cv::COLOR_GRAY2BGR);
+
+            cv::Mat mask = cv::Mat::zeros(frame.size(), CV_8U);
+            for (const auto& face : faces) {
+                // Include faces in the mask
+                cv::rectangle(mask, face, cv::Scalar(255), -1);
+            }
+            cv::Mat mask3;
+            cv::cvtColor(mask, mask3, cv::COLOR_GRAY2BGR);
+            frame = (frame & mask3) + (gray & ~mask3);
         }
 
         cv::imshow("Video", frame);
@@ -121,6 +147,9 @@ int displayVideo(int videoDeviceIndex) {
         } else if (key == 'f') {
             lastKeypress = 'f';
             cout << lastKeypress << "pressed : Using face detect." << endl;
+        } else if (key == 'a') {
+            lastKeypress = 'a';
+            cout << lastKeypress << "pressed : Make background greyscale." << endl;
         }
 
     }
