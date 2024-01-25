@@ -26,6 +26,7 @@ int displayVideo(int videoDeviceIndex) {
 
     cv::namedWindow("Video", 1); // Identifies a window
     cv::Mat frame;
+    cv::Mat filter = frame;
 
     char lastKeypress = '\0';  // Initialize the last keypress variable
 
@@ -50,13 +51,16 @@ int displayVideo(int videoDeviceIndex) {
             blur5x5_1(frame, frame);
         } else if (lastKeypress == 'B') {
             // Use the custom (faster) blur function
-            blur5x5_2(frame, frame);
-        }
-        else if (lastKeypress == 'x') {
-            sobelX3x3(frame, frame);
-        }
-        else if (lastKeypress == 'y') {
-            sobelY3x3(frame, frame);
+            blur5x5_2(frame, filter);
+            cv::convertScaleAbs(filter, frame);
+        } else if (lastKeypress == 'x') {
+            sobelX3x3(frame, filter);
+            cv::convertScaleAbs(filter, frame);
+            cv::imshow("SobelX", filter);
+        } else if (lastKeypress == 'y') {
+            sobelY3x3(frame, filter);
+            cv::convertScaleAbs(filter, frame);
+            cv::imshow("SobelY", filter);
         }
 
         cv::imshow("Video", frame);
