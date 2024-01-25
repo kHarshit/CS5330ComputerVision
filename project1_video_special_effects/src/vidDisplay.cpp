@@ -8,6 +8,7 @@
 #include <iostream>
 #include "vidDisplay.h"
 #include "filter.h"
+#include "faceDetect.h"
 
 using namespace std;
 
@@ -27,6 +28,9 @@ int displayVideo(int videoDeviceIndex) {
     cv::namedWindow("Video", 1); // Identifies a window
     cv::Mat frame;
     cv::Mat filter = frame;
+    cv::Mat grey;
+    std::vector<cv::Rect> faces;
+    cv::Rect last(0, 0, 0, 0);
 
     char lastKeypress = '\0';  // Initialize the last keypress variable
 
@@ -56,11 +60,29 @@ int displayVideo(int videoDeviceIndex) {
         } else if (lastKeypress == 'x') {
             sobelX3x3(frame, filter);
             cv::convertScaleAbs(filter, frame);
-            cv::imshow("SobelX", filter);
+            // cv::imshow("SobelX", filter);
         } else if (lastKeypress == 'y') {
             sobelY3x3(frame, filter);
             cv::convertScaleAbs(filter, frame);
-            cv::imshow("SobelY", filter);
+            // cv::imshow("SobelY", filter);
+        } else if (lastKeypress == 'f') {
+            // use facedetect
+            // convert the image to greyscale
+            cv::cvtColor( frame, grey, cv::COLOR_BGR2GRAY, 0);
+
+            // detect faces
+            detectFaces( grey, faces );
+
+            // draw boxes around the faces
+            drawBoxes( frame, faces );
+
+            // add a little smoothing by averaging the last two detections
+            if( faces.size() > 0 ) {
+            last.x = (faces[0].x + last.x)/2;
+            last.y = (faces[0].y + last.y)/2;
+            last.width = (faces[0].width + last.width)/2;
+            last.height = (faces[0].height + last.height)/2;
+            }
         }
 
         cv::imshow("Video", frame);
@@ -96,6 +118,9 @@ int displayVideo(int videoDeviceIndex) {
         } else if (key == 'y') {
             lastKeypress = 'y';
             cout << lastKeypress << "pressed : Converting to sobelY filter." << endl;
+        } else if (key == 'f') {
+            lastKeypress = 'f';
+            cout << lastKeypress << "pressed : Using face detect." << endl;
         }
 
     }
