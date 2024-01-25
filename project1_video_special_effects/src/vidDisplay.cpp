@@ -52,6 +52,12 @@ int displayVideo(int videoDeviceIndex) {
             // Use the custom (faster) blur function
             blur5x5_2(frame, frame);
         }
+        else if (lastKeypress == 'x') {
+            sobelX3x3(frame, frame);
+        }
+        else if (lastKeypress == 'y') {
+            sobelY3x3(frame, frame);
+        }
 
         cv::imshow("Video", frame);
 
@@ -80,7 +86,14 @@ int displayVideo(int videoDeviceIndex) {
         } else if (key == 'B') {
             lastKeypress = 'B';
             cout << lastKeypress << " pressed: Converting to custom (faster) blur." << endl;
+        } else if (key == 'x') {
+            lastKeypress = 'x';
+            cout << lastKeypress << "pressed : Converting to sobelX filter." << endl;
+        } else if (key == 'y') {
+            lastKeypress = 'y';
+            cout << lastKeypress << "pressed : Converting to sobelY filter." << endl;
         }
+
     }
 
     return 0;
