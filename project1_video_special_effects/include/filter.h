@@ -43,5 +43,19 @@ int blur5x5_1( cv::Mat &src, cv::Mat &dst );
  * @return 0 if the operation is successful.
 */
 int blur5x5_2( cv::Mat &src, cv::Mat &dst );
+/*
+* @brief Applies SobelX filter (horizontal edge detection) to an image
+* @param src Input image
+* @param dst Output image
+* @return 0 if the operation is succesful.
+*/
+int sobelX3x3(cv::Mat& src, cv::Mat& dst);
+/*
+* @brief Applies SobelY filter (vertical edge detection) to an image
+* @param src Input image
+* @param dst Output image
+* @return 0 if the operation is succesful.
+*/
+int sobelY3x3(cv::Mat& src, cv::Mat& dst);
 
 #endif // FILTER_H
