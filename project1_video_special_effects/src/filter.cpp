@@ -48,6 +48,7 @@ int sepia(cv::Mat &src, cv::Mat &dst) {
 
     return 0;
 }
+
 int blur5x5_1(cv::Mat& src, cv::Mat& dst) {
     dst = src.clone();
 
@@ -85,26 +86,86 @@ int blur5x5_1(cv::Mat& src, cv::Mat& dst) {
                 dst.at<cv::Vec3b>(i, j)[c] = static_cast<uchar>(normalizedValue);
             }
         }
+
     }
     return 0;
 }
 
 
 
+
 int blur5x5_2(cv::Mat & src, cv::Mat & dst) {
-    if (src.empty()) {
-        return -1; // Error: Empty source image
+    dst = cv::Mat::zeros(src.size(), src.type());
+
+    // loop over rows
+    for (int i = 2; i < src.rows - 2; i++) {
+
+        //src row pointers
+        cv::Vec3b* rptrm2 = src.ptr<cv::Vec3b>(i - 2);
+        cv::Vec3b* rptrm1 = src.ptr<cv::Vec3b>(i - 1);
+        cv::Vec3b* rptr = src.ptr<cv::Vec3b>(i);
+        cv::Vec3b* rptrp1 = src.ptr<cv::Vec3b>(i + 1);
+        cv::Vec3b* rptrp2 = src.ptr<cv::Vec3b>(i + 2);
+
+        //destination ptr
+        cv::Vec3b* dptr = dst.ptr<cv::Vec3b>(i);
+
+        // loop over columns
+        for (int j = 2; j < src.cols - 2; j++) {
+
+            // loop over color channels
+            for (int c = 0; c < 3; c++) {
+
+                //row filter [1 , 2, 4, 2, 1]
+                dptr[j][c] = 1 * rptr[j - 2][c] + 2 * rptr[j - 1][c] + 4 * rptr[j][c] + 2 * rptr[j + 1][c] + 1 * rptr[j + 2][c];
+
+                /*column filter
+                    [1]  m2
+                    [2]  m1
+                    [4]  r
+                    [2]  p1
+                    [1]  p2
+                */
+
+                dptr[j][c] = (dptr[j][c] + 1 * rptrm1[j][c] + 2 * rptrm1[j][c] + 4 * rptr[j][c] + 2 * rptrp1[j][c] + 1 * rptrp2[j][c]) / 10;
+                
+            }
+        }
+    }
+    
+    return 0; // Success
+}
+
+int sobelX3x3(cv::Mat& src, cv::Mat& dst) {
+    //X Sobel
+    //[-1,0,1],     [-1]    [-1,0,1]
+    //[-2,0,2], ==> [-2] X
+    //[-1,0,1]      [-1]
+    dst = cv::Mat::zeros(src.size(), src.type());
+    for (int i = 1; i < src.rows-1; i++) {
+        cv::Vec3b* rptrm1 = src.ptr<cv::Vec3b>(i - 1);
+        cv::Vec3b* rptr = src.ptr<cv::Vec3b>(i);
+        cv::Vec3b* rptrp1 = src.ptr<cv::Vec3b>(i + 1);
+
+        cv::Vec3b* dptr = dst.ptr<cv::Vec3b>(i);
+        for (int j = 1; j < src.cols-1; j++) {
+            for (int c = 0; c < 3; c++) {
+                //row filter
+                dptr[j][c] = -1 * rptr[j - 1][c] + 1 * rptr[j + 1][c];
+
+                dptr[j][c] = (dptr[j][c] + (-1 * rptrm1[j][c] + -2 * rptr[j][c] + -1 * rptrp1[j][c]))/4;
+            }
+        }
     }
 
-    // Create a temporary image for intermediate results
-    cv::Mat temp(src.rows, src.cols, src.type());
+    return 0;
+}
 
-    // Define the 1x5 kernel for blur
-    float kernel[] = { 1, 2, 4, 2, 1 };
-
-    cv::filter2D(src, temp, -1, cv::Mat(1, 5, CV_32F, kernel), cv::Point(-1, -1), 0, cv::BORDER_CONSTANT);
-
-    cv::filter2D(temp, dst, -1, cv::Mat(5, 1, CV_32F, kernel), cv::Point(-1, -1), 0, cv::BORDER_CONSTANT);
-
+int sobelY3x3(cv::Mat& src, cv::Mat& dst) {
+    //Y Sobel
+    //[-1,2,1],
+    //[0,0,0],
+    //[-1,-2,-1]
+    
     return 0;
 }
