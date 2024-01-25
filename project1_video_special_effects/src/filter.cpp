@@ -138,10 +138,10 @@ int blur5x5_2(cv::Mat & src, cv::Mat & dst) {
 
 int sobelX3x3(cv::Mat& src, cv::Mat& dst) {
     //X Sobel
-    //[-1,0,1],     [-1]    [-1,0,1]
-    //[-2,0,2], ==> [-2] X
-    //[-1,0,1]      [-1]
-    dst = cv::Mat::zeros(src.size(), src.type());
+    //[-1,0,1],     [1] [-1,0,1]
+    //[-2,0,2], ==> [2]X
+    //[-1,0,1]      [1]
+    dst = cv::Mat::zeros(src.size(), CV_16SC3);
     for (int i = 1; i < src.rows-1; i++) {
         cv::Vec3b* rptrm1 = src.ptr<cv::Vec3b>(i - 1);
         cv::Vec3b* rptr = src.ptr<cv::Vec3b>(i);
@@ -153,7 +153,7 @@ int sobelX3x3(cv::Mat& src, cv::Mat& dst) {
                 //row filter
                 dptr[j][c] = -1 * rptr[j - 1][c] + 1 * rptr[j + 1][c];
 
-                dptr[j][c] = (dptr[j][c] + (-1 * rptrm1[j][c] + -2 * rptr[j][c] + -1 * rptrp1[j][c]))/4;
+                dptr[j][c] = (dptr[j][c] + (1 * rptrm1[j][c] + 2 * rptr[j][c] + 1 * rptrp1[j][c]))/4;
             }
         }
     }
@@ -163,9 +163,25 @@ int sobelX3x3(cv::Mat& src, cv::Mat& dst) {
 
 int sobelY3x3(cv::Mat& src, cv::Mat& dst) {
     //Y Sobel
-    //[-1,2,1],
-    //[0,0,0],
-    //[-1,-2,-1]
-    
+    //[-1,2,1],        [1]    [1 2 1] 
+    //[0,0,0], ====>   [0]  X 
+    //[-1,-2,-1]       [-1]
+    dst = cv::Mat::zeros(src.size(), CV_16SC3);
+    for (int i = 1; i < src.rows - 1; i++) {
+        cv::Vec3b* rptrm1 = src.ptr<cv::Vec3b>(i - 1);
+        cv::Vec3b* rptr = src.ptr<cv::Vec3b>(i);
+        cv::Vec3b* rptrp1 = src.ptr<cv::Vec3b>(i + 1);
+
+        cv::Vec3b* dptr = dst.ptr<cv::Vec3b>(i);
+        for (int j = 1; j < src.cols - 1; j++) {
+            for (int c = 0; c < 3; c++) {
+                //row filter
+                dptr[j][c] = 1 * rptr[j - 1][c] + -1 * rptr[j + 1][c];
+
+                dptr[j][c] = (dptr[j][c] + (1 * rptrm1[j][c] + 2 * rptr[j][c] + 1 * rptrp1[j][c])) / 4;
+            }
+        }
+    }
+
     return 0;
 }
