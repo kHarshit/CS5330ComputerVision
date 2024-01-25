@@ -109,6 +109,17 @@ int displayVideo(int videoDeviceIndex) {
             cv::Mat mask3;
             cv::cvtColor(mask, mask3, cv::COLOR_GRAY2BGR);
             frame = (frame & mask3) + (gray & ~mask3);
+        } else if (lastKeypress == 'n') {
+            // negative image
+            frame = 255 - frame;
+        } else if (lastKeypress == 'e') {
+            // Make an embossing effect
+            cv::Mat grad_x, grad_y;
+            sobelX3x3(frame, grad_x);
+            sobelY3x3(frame, grad_y);
+            cv::convertScaleAbs(grad_x, grad_x);
+            cv::convertScaleAbs(grad_y, grad_y);
+            frame = grad_x * 0.7071 + grad_y * 0.7071; 
         }
 
         cv::imshow("Video", frame);
@@ -150,8 +161,16 @@ int displayVideo(int videoDeviceIndex) {
         } else if (key == 'a') {
             lastKeypress = 'a';
             cout << lastKeypress << "pressed : Make background greyscale." << endl;
+        } else if (key == 'c') {
+            lastKeypress = 'c';
+            cout << lastKeypress << "pressed : Make face colorful." << endl;
+        } else if (key == 'n') {
+            lastKeypress = 'n';
+            cout << lastKeypress << "pressed : Make negative image." << endl;
+        } else if (key == 'e') {
+            lastKeypress = 'e';
+            cout << lastKeypress << "pressed : Make embossing effect." << endl;
         }
-
     }
 
     return 0;
