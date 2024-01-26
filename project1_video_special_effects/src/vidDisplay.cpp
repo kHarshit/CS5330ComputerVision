@@ -87,7 +87,7 @@ int displayVideo(int videoDeviceIndex) {
             cv::convertScaleAbs(filter, frame);
             // cv::imshow("SobelY", filter);
         }
-        else if (lastKeypress == 'l') {
+        else if (lastKeypress == 'm') {
             cv::putText(frame, "Gradient Image from Sobel X and Y", cv::Point(30, 50), cv::FONT_HERSHEY_DUPLEX, 1.5, cv::Scalar(0, 255, 0), 3);
             cv::Mat grad_x, grad_y;
             sobelX3x3(frame, grad_x);
@@ -227,7 +227,7 @@ int displayVideo(int videoDeviceIndex) {
             lastKeypress = 'y';
             cout << lastKeypress << "pressed : Converting to sobelY filter." << endl;
         }
-        else if (key == 'l') {
+        else if (key == 'm') {
             lastKeypress = 'l';
             cout << lastKeypress << "pressed : Generating Gradient Magnitude Image" << endl;
         }
