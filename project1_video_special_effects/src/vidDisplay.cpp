@@ -96,6 +96,15 @@ int displayVideo(int videoDeviceIndex) {
             magnitude(grad_x, grad_y, filter);
             cv::convertScaleAbs(filter, frame);
         }
+        else if (lastKeypress == 'l') {
+            cv::putText(frame, "Blur and quantiizes", cv::Point(30, 50), cv::FONT_HERSHEY_DUPLEX, 1.5, cv::Scalar(0, 255, 0), 3);
+            int levels;
+            cin >> levels;
+            
+            blurQuantize(frame, filter, int(levels));
+            cv::convertScaleAbs(filter, frame);
+         
+        }
         else if (lastKeypress == 'f') {
             cv::putText(frame, "Face Detect", cv::Point(30, 50), cv::FONT_HERSHEY_DUPLEX, 1.5, cv::Scalar(0, 0, 255), 3);
             // use facedetect
@@ -227,8 +236,12 @@ int displayVideo(int videoDeviceIndex) {
             lastKeypress = 'y';
             cout << lastKeypress << "pressed : Converting to sobelY filter." << endl;
         }
-        else if (key == 'm') {
+        else if (key == 'l') {
             lastKeypress = 'l';
+            cout << lastKeypress << "pressed : Blur and Quantizing Image" << endl;
+        }
+        else if (key == 'm') {
+            lastKeypress = 'm';
             cout << lastKeypress << "pressed : Generating Gradient Magnitude Image" << endl;
         }
         else if (key == 'f') {
