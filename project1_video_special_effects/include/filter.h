@@ -72,5 +72,12 @@ int magnitude(cv::Mat& sx, cv::Mat& sy, cv::Mat& dst);
  * @return 0 if the operation is successful.
 */
 int comicBookEffect(cv::Mat& src, cv::Mat& dst);
-
+/**
+ * @brief Applies a custom comic book effect to an image.
+ * @param src Input image.
+ * @param dst Output image.
+ * @param levels to determine number of levels.
+ * @return 0 if the operation is successful.
+*/
+int blurQuantize(cv::Mat& src, cv::Mat& dst, int levels);
 #endif // FILTER_H
