@@ -139,6 +139,10 @@ int displayVideo(int videoDeviceIndex) {
             cv::convertScaleAbs(grad_x, grad_x);
             cv::convertScaleAbs(grad_y, grad_y);
             frame = grad_x * 0.7071 + grad_y * 0.7071; 
+        } else if (lastKeypress == 'z') {
+            // comic book effect
+            cv::putText(frame, "Comic Book Effect", cv::Point(30, 50), cv::FONT_HERSHEY_DUPLEX, 1.5, cv::Scalar(255, 0, 255), 3);
+            comicBookEffect(frame, frame);
         } else if (lastKeypress == 'v') {
             cv::putText(frame, "Video Saving Started", cv::Point(30, 50), cv::FONT_HERSHEY_DUPLEX, 1.5, cv::Scalar(255, 0, 0), 3);
             // save short video sequences with the special effects
@@ -204,6 +208,9 @@ int displayVideo(int videoDeviceIndex) {
         } else if (key == 'e') {
             lastKeypress = 'e';
             cout << lastKeypress << "pressed : Make embossing effect." << endl;
+        } else if (key == 'z') {
+            lastKeypress = 'z';
+            cout << lastKeypress << "pressed : Make comic book effect." << endl;
         } else if (key == 'v') {
             lastKeypress = 'v';
             cout << lastKeypress << "pressed : Video saving started." << endl;

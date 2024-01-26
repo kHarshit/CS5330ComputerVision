@@ -136,6 +136,7 @@ int blur5x5_2(cv::Mat & src, cv::Mat & dst) {
     return 0; // Success
 }
 
+#if 0
 int sobelX3x3(cv::Mat& src, cv::Mat& dst) {
     //X Sobel
     //[-1,0,1],     [1] [-1,0,1]
@@ -182,6 +183,96 @@ int sobelY3x3(cv::Mat& src, cv::Mat& dst) {
             }
         }
     }
+
+    return 0;
+}
+#endif
+
+int sobelX3x3(cv::Mat &src, cv::Mat &dst) {
+    cv::Mat temp = src.clone();
+    dst = cv::Mat::zeros(src.size(), CV_16SC3);
+
+    // horizontal derivative
+    for (int i = 0; i < src.rows; i++) {
+        cv::Vec3b* tptr = temp.ptr<cv::Vec3b>(i);
+        cv::Vec3b* sptr = src.ptr<cv::Vec3b>(i);
+        for (int j = 1; j < src.cols - 1; j++) {
+            for (int c = 0; c < 3; c++) {
+                tptr[j][c] = static_cast<uchar>(
+                    (-1 * sptr[j - 1][c] +
+                     1 * sptr[j + 1][c]) / 2.0 + 0.5);
+            }
+        }
+    }
+
+    // vertical
+    for (int i = 1; i < src.rows - 1; i++) {
+        cv::Vec3s* dptr = dst.ptr<cv::Vec3s>(i);
+        cv::Vec3b* tptrm1 = temp.ptr<cv::Vec3b>(i - 1);
+        cv::Vec3b* tptr = temp.ptr<cv::Vec3b>(i);
+        cv::Vec3b* tptrp1 = temp.ptr<cv::Vec3b>(i + 1);
+        for (int j = 0; j < src.cols; j++) {
+            for (int c = 0; c < 3; c++) {
+                dptr[j][c] = static_cast<short>(
+                    (1 * tptrm1[j][c] +
+                     2 * tptr[j][c] +
+                     1 * tptrp1[j][c]) / 4.0 + 0.5);
+            }
+        }
+    }
+
+    return 0;
+}
+
+int sobelY3x3(cv::Mat &src, cv::Mat &dst) {
+    cv::Mat temp = src.clone();
+    dst = cv::Mat::zeros(src.size(), CV_16SC3);
+
+    // vertical derivative
+    for (int i = 1; i < src.rows - 1; i++) {
+        cv::Vec3b* tptr = temp.ptr<cv::Vec3b>(i);
+        cv::Vec3b* sptrm1 = src.ptr<cv::Vec3b>(i - 1);
+        cv::Vec3b* sptrp1 = src.ptr<cv::Vec3b>(i + 1);
+        for (int j = 0; j < src.cols; j++) {
+            for (int c = 0; c < 3; c++) {
+                tptr[j][c] = static_cast<uchar>(
+                    (-1 * sptrm1[j][c] +
+                     1 * sptrp1[j][c]) / 2.0 + 0.5);
+            }
+        }
+    }
+
+    // horizontal 
+    for (int i = 0; i < src.rows; i++) {
+        cv::Vec3s* dptr = dst.ptr<cv::Vec3s>(i);
+        cv::Vec3b* tptr = temp.ptr<cv::Vec3b>(i);
+        for (int j = 1; j < src.cols - 1; j++) {
+            for (int c = 0; c < 3; c++) {
+                dptr[j][c] = static_cast<short>(
+                    (1 * tptr[j - 1][c] +
+                     2 * tptr[j][c] +
+                     1 * tptr[j + 1][c]) / 4.0 + 0.5);
+            }
+        }
+    }
+
+    return 0;
+}
+
+int comicBookEffect(cv::Mat& input, cv::Mat& output) {
+    // bilateral filter for smoothing while preserving edges
+    cv::Mat bilateralFiltered;
+    cv::bilateralFilter(input, bilateralFiltered, 9, 75, 75);
+
+    cv::Mat gray, thresholded, edges;
+    cv::cvtColor(bilateralFiltered, gray, cv::COLOR_BGR2GRAY);
+
+    // adaptive thresholding
+    cv::adaptiveThreshold(gray, thresholded, 255, cv::ADAPTIVE_THRESH_MEAN_C, cv::THRESH_BINARY, 9, 9);
+
+    // edge enhancement
+    cv::Canny(gray, edges, 50, 150);
+    cv::bitwise_and(thresholded, edges, output);
 
     return 0;
 }
