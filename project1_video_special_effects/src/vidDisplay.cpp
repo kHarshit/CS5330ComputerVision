@@ -1,5 +1,5 @@
 /**
- * author: Harshit Kumar
+ * author: Harshit Kumar and Khushi Neema
  * date: Jan 18, 2024
  * purpose: Display video, allowing users to save frames and quit using keystrokes.
  * 
