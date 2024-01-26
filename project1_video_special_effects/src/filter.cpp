@@ -293,7 +293,7 @@ int blurQuantize(cv::Mat& src, cv::Mat& dst, int levels) {
     b = 255 / levels;
 
     cv::Mat x;
-    blur5x5_1(src, x);
+    blur5x5_2(src, x);
 
 
     for (int i = 0; i < x.rows; i++) {
