@@ -144,6 +144,8 @@ int blur5x5_2(cv::Mat &src, cv::Mat &dst)
                 */
 
                 dptr[j][c] = (dptr[j][c] + 1 * rptrm1[j][c] + 2 * rptrm1[j][c] + 4 * rptr[j][c] + 2 * rptrp1[j][c] + 1 * rptrp2[j][c]) / 10;
+                // clip b/w 0 and 255
+                // dptr[j][c] = dptr[j][c] > 255 ? 255 : dptr[j][c];
             }
         }
     }

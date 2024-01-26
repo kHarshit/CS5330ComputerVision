@@ -98,12 +98,8 @@ int displayVideo(int videoDeviceIndex) {
         }
         else if (lastKeypress == 'l') {
             cv::putText(frame, "Blur and quantiizes", cv::Point(30, 50), cv::FONT_HERSHEY_DUPLEX, 1.5, cv::Scalar(0, 255, 0), 3);
-            int levels;
-            cin >> levels;
-            
-            blurQuantize(frame, filter, int(levels));
+            blurQuantize(frame, filter, 10);
             cv::convertScaleAbs(filter, frame);
-         
         }
         else if (lastKeypress == 'f') {
             cv::putText(frame, "Face Detect", cv::Point(30, 50), cv::FONT_HERSHEY_DUPLEX, 1.5, cv::Scalar(0, 0, 255), 3);
