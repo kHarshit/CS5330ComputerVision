@@ -1,5 +1,5 @@
 /**
- * author: Harshit Kumar
+ * author: Harshit Kumar and Khushi Neema
  * date: Jan 20, 2024
  * purpose: Applies a filter to an image.
  * 
