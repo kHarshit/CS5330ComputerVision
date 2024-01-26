@@ -35,12 +35,16 @@ int sepia(cv::Mat& src, cv::Mat& dst) {
     for (int i = 0; i < src.rows; ++i) {
         for (int j = 0; j < src.cols; ++j) {
             // R .    G .    B .    
-            // 0.272, 0.534, 0.131    // Red coefficients
+            // 0.272, 0.534, 0.131    // Blue coefficients
             // 0.349, 0.686, 0.168    // Green coefficients
-            // 0.393, 0.769, 0.189     // Blue coefficients
-            int red = (src.at<cv::Vec3b>(i, j)[2] * 0.272) + (src.at<cv::Vec3b>(i, j)[1] * 0.534) + (src.at<cv::Vec3b>(i, j)[0] * 0.131);
+            // 0.393, 0.769, 0.189     // Red coefficients
+            int blue = (src.at<cv::Vec3b>(i, j)[2] * 0.272) + (src.at<cv::Vec3b>(i, j)[1] * 0.534) + (src.at<cv::Vec3b>(i, j)[0] * 0.131);
             int green = (src.at<cv::Vec3b>(i, j)[2] * 0.349) + (src.at<cv::Vec3b>(i, j)[1] * 0.686) + (src.at<cv::Vec3b>(i, j)[0] * 0.168);
-            int blue = (src.at<cv::Vec3b>(i, j)[2] * 0.393) + (src.at<cv::Vec3b>(i, j)[1] * 0.769) + (src.at<cv::Vec3b>(i, j)[0] * 0.189);
+            int red = (src.at<cv::Vec3b>(i, j)[2] * 0.393) + (src.at<cv::Vec3b>(i, j)[1] * 0.769) + (src.at<cv::Vec3b>(i, j)[0] * 0.189);
+            // clip values to [0, 255]
+            blue = blue > 255 ? 255 : blue;
+            green = green > 255 ? 255 : green;
+            red = red > 255 ? 255 : red;
             dst.at<cv::Vec3b>(i, j) = cv::Vec3b(blue, green, red);
         }
     }
