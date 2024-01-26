@@ -283,7 +283,34 @@ int magnitude(cv::Mat& sx, cv::Mat& sy, cv::Mat& dst) {
 
     return 0;
 }
+int blurQuantize(cv::Mat& src, cv::Mat& dst, int levels) {
+    dst = cv::Mat::zeros(src.size(), src.type());
 
+    cv::Mat xt;
+    xt = cv::Mat::zeros(src.size(), src.type());
+
+    int b;
+    b = 255 / levels;
+
+    cv::Mat x;
+    blur5x5_1(src, x);
+
+
+    for (int i = 0; i < x.rows; i++) {
+        cv::Vec3b * xrptr = x.ptr<cv::Vec3b>(i);
+        cv::Vec3b* xtrptr = xt.ptr<cv::Vec3b>(i);
+        cv::Vec3b* drptr = dst.ptr<cv::Vec3b>(i);
+        for (int j = 0; j < x.cols; j++) {
+
+            for (int c = 0; c < 3; c++) {
+                xtrptr[j][c] = xrptr[j][c] / b;
+                drptr[j][c] = xtrptr[j][c] * b;
+            }
+        }
+    }
+
+    return 0;
+}
 int comicBookEffect(cv::Mat& input, cv::Mat& output) {
     // bilateral filter for smoothing while preserving edges
     cv::Mat bilateralFiltered;
