@@ -62,12 +62,12 @@ int sobelY3x3(cv::Mat &src, cv::Mat &dst);
 
 /**
  * @brief generates a gradient magnitude to an image.
- * @param sx SobelX values.
- * @param sy SobelY values.
+ * @param sobelX Input image.
+ * @param sobelY Input image.
  * @param dst Output image.
  * @return 0 if the operation is successful.
  */
-int magnitude(cv::Mat &sx, cv::Mat &sy, cv::Mat &dst);
+int magnitude(cv::Mat &sobelX, cv::Mat &sobelY, cv::Mat &dst);
 
 /**
  * @brief Applies a custom comic book effect to an image.

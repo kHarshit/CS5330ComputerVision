@@ -97,7 +97,7 @@ int displayVideo(int videoDeviceIndex) {
             cv::convertScaleAbs(filter, frame);
         }
         else if (lastKeypress == 'l') {
-            cv::putText(frame, "Blur and quantiizes", cv::Point(30, 50), cv::FONT_HERSHEY_DUPLEX, 1.5, cv::Scalar(0, 255, 0), 3);
+            cv::putText(frame, "Blur and quantize", cv::Point(30, 50), cv::FONT_HERSHEY_DUPLEX, 1.5, cv::Scalar(0, 255, 0), 3);
             blurQuantize(frame, filter, 10);
             cv::convertScaleAbs(filter, frame);
         }

@@ -133,7 +133,7 @@ int blur5x5_2(cv::Mat &src, cv::Mat &dst)
             {
 
                 // row filter [1 , 2, 4, 2, 1]
-                dptr[j][c] = 1 * rptr[j - 2][c] + 2 * rptr[j - 1][c] + 4 * rptr[j][c] + 2 * rptr[j + 1][c] + 1 * rptr[j + 2][c];
+                dptr[j][c] = (1 * rptr[j - 2][c] + 2 * rptr[j - 1][c] + 4 * rptr[j][c] + 2 * rptr[j + 1][c] + 1 * rptr[j + 2][c]) / 10.0;
 
                 /*column filter
                     [1]  m2
@@ -210,39 +210,39 @@ int sobelX3x3(cv::Mat &src, cv::Mat &dst)
     cv::Mat temp = src.clone();
     dst = cv::Mat::zeros(src.size(), CV_16SC3);
 
-    // horizontal derivative
+    // horizontal filter 
     for (int i = 0; i < src.rows; i++)
     {
-        cv::Vec3b *tptr = temp.ptr<cv::Vec3b>(i);
-        cv::Vec3b *sptr = src.ptr<cv::Vec3b>(i);
+        cv::Vec3b *tempptr = temp.ptr<cv::Vec3b>(i);
+        cv::Vec3b *rowptr = src.ptr<cv::Vec3b>(i);
         for (int j = 1; j < src.cols - 1; j++)
         {
             for (int c = 0; c < 3; c++)
             {
-                tptr[j][c] = static_cast<uchar>(
-                    (-1 * sptr[j - 1][c] +
-                     1 * sptr[j + 1][c]) /
+                tempptr[j][c] = static_cast<uchar>(
+                    (-1 * rowptr[j - 1][c] +
+                     1 * rowptr[j + 1][c]) /
                         2.0 +
                     0.5);
             }
         }
     }
 
-    // vertical
+    // vertical filter
     for (int i = 1; i < src.rows - 1; i++)
     {
         cv::Vec3s *dptr = dst.ptr<cv::Vec3s>(i);
-        cv::Vec3b *tptrm1 = temp.ptr<cv::Vec3b>(i - 1);
-        cv::Vec3b *tptr = temp.ptr<cv::Vec3b>(i);
-        cv::Vec3b *tptrp1 = temp.ptr<cv::Vec3b>(i + 1);
+        cv::Vec3b *tempptrm1 = temp.ptr<cv::Vec3b>(i - 1);
+        cv::Vec3b *tempptr = temp.ptr<cv::Vec3b>(i);
+        cv::Vec3b *tempptrp1 = temp.ptr<cv::Vec3b>(i + 1);
         for (int j = 0; j < src.cols; j++)
         {
             for (int c = 0; c < 3; c++)
             {
                 dptr[j][c] = static_cast<short>(
-                    (1 * tptrm1[j][c] +
-                     2 * tptr[j][c] +
-                     1 * tptrp1[j][c]) /
+                    (1 * tempptrm1[j][c] +
+                     2 * tempptr[j][c] +
+                     1 * tempptrp1[j][c]) /
                         4.0 +
                     0.5);
             }
@@ -257,38 +257,38 @@ int sobelY3x3(cv::Mat &src, cv::Mat &dst)
     cv::Mat temp = src.clone();
     dst = cv::Mat::zeros(src.size(), CV_16SC3);
 
-    // vertical derivative
+    // vertical filter
     for (int i = 1; i < src.rows - 1; i++)
     {
-        cv::Vec3b *tptr = temp.ptr<cv::Vec3b>(i);
-        cv::Vec3b *sptrm1 = src.ptr<cv::Vec3b>(i - 1);
-        cv::Vec3b *sptrp1 = src.ptr<cv::Vec3b>(i + 1);
+        cv::Vec3b *tempptr = temp.ptr<cv::Vec3b>(i);
+        cv::Vec3b *rowptrm1 = src.ptr<cv::Vec3b>(i - 1);
+        cv::Vec3b *rowptrp1 = src.ptr<cv::Vec3b>(i + 1);
         for (int j = 0; j < src.cols; j++)
         {
             for (int c = 0; c < 3; c++)
             {
-                tptr[j][c] = static_cast<uchar>(
-                    (-1 * sptrm1[j][c] +
-                     1 * sptrp1[j][c]) /
+                tempptr[j][c] = static_cast<uchar>(
+                    (-1 * rowptrm1[j][c] +
+                     1 * rowptrp1[j][c]) /
                         2.0 +
                     0.5);
             }
         }
     }
 
-    // horizontal
+    // horizontal filter
     for (int i = 0; i < src.rows; i++)
     {
         cv::Vec3s *dptr = dst.ptr<cv::Vec3s>(i);
-        cv::Vec3b *tptr = temp.ptr<cv::Vec3b>(i);
+        cv::Vec3b *tempptr = temp.ptr<cv::Vec3b>(i);
         for (int j = 1; j < src.cols - 1; j++)
         {
             for (int c = 0; c < 3; c++)
             {
                 dptr[j][c] = static_cast<short>(
-                    (1 * tptr[j - 1][c] +
-                     2 * tptr[j][c] +
-                     1 * tptr[j + 1][c]) /
+                    (1 * tempptr[j - 1][c] +
+                     2 * tempptr[j][c] +
+                     1 * tempptr[j + 1][c]) /
                         4.0 +
                     0.5);
             }
@@ -298,29 +298,28 @@ int sobelY3x3(cv::Mat &src, cv::Mat &dst)
     return 0;
 }
 
-int magnitude(cv::Mat &sx, cv::Mat &sy, cv::Mat &dst)
+int magnitude(cv::Mat &sobelX, cv::Mat &sobelY, cv::Mat &dst)
 {
-    dst = cv::Mat::zeros(sx.size(), CV_8UC3);
+    dst = cv::Mat::zeros(sobelX.size(), CV_8UC3);
 
     // loop over columns
-    for (int i = 0; i < sx.rows; i++)
+    for (int i = 0; i < sobelX.rows; i++)
     {
 
         // src row pointers
-        cv::Vec3s *sxrptr = sx.ptr<cv::Vec3s>(i);
-        cv::Vec3s *syrptr = sy.ptr<cv::Vec3s>(i);
+        cv::Vec3s *sobelXrowptr = sobelX.ptr<cv::Vec3s>(i);
+        cv::Vec3s *sobelYrowptr = sobelY.ptr<cv::Vec3s>(i);
 
         // destination ptr
         cv::Vec3b *dptr = dst.ptr<cv::Vec3b>(i);
 
         // loop over columns
-        for (int j = 0; j < sx.cols; j++)
+        for (int j = 0; j < sobelX.cols; j++)
         {
-
             // loop over color channels
             for (int c = 0; c < 3; c++)
             {
-                dptr[j][c] = sqrt((sxrptr[j][c] * sxrptr[j][c] + syrptr[j][c] * syrptr[j][c]));
+                dptr[j][c] = sqrt((sobelXrowptr[j][c] * sobelXrowptr[j][c] + sobelYrowptr[j][c] * sobelYrowptr[j][c]));
             }
         }
     }
@@ -332,9 +331,11 @@ int blurQuantize(cv::Mat &src, cv::Mat &dst, int levels)
 {
     dst = cv::Mat::zeros(src.size(), src.type());
 
-    cv::Mat xt;
-    xt = cv::Mat::zeros(src.size(), src.type());
+    // create a temporary image
+    cv::Mat tempImg;
+    tempImg = cv::Mat::zeros(src.size(), src.type());
 
+    // calculate the quantization factor
     int b;
     b = 255 / levels;
 
@@ -343,16 +344,15 @@ int blurQuantize(cv::Mat &src, cv::Mat &dst, int levels)
 
     for (int i = 0; i < x.rows; i++)
     {
-        cv::Vec3b *xrptr = x.ptr<cv::Vec3b>(i);
-        cv::Vec3b *xtrptr = xt.ptr<cv::Vec3b>(i);
-        cv::Vec3b *drptr = dst.ptr<cv::Vec3b>(i);
+        cv::Vec3b *xrowptr = x.ptr<cv::Vec3b>(i);
+        cv::Vec3b *tempptr = tempImg.ptr<cv::Vec3b>(i);
+        cv::Vec3b *drowptr = dst.ptr<cv::Vec3b>(i);
         for (int j = 0; j < x.cols; j++)
         {
-
             for (int c = 0; c < 3; c++)
             {
-                xtrptr[j][c] = xrptr[j][c] / b;
-                drptr[j][c] = xtrptr[j][c] * b;
+                tempptr[j][c] = xrowptr[j][c] / b;
+                drowptr[j][c] = tempptr[j][c] * b;
             }
         }
     }
