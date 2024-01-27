@@ -149,6 +149,37 @@ int displayVideo(int videoDeviceIndex) {
             cv::cvtColor(mask, mask3, cv::COLOR_GRAY2BGR);
             frame = (frame & mask3) + (gray & ~mask3);
         }
+        else if (lastKeypress == 'a') {
+            cv::putText(frame, "Blur background", cv::Point(30, 50), cv::FONT_HERSHEY_DUPLEX, 1.5, cv::Scalar(0, 0, 255), 3);
+            // Make the face colorful, while the rest of the image is greyscale.
+            // use facedetect
+            // convert the image to greyscale
+            cv::cvtColor(frame, grey, cv::COLOR_BGR2GRAY, 0);
+            // detect faces
+            detectFaces(grey, faces);
+            // draw boxes around the faces
+            drawBoxes(frame, faces);
+            // add a little smoothing by averaging the last two detections
+            if (faces.size() > 0) {
+                last.x = (faces[0].x + last.x) / 2;
+                last.y = (faces[0].y + last.y) / 2;
+                last.width = (faces[0].width + last.width) / 2;
+                last.height = (faces[0].height + last.height) / 2;
+            }
+            // Create a mask with the same size as the frame, filled with white color
+            cv::Mat mask = cv::Mat::ones(frame.size(), CV_8U) * 255;
+            // For each detected face
+            for (const auto& face : faces) {
+                // Set the region corresponding to the face to black in the mask
+                mask(face) = 0;
+            }
+            // Blur the entire image
+            cv::Mat blurred;
+            // cv::blur(frame, blurred, cv::Size(15, 15));
+            blur5x5_2(frame, blurred);
+            // Combine the blurred and original images using the mask
+            blurred.copyTo(frame, mask);
+        }
         else if (lastKeypress == 'n') {
             cv::putText(frame, "Negative Image", cv::Point(30, 50), cv::FONT_HERSHEY_DUPLEX, 1.5, cv::Scalar(0, 0, 255), 3);
             // negative image
@@ -244,13 +275,13 @@ int displayVideo(int videoDeviceIndex) {
             lastKeypress = 'f';
             cout << lastKeypress << "pressed : Using face detect." << endl;
         }
-        else if (key == 'a') {
-            lastKeypress = 'a';
-            cout << lastKeypress << "pressed : Make background greyscale." << endl;
-        }
         else if (key == 'c') {
             lastKeypress = 'c';
             cout << lastKeypress << "pressed : Make face colorful." << endl;
+        }
+        else if (key == 'a') {
+            lastKeypress = 'a';
+            cout << lastKeypress << "pressed : Make background blur." << endl;
         }
         else if (key == 'n') {
             lastKeypress = 'n';
