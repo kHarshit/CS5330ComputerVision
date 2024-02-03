@@ -20,4 +20,6 @@ To simple test program, you can use direct method (note that you need to specify
 
 ```
 g++ -std=c++11 main.cpp -o app `pkg-config --cflags --libs opencv4`
+
+g++ -std=c++11 main.cpp src/faceDetect.cpp src/filter.cpp src/imgDisplay.cpp src/vidDisplay.cpp -Iinclude -o app `pkg-config --cflags --libs opencv`
 ```
