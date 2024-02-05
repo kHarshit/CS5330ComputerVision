@@ -18,7 +18,7 @@
  * @param image Input image
  * @return cv::Mat Feature vector
 */
-cv::Mat computeBaselineFeatures(const cv::Mat& image, cv::Mat);
+cv::Mat computeBaselineFeatures(const cv::Mat& image);
 
 /**
  * Computer distance between two feature vectors
