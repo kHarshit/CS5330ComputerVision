@@ -10,6 +10,13 @@
 #include "include/imgProcess.h"
 #include "include/csv_util.h"
 
+// Run Part 1: reads the target image and computes its features, 
+// loops over the directory of images, and for each image computes the features
+// and compares them to the target image, storing the result in an array or vector,
+// sorts the list of matches and returns the top N
+// Part 2: writes the feature vector for each image to a file to save processing time
+#define RUN_PART1 0
+
 void Sort(std::vector<std::pair<std::string, double> >& matches) {
     int n = matches.size();
     for (int i = 0; i < n - 1; ++i) {
@@ -24,6 +31,8 @@ void Sort(std::vector<std::pair<std::string, double> >& matches) {
         }
     }
 }
+
+#if !RUN_PART1
 
 int main(int argc,char *argv[])
 {
@@ -147,7 +156,7 @@ int main(int argc,char *argv[])
     return 0;
 }
 
-#if 0
+#else
 int main(int argc, char *argv[])
 {
     char dirname[256];
