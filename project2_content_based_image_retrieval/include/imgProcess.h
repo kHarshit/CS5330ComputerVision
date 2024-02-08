@@ -10,6 +10,7 @@
 #define IMG_PROCESS_H
 
 #include <opencv2/opencv.hpp>
+#include<opencv2/core/core.hpp>
 
 
 /**
@@ -18,7 +19,7 @@
  * @param image Input image
  * @return cv::Mat Feature vector
 */
-cv::Mat computeBaselineFeatures(const cv::Mat& image);
+std::vector <float> computeBaselineFeatures(const cv::Mat& image);
 
 /**
  * @brief Compute distance between two feature vectors
@@ -28,6 +29,5 @@ cv::Mat computeBaselineFeatures(const cv::Mat& image);
  * @return double Distance between the two feature vectors
 */
 double computeDistance(const std::vector<float>& feature1, const std::vector<float>& feature2);
-
 
 #endif // IMG_PROCESS_H

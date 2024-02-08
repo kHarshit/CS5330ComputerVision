@@ -13,14 +13,28 @@
 //     return image(cv::Rect(image.cols / 4, image.rows / 4, image.cols / 2, image.rows / 2)).clone();
 // }
 
-cv::Mat computeBaselineFeatures(const cv::Mat& image) {
+std::vector<float> matToVector(const cv::Mat &m) {
+    //cv::Mat flat = m.reshape(1, m.total() * m.channels());
+    cv::Mat flat;
+    if (m.isContinuous()) {
+        flat = m.reshape(1, m.total() * m.channels());
+    } else {
+        cv::Mat continuousM;
+        m.copyTo(continuousM);
+        flat = continuousM.reshape(1, continuousM.total() * continuousM.channels());
+    }
+    flat.convertTo(flat, CV_32F);
+    return m.isContinuous() ? flat : flat.clone();
+}
+
+std::vector <float> computeBaselineFeatures(const cv::Mat& image) {
     // Ensure the image is large enough for a 7x7 extraction
     if (image.cols < 7 || image.rows < 7) {
         throw std::runtime_error("Image is too small for a 7x7 feature extraction.");
     }
     int startX = (image.cols - 7) / 2;
     int startY = (image.rows - 7) / 2;
-    return image(cv::Rect(startX, startY, 7, 7)).clone();
+    return matToVector(image(cv::Rect(startX, startY, 7, 7)));
 }
 
 
