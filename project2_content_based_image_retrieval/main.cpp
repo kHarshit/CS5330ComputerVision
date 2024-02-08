@@ -271,12 +271,13 @@ int main(int argc, char *argv[])
     printf("Processing directory %s\n", dirname);
 
     //Reading the target image and computing its features
-    target_image=cv::imread("/Users/harshit/Downloads/olympus/pic.1016.jpg");
+    target_image=cv::imread("/Users/harshit/Downloads/olympus/pic.0164.jpg");
     cv::imshow("Target Image",target_image);
     cv::waitKey(0);
 
     printf("Computing its features : ");
-    target_features=computeBaselineFeatures(target_image);
+    // target_features=computeBaselineFeatures(target_image);
+    target_features = computeRGChromaticityHistogram(target_image, 16);
     // Convert features to a vector<float>
     std::vector<float> target_feature_vector(target_features.begin<float>(), target_features.end<float>());
     // this will store filenames and their distances in pairs;
@@ -303,7 +304,8 @@ int main(int argc, char *argv[])
             //printf("full path name %s",buffer);
         
         cv::Mat image=cv::imread(buffer);
-        cv::Mat features=computeBaselineFeatures(image);
+        // cv::Mat features=computeBaselineFeatures(image);
+        cv::Mat features = computeRGChromaticityHistogram(image, 16);
         std::vector<float> feature_vector(features.begin<float>(), features.end<float>());
         double distance=computeDistance(feature_vector,target_feature_vector);
 

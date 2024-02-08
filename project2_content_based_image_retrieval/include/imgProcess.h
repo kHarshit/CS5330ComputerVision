@@ -29,5 +29,21 @@ cv::Mat computeBaselineFeatures(const cv::Mat& image);
 */
 double computeDistance(const std::vector<float>& feature1, const std::vector<float>& feature2);
 
+/**
+ * @brief Compute 2D RG Chromaticity Histogram
+ * 
+ * @param image Input image
+ * @param bins Number of bins for the histogram
+ * @return cv::Mat 2D RG Chromaticity Histogram
+*/
+cv::Mat computeRGChromaticityHistogram(const cv::Mat& image, int bins);
 
+/**
+ * @brief Compute histogram intersection between two histograms
+ * 
+ * @param hist1 Histogram 1
+ * @param hist2 Histogram 2
+ * @return float Histogram intersection value
+*/
+float histogramIntersection(const cv::Mat& hist1, const cv::Mat& hist2);
 #endif // IMG_PROCESS_H
