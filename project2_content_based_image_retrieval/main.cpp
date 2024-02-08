@@ -8,6 +8,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <dirent.h>
+#include<vector>
 #include "include/imgProcess.h"
 #include "include/csv_util.h"
 
@@ -18,7 +19,7 @@ using namespace std;
 // and compares them to the target image, storing the result in an array or vector,
 // sorts the list of matches and returns the top N
 // Part 2: writes the feature vector for each image to a file to save processing time
-#define RUN_PART1 1
+#define RUN_PART1 0
 // if RUN_PART1 is 0 and you want to write data to csv, set it to 1
 #define WRITE_CSV 0
 
@@ -42,7 +43,7 @@ void Sort(std::vector<std::pair<std::string, double> >& matches) {
 int main(int argc,char *argv[])
 {
 
-    #if 0
+    #if WRITE_CSV
     if (argc < 3) {
         std::cout << "Usage: " << argv[0] << " <directory path> <output CSV file>" << std::endl;
         return -1;
@@ -50,6 +51,8 @@ int main(int argc,char *argv[])
 
     DIR *dirp;
     struct dirent *dp;
+    std::cout<<"Argument 1";
+    printf(argv[1]);
     dirp = opendir(argv[1]);
     if (dirp == NULL) {
         std::cout << "Cannot open directory " << argv[1] << std::endl;
@@ -62,25 +65,24 @@ int main(int argc,char *argv[])
             std::string filepath = std::string(argv[1]) + "/" + std::string(dp->d_name);
             cv::Mat image = cv::imread(filepath);
             if (!image.empty()) {
-                cv::Mat features = computeBaselineFeatures(image);
+                std::vector<float> features = computeBaselineFeatures(image);
+                
                 // Convert features to a vector<float>
-                std::vector<float> feature_vector(features.begin<float>(), features.end<float>());
-                append_image_data_csv(argv[2], const_cast<char *>(filepath.c_str()), feature_vector, reset_file);
+                //std::vector<float> feature_vector(features.begin<float>(), features.end<float>());
+                append_image_data_csv(argv[2], const_cast<char *>(filepath.c_str()), features, reset_file);
                 reset_file = false; // Only reset the file once, for the first image
             }
         }
     }
 
     closedir(dirp);
-    #endif
-
-    #if 1
-
+    #else
     if (argc < 4) {
         std::cout << "Usage: " << argv[0] << " <target image> <feature vector file> <N>" << std::endl;
         return -1;
     }
-
+    printf("Argument 1");
+    printf(argv[1]);
     cv::Mat target_image = cv::imread(argv[1]);
     if (target_image.empty()) {
         std::cout << "Could not read the target image." << std::endl;
@@ -90,17 +92,18 @@ int main(int argc,char *argv[])
     int N = std::atoi(argv[3]);
 
     // Assuming computeBaselineFeatures returns a cv::Mat that needs to be converted to a std::vector<float>
-    cv::Mat target_features_mat = computeBaselineFeatures(target_image);
-    std::vector<float> target_feature_vector(target_features_mat.begin<float>(), target_features_mat.end<float>());
-
+    //cv::Mat target_features_mat = computeBaselineFeatures(target_image);
+    std::vector<float> target_feature_vector = computeBaselineFeatures(target_image);
+    //std::vector<float> target_feature_vector(target_features_mat.begin<float>(), target_features_mat.end<float>());
+    // std::cout<<target_features_mat.channels();
     std::vector<char *> filenames;
-    std::vector<std::vector<float>> data;
+    std::vector<std::vector<float> > data;
     if (read_image_data_csv(argv[2], filenames, data, 0) != 0) {
         std::cerr << "Error reading feature vector file." << std::endl;
         return -1;
     }
 
-    std::vector<std::pair<std::string, double>> distances;
+    std::vector<std::pair<std::string, double> > distances;
     for (size_t i = 0; i < data.size(); ++i) {
         double distance = computeDistance(target_feature_vector, data[i]);
         if (distance >= 0) { // Ensure distance is valid
