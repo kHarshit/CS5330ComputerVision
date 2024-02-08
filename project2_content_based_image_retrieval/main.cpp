@@ -278,9 +278,12 @@ int main(int argc, char *argv[])
     printf("Computing its features : ");
     // target_features=computeBaselineFeatures(target_image);
     target_features = computeRGChromaticityHistogram(target_image, 16);
+    // auto target_hist = computeSpatialHistograms(target_image, 8);
     // Convert features to a vector<float>
-    std::vector<float> target_feature_vector(target_features.begin<float>(), target_features.end<float>());
+    // std::vector<float> target_feature_vector(target_features.begin<float>(), target_features.end<float>());
     // this will store filenames and their distances in pairs;
+
+    cout << "properties of target features: " << target_features.rows << " " << target_features.cols << " " << target_features.channels() << endl;
     std::vector<std::pair<std::string, double>> distances;
 
     dirp = opendir(dirname);
@@ -306,11 +309,14 @@ int main(int argc, char *argv[])
         cv::Mat image=cv::imread(buffer);
         // cv::Mat features=computeBaselineFeatures(image);
         cv::Mat features = computeRGChromaticityHistogram(image, 16);
-        std::vector<float> feature_vector(features.begin<float>(), features.end<float>());
-        double distance=computeDistance(feature_vector,target_feature_vector);
+        // auto image_hist = computeSpatialHistograms(image, 8);
+        // std::vector<float> feature_vector(features.begin<float>(), features.end<float>());
+        double distance = histogramIntersection(target_features, features);
+        // double distance=computeDistance(feature_vector,target_feature_vector);
+        // double distance = combinedHistogramDistance(target_hist, image_hist);
 
         if (distance >= 0) { // Ensure distance is valid
-            cout << "Distance: " << distance << endl;
+            // cout << "Distance: " << distance << endl;
             distances.push_back(std::make_pair(buffer, distance));
         }
         }
@@ -319,7 +325,7 @@ int main(int argc, char *argv[])
 
     // Sorting the distances in ascending order
     std::sort(distances.begin(), distances.end(), [](const std::pair<std::string, double> &a, const std::pair<std::string, double> &b) {
-        return a.second < b.second;
+        return a.second > b.second;
     });
 
     int N = 3; // Number of top matches to display

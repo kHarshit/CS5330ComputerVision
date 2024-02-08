@@ -45,5 +45,33 @@ cv::Mat computeRGChromaticityHistogram(const cv::Mat& image, int bins);
  * @param hist2 Histogram 2
  * @return float Histogram intersection value
 */
-float histogramIntersection(const cv::Mat& hist1, const cv::Mat& hist2);
+double histogramIntersection(const cv::Mat& hist1, const cv::Mat& hist2);
+
+/**
+ * @brief Compute RGB histogram
+ * 
+ * @param imagePart Input image
+ * @param bins Number of bins for the histogram
+ * @return cv::Mat RGB histogram
+*/
+cv::Mat computeRGBHistogram(const cv::Mat& imagePart, int bins);
+
+/**
+ * @brief Compute spatial histograms
+ * 
+ * @param image Input image
+ * @param bins Number of bins for the histogram
+ * @return std::pair<cv::Mat, cv::Mat> Pair of spatial histograms
+*/
+std::pair<cv::Mat, cv::Mat> computeSpatialHistograms(const cv::Mat& image, int bins);
+
+/**
+ * @brief Compute combined histogram distance
+ * 
+ * @param histPair1 Pair of spatial histograms 1
+ * @param histPair2 Pair of spatial histograms 2
+ * @return double Combined histogram distance
+*/
+double combinedHistogramDistance(const std::pair<cv::Mat, cv::Mat>& histPair1, const std::pair<cv::Mat, cv::Mat>& histPair2);
+
 #endif // IMG_PROCESS_H
