@@ -3,6 +3,7 @@
  * date: Jan 29, 2024
  */
 
+#include <iostream>
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
@@ -10,12 +11,16 @@
 #include "include/imgProcess.h"
 #include "include/csv_util.h"
 
+using namespace std;
+
 // Run Part 1: reads the target image and computes its features, 
 // loops over the directory of images, and for each image computes the features
 // and compares them to the target image, storing the result in an array or vector,
 // sorts the list of matches and returns the top N
 // Part 2: writes the feature vector for each image to a file to save processing time
 #define RUN_PART1 0
+// if RUN_PART1 is 0 and you want to write data to csv, set it to 1
+#define WRITE_CSV 0
 
 void Sort(std::vector<std::pair<std::string, double> >& matches) {
     int n = matches.size();
@@ -60,7 +65,7 @@ int main(int argc,char *argv[])
     target_image=cv::imread("/home/kharshit/Khushi/olympus/pic.0503.jpg");
     //cv::imshow("Target Image",target_image);
     //cv::waitKey(0);
-    printf("Computing its features : ");
+    cout << "Computing target image features\n";
     target_features=computeBaselineFeatures(target_image);
 
     dirp = opendir(dirname);
@@ -69,40 +74,43 @@ int main(int argc,char *argv[])
         printf("Cannot open directory %s\n", dirname);
         exit(-1);
     }
-    // while ((dp = readdir(dirp)) != NULL)
-    // {
+    #if WRITE_CSV
+    cout << "Writing to CSV file\n";
+    while ((dp = readdir(dirp)) != NULL)
+    {
 
-    //     // check if the file is an image
-    //     if (strstr(dp->d_name, ".jpg") ||
-    //         strstr(dp->d_name, ".png") ||
-    //         strstr(dp->d_name, ".ppm") ||
-    //         strstr(dp->d_name, ".tif"))
-    //     {
-    //         strcpy(buffer, dirname);
-    //         strcat(buffer, "/");
-    //         strcat(buffer, dp->d_name);
-    //         //printf("full path name %s",buffer);
+        // check if the file is an image
+        if (strstr(dp->d_name, ".jpg") ||
+            strstr(dp->d_name, ".png") ||
+            strstr(dp->d_name, ".ppm") ||
+            strstr(dp->d_name, ".tif"))
+        {
+            strcpy(buffer, dirname);
+            strcat(buffer, "/");
+            strcat(buffer, dp->d_name);
+            //printf("full path name %s",buffer);
         
-    //     cv::Mat current_image=cv::imread(buffer);
-    //     cv::Mat current_features=computeBaselineFeatures(current_image);
+        cv::Mat current_image=cv::imread(buffer);
+        cv::Mat current_features=computeBaselineFeatures(current_image);
         
-    // Convert cv::Mat to std::vector<float>
+        //Convert cv::Mat to std::vector<float>
         
-    //     featureVector.assign(current_features.begin<float>(), current_features.end<float>());
-    //      if(flag==0){
-    //          flag=1;
-    //         int status=append_image_data_csv(filename,dp->d_name,featureVector,1);
-    //     }
-    //     std::vector<float> featureVector;
-    //     current_features.reshape(1, 1).convertTo(featureVector, CV_32F);
-    //     int status=append_image_data_csv(filename,dp->d_name,featureVector,0);
-    //     if(status!=0){
-    //         printf("Error in writing information in file");
-    //     }
-    //     }
+        featureVector.assign(current_features.begin<float>(), current_features.end<float>());
+         if(flag==0){
+             flag=1;
+            int status=append_image_data_csv(filename,dp->d_name,featureVector,1);
+        }
+        std::vector<float> featureVector;
+        current_features.reshape(1, 1).convertTo(featureVector, CV_32F);
+        int status=append_image_data_csv(filename,dp->d_name,featureVector,0);
+        if(status!=0){
+            printf("Error in writing information in file");
+        }
+        }
              
-    //}
-    printf("Succesfully read all images");
+    }
+    #endif
+    cout << "Reading from CSV file\n";
     std::vector<char*> filenames;
     std::vector<std::vector<float> >  data;
     if (read_image_data_csv(filename, filenames, data, 0) != 0) {
@@ -122,16 +130,18 @@ int main(int argc,char *argv[])
 // }
     
     
+    cout << "Computing distances\n";
     //Compute distances between target image features and features of all other images
     for (int i = 0; i < filenames.size(); ++i) {
+        cout << filenames[i] << endl;
         
         if (strcmp(filenames[i], "pic.0503.jpg") != 0) {  // Exclude the target image itself
             // cv::Mat featureMat(target_features.rows,target_features.cols, CV_32F);
             // memcpy(featureMat.data, data[i].data(), data[i].size() * sizeof(float));
             // std::cout << " Target Size " << target_features.rows << " "<<target_features.cols;
             //std::cout << " Input Size " << featureMat.rows << " "<<featureMat.cols;
-            //std::cout << "Type of Input" << featureMat.type();
-            std::cout<< "Type of Target" << target_features.type();
+            //std::cout << "Type of Input " << featureMat.type();
+            std::cout<< "Type of Target " << target_features.type();
             
             double distance = computeDistance(target_features, cv::Mat(data[i]).reshape(256,320));
             matches.push_back(std::make_pair(std::string(filenames[i]), distance));
