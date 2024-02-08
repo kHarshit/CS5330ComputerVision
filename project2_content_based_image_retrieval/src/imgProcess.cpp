@@ -8,14 +8,32 @@
 
 #include "imgProcess.h"
 
+// cv::Mat computeBaselineFeatures(const cv::Mat& image) {
+//     // Implementation to compute features (e.g., 7x7 square in the middle)
+//     return image(cv::Rect(image.cols / 4, image.rows / 4, image.cols / 2, image.rows / 2)).clone();
+// }
+
 cv::Mat computeBaselineFeatures(const cv::Mat& image) {
-    // Implementation to compute features (e.g., 7x7 square in the middle)
-    return image(cv::Rect(image.cols / 4, image.rows / 4, image.cols / 2, image.rows / 2)).clone();
+    // Ensure the image is large enough for a 7x7 extraction
+    if (image.cols < 7 || image.rows < 7) {
+        throw std::runtime_error("Image is too small for a 7x7 feature extraction.");
+    }
+    int startX = (image.cols - 7) / 2;
+    int startY = (image.rows - 7) / 2;
+    return image(cv::Rect(startX, startY, 7, 7)).clone();
 }
 
-double computeDistance(const cv::Mat& features1, const cv::Mat& features2) {
-    // Implementation to compute distance (e.g., sum-of-squared-difference)
-    cv::Mat diff;
-    cv::absdiff(features1, features2, diff);
-    return cv::sum(diff)[0]; // Assuming single-channel images
+double computeDistance(const std::vector<float>& feature1, const std::vector<float>& feature2) {
+    if (feature1.size() != feature2.size()) {
+        std::cerr << "Error: Feature vectors must have the same length!" << std::endl;
+        return -1.0f;
+    }
+
+    double sumSquaredDifferences = 0.0f;
+    for (size_t i = 0; i < feature1.size(); ++i) {
+        double diff = feature1[i] - feature2[i];
+        sumSquaredDifferences += diff * diff;
+    }
+
+    return sumSquaredDifferences;
 }
