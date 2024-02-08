@@ -76,7 +76,7 @@ int main(int argc,char *argv[])
 
     #if 1
 
-            if (argc < 4) {
+    if (argc < 4) {
         std::cout << "Usage: " << argv[0] << " <target image> <feature vector file> <N>" << std::endl;
         return -1;
     }
@@ -100,9 +100,9 @@ int main(int argc,char *argv[])
         return -1;
     }
 
-    std::vector<std::pair<std::string, float>> distances;
+    std::vector<std::pair<std::string, double>> distances;
     for (size_t i = 0; i < data.size(); ++i) {
-        float distance = computeDistance(target_feature_vector, data[i]);
+        double distance = computeDistance(target_feature_vector, data[i]);
         if (distance >= 0) { // Ensure distance is valid
             cout << "Distance: " << distance << endl;
             distances.push_back(std::make_pair(std::string(filenames[i]), distance));
@@ -110,7 +110,7 @@ int main(int argc,char *argv[])
     }
 
     // Sorting the distances in ascending order
-    std::sort(distances.begin(), distances.end(), [](const std::pair<std::string, float> &a, const std::pair<std::string, float> &b) {
+    std::sort(distances.begin(), distances.end(), [](const std::pair<std::string, double> &a, const std::pair<std::string, double> &b) {
         return a.second < b.second;
     });
 
@@ -259,8 +259,6 @@ int main(int argc, char *argv[])
     DIR *dirp;
     struct dirent *dp;
     int i;
-    // this will store filenames and their distances in pairs;
-    std::vector<std::pair<std::string, double> > matches; 
 
     cv::Mat target_image,target_features;
     if (argc < 2)
@@ -281,8 +279,8 @@ int main(int argc, char *argv[])
     target_features=computeBaselineFeatures(target_image);
     // Convert features to a vector<float>
     std::vector<float> target_feature_vector(target_features.begin<float>(), target_features.end<float>());
-    // store distances
-    std::vector<std::pair<std::string, float>> distances;
+    // this will store filenames and their distances in pairs;
+    std::vector<std::pair<std::string, double>> distances;
 
     dirp = opendir(dirname);
     if (dirp == NULL)
@@ -309,15 +307,16 @@ int main(int argc, char *argv[])
         std::vector<float> feature_vector(features.begin<float>(), features.end<float>());
         double distance=computeDistance(feature_vector,target_feature_vector);
 
-        cout << "Distance: " << distance << endl;
-        distances.push_back(std::make_pair(buffer, distance));
-        matches.push_back(std::make_pair(buffer,distance));
+        if (distance >= 0) { // Ensure distance is valid
+            cout << "Distance: " << distance << endl;
+            distances.push_back(std::make_pair(buffer, distance));
+        }
         }
     }
     closedir(dirp);
 
     // Sorting the distances in ascending order
-    std::sort(distances.begin(), distances.end(), [](const std::pair<std::string, float> &a, const std::pair<std::string, float> &b) {
+    std::sort(distances.begin(), distances.end(), [](const std::pair<std::string, double> &a, const std::pair<std::string, double> &b) {
         return a.second < b.second;
     });
 
@@ -325,7 +324,7 @@ int main(int argc, char *argv[])
     printf("Top %d matches:\n", N);
     // Displaying top N matches, starting from the second match to avoid the target image itself if present
     for (int i = 1; i <= N && i < distances.size(); ++i) {
-        cv::Mat picture=cv::imread(matches[i].first.c_str());
+        cv::Mat picture=cv::imread(distances[i].first.c_str());
         cv::imshow("Picture",picture);
         cv::waitKey(0);
         std::cout << "Distance: " << distances[i].second << endl;

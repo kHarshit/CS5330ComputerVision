@@ -23,15 +23,16 @@ cv::Mat computeBaselineFeatures(const cv::Mat& image) {
     return image(cv::Rect(startX, startY, 7, 7)).clone();
 }
 
+
 double computeDistance(const std::vector<float>& feature1, const std::vector<float>& feature2) {
     if (feature1.size() != feature2.size()) {
         std::cerr << "Error: Feature vectors must have the same length!" << std::endl;
-        return -1.0f;
+        return -1.0; // Changed from -1.0f to -1.0 to match the return type
     }
 
-    double sumSquaredDifferences = 0.0f;
+    double sumSquaredDifferences = 0.0; // Removed the 'f' to ensure it's a double
     for (size_t i = 0; i < feature1.size(); ++i) {
-        double diff = feature1[i] - feature2[i];
+        double diff = static_cast<double>(feature1[i]) - static_cast<double>(feature2[i]);
         sumSquaredDifferences += diff * diff;
     }
 
