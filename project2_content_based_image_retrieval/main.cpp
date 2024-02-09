@@ -19,7 +19,7 @@ using namespace std;
 // and compares them to the target image, storing the result in an array or vector,
 // sorts the list of matches and returns the top N
 // Part 2: writes the feature vector for each image to a file to save processing time
-#define RUN_PART1 1
+#define RUN_PART1 0
 // if RUN_PART1 is 0 and you want to write data to csv, set it to 1
 #define WRITE_CSV 0
 
@@ -85,6 +85,8 @@ int main(int argc, char *argv[])
         std::cout << "Usage: " << argv[0] << " <target image> <feature vector file> <N>" << std::endl;
         return -1;
     }
+    std::string imgPath = argv[1];
+    std::string targetImageFilename = imgPath.substr(imgPath.find_last_of("/\\") + 1);
     cv::Mat target_image = cv::imread(argv[1]);
     if (target_image.empty())
     {
@@ -94,7 +96,7 @@ int main(int argc, char *argv[])
 
     int N = std::atoi(argv[3]);
 
-    std::vector<float> target_feature_vector = computeBaselineFeatures(target_image);
+    // std::vector<float> target_feature_vector = computeBaselineFeatures(target_image);
     std::vector<char *> filenames;
     std::vector<std::vector<float>> data;
     if (read_image_data_csv(argv[2], filenames, data, 0) != 0)
@@ -103,10 +105,27 @@ int main(int argc, char *argv[])
         return -1;
     }
 
+    // Find the feature vector for the target image
+    std::vector<float> target_feature_vector;
+    bool targetFound = false;
+    for (size_t i = 0; i < filenames.size(); ++i) {
+        if (std::string(filenames[i]) == targetImageFilename) {
+            target_feature_vector = data[i];
+            targetFound = true;
+            break;
+        }
+    }
+
+    if (!targetFound) {
+        std::cerr << "Feature vector for target image not found." << std::endl;
+        return -1;
+    }
+
     std::vector<std::pair<std::string, double>> distances;
     for (size_t i = 0; i < data.size(); ++i)
     {
-        double distance = sumSquaredDistance(target_feature_vector, data[i]);
+        // double distance = sumSquaredDistance(target_feature_vector, data[i]);
+        double distance = cosineDistance(target_feature_vector, data[i]);
         if (distance >= 0)
         { // Ensure distance is valid
             cout << "Distance: " << distance << endl;
