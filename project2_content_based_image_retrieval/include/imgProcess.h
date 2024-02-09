@@ -49,6 +49,15 @@ cv::Mat computeRGChromaticityHistogram(const cv::Mat& image, int bins);
 double histogramIntersection(const cv::Mat& hist1, const cv::Mat& hist2);
 
 /**
+ * @brief Compute histogram intersection between two 3D histograms
+ * 
+ * @param hist1 3D Histogram 1
+ * @param hist2 3D Histogram 2
+ * @return double Histogram intersection value
+*/
+double histogramIntersection3d(const cv::Mat& hist1, const cv::Mat& hist2);
+
+/**
  * @brief Compute RGB histogram
  * 
  * @param imagePart Input image

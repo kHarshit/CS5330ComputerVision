@@ -7,7 +7,7 @@
  */
 
 #include "imgProcess.h"
-
+#include <iostream>
 std::vector<float> matToVector(const cv::Mat &m)
 {
     // cv::Mat flat = m.reshape(1, m.total() * m.channels());
@@ -86,8 +86,12 @@ cv::Mat computeRGChromaticityHistogram(const cv::Mat &image, int bins)
         }
     }
 
+    // Compute total number of pixels to normalize histogram
+    float totalPixels = image.rows * image.cols;
+
     // Normalize the histogram so that the sum of histogram bins = 1
-    cv::normalize(histogram, histogram, 1, 0, cv::NORM_L1);
+    histogram /= totalPixels;
+
     return histogram;
 }
 
@@ -106,6 +110,25 @@ double histogramIntersection(const cv::Mat &hist1, const cv::Mat &hist2)
 
     return intersection;
 }
+
+
+double histogramIntersection3d(const cv::Mat& hist1, const cv::Mat& hist2) {
+    CV_Assert(hist1.size == hist2.size && hist1.type() == hist2.type());
+
+    double intersection = 0.0;
+    // Assuming hist1 and hist2 are CV_32F type
+    for (int i = 0; i < hist1.size[0]; ++i) {
+        for (int j = 0; j < hist1.size[1]; ++j) {
+            for (int k = 0; k < hist1.size[2]; ++k) {
+                int idx[3] = {i, j, k};
+                intersection += std::min(hist1.at<float>(idx), hist2.at<float>(idx));
+            }
+        }
+    }
+    // Convert intersection to a measure of distance
+    return intersection;
+}
+
 
 cv::Mat computeRGBHistogram(const cv::Mat &image, int bins)
 {
@@ -162,12 +185,13 @@ std::pair<cv::Mat, cv::Mat> computeSpatialHistograms(const cv::Mat &image, int b
 double combinedHistogramDistance(const std::pair<cv::Mat, cv::Mat> &histPair1, const std::pair<cv::Mat, cv::Mat> &histPair2)
 {
     // Compute histogram intersections
-    float topIntersection = histogramIntersection(histPair1.first, histPair2.first);
-    float bottomIntersection = histogramIntersection(histPair1.second, histPair2.second);
+    double topIntersection = histogramIntersection3d(histPair1.first, histPair2.first);
+    double bottomIntersection = histogramIntersection3d(histPair1.second, histPair2.second);
+    std::cout << "topIntersection: " << topIntersection << " bottomIntersection: " << bottomIntersection << std::endl;
 
     // Example of a simple weighted average of distances
     // Assuming equal importance for top and bottom histograms
-    double combinedDistance = (topIntersection + bottomIntersection) / 2.0;
+    double combinedDistance = 0.5*topIntersection + 0.5*bottomIntersection;
 
     // Convert intersection to a measure of distance
     return 1.0 - combinedDistance;

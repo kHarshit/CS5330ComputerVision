@@ -226,11 +226,11 @@ int main(int argc, char *argv[])
     }
     closedir(dirp);
 
-    if (featureType == "baseline")
+    if (featureType == "baseline" || featureType == "multihistogram")
     {
         sort(distances, true);
     }
-    else if (featureType == "histogram" || featureType == "multihistogram")
+    else if (featureType == "histogram")
     {
         sort(distances, false);
     }
