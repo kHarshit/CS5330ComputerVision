@@ -139,28 +139,44 @@ int main(int argc, char *argv[])
     int i;
 
     cv::Mat target_image, target_features;
-    if (argc < 3)
+    std::vector<float> target_feature_vector;
+    std::pair<cv::Mat, cv::Mat> target_hist;
+    if (argc < 4)
     {
-        printf("usage: %s <directory path> <target image path>\n", argv[0]);
+        printf("usage: %s <directory path> <target image path> <feature type>\n", argv[0]);
         exit(-1);
     }
 
     strcpy(dirname, argv[1]);
     printf("Processing directory %s\n", dirname);
+    string featureType = argv[3];
+    cout << "Feature type: " << featureType << endl;
 
     // Reading the target image and computing its features
     target_image = cv::imread(argv[2]);
     cv::imshow("Target Image", target_image);
     cv::waitKey(0);
 
-    printf("Computing its features : ");
-    // std::vector<float> target_feature_vector = computeBaselineFeatures(target_image);
-    // target_features = computeRGChromaticityHistogram(target_image, 16);
-    auto target_hist = computeSpatialHistograms(target_image, 8);
-    // Convert features to a vector<float>
-    // std::vector<float> target_feature_vector(target_features.begin<float>(), target_features.end<float>());
-    // this will store filenames and their distances in pairs;
+    printf("Computing target features : ");
+    if (featureType == "baseline")
+    {
+        target_feature_vector = computeBaselineFeatures(target_image);
+    }
+    else if (featureType == "histogram")
+    {
+        target_features = computeRGChromaticityHistogram(target_image, 16);
+    }
+    else if (featureType == "multihistogram")
+    {
+        target_hist = computeSpatialHistograms(target_image, 8);
+    }
+    else
+    {
+        printf("Invalid feature type: %s\n", featureType.c_str());
+        exit(-1);
+    }
 
+    // this will store filenames and their distances in pairs;
     std::vector<std::pair<std::string, double>> distances;
 
     dirp = opendir(dirname);
@@ -184,13 +200,22 @@ int main(int argc, char *argv[])
             // printf("full path name %s",buffer);
 
             cv::Mat image = cv::imread(buffer);
-            // std::vector<float> feature_vector = computeBaselineFeatures(image);
-            // cv::Mat features = computeRGChromaticityHistogram(image, 16);
-            auto image_hist = computeSpatialHistograms(image, 8);
-            // std::vector<float> feature_vector(features.begin<float>(), features.end<float>());
-            // double distance = histogramIntersection(target_features, features);
-            // double distance = computeDistance(feature_vector, target_feature_vector);
-            double distance = combinedHistogramDistance(target_hist, image_hist);
+            double distance = -1.0;
+            if (featureType == "baseline")
+            {
+                std::vector<float> feature_vector = computeBaselineFeatures(image);
+                distance = computeDistance(target_feature_vector, feature_vector);
+            }
+            else if (featureType == "histogram")
+            {
+                cv::Mat features = computeRGChromaticityHistogram(image, 16);
+                distance = histogramIntersection(target_features, features);
+            }
+            else if (featureType == "multihistogram")
+            {
+                std::pair<cv::Mat, cv::Mat> features_hist = computeSpatialHistograms(image, 8);
+                distance = combinedHistogramDistance(target_hist, features_hist);
+            }
 
             if (distance >= 0)
             { // Ensure distance is valid
@@ -201,7 +226,14 @@ int main(int argc, char *argv[])
     }
     closedir(dirp);
 
-    sort(distances, false);
+    if (featureType == "baseline")
+    {
+        sort(distances, true);
+    }
+    else if (featureType == "histogram" || featureType == "multihistogram")
+    {
+        sort(distances, false);
+    }
 
     int N = 3; // Number of top matches to display
     printf("Top %d matches:\n", N);
