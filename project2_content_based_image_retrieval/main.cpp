@@ -19,7 +19,7 @@ using namespace std;
 // and compares them to the target image, storing the result in an array or vector,
 // sorts the list of matches and returns the top N
 // Part 2: writes the feature vector for each image to a file to save processing time
-#define RUN_PART1 0
+#define RUN_PART1 1
 // if RUN_PART1 is 0 and you want to write data to csv, set it to 1
 #define WRITE_CSV 0
 
@@ -85,11 +85,7 @@ int main(int argc,char *argv[])
 
     int N = std::atoi(argv[3]);
 
-    // Assuming computeBaselineFeatures returns a cv::Mat that needs to be converted to a std::vector<float>
-    //cv::Mat target_features_mat = computeBaselineFeatures(target_image);
     std::vector<float> target_feature_vector = computeBaselineFeatures(target_image);
-    //std::vector<float> target_feature_vector(target_features_mat.begin<float>(), target_features_mat.end<float>());
-    // std::cout<<target_features_mat.channels();
     std::vector<char *> filenames;
     std::vector<std::vector<float> > data;
     if (read_image_data_csv(argv[2], filenames, data, 0) != 0) {
@@ -140,13 +136,13 @@ int main(int argc, char *argv[])
     printf("Processing directory %s\n", dirname);
 
     //Reading the target image and computing its features
-    target_image=cv::imread("/Users/harshit/Downloads/olympus/pic.0164.jpg");
+    target_image=cv::imread("/Users/harshit/Downloads/olympus/pic.1016.jpg");
     cv::imshow("Target Image",target_image);
     cv::waitKey(0);
 
     printf("Computing its features : ");
-    // target_features=computeBaselineFeatures(target_image);
-    target_features = computeRGChromaticityHistogram(target_image, 16);
+    std::vector<float> target_feature_vector = computeBaselineFeatures(target_image);
+    // target_features = computeRGChromaticityHistogram(target_image, 16);
     // auto target_hist = computeSpatialHistograms(target_image, 8);
     // Convert features to a vector<float>
     // std::vector<float> target_feature_vector(target_features.begin<float>(), target_features.end<float>());
@@ -176,12 +172,12 @@ int main(int argc, char *argv[])
             //printf("full path name %s",buffer);
         
         cv::Mat image=cv::imread(buffer);
-        // cv::Mat features=computeBaselineFeatures(image);
+        std::vector<float> feature_vector = computeBaselineFeatures(image);
         cv::Mat features = computeRGChromaticityHistogram(image, 16);
         // auto image_hist = computeSpatialHistograms(image, 8);
         // std::vector<float> feature_vector(features.begin<float>(), features.end<float>());
-        double distance = histogramIntersection(target_features, features);
-        // double distance=computeDistance(feature_vector,target_feature_vector);
+        // double distance = histogramIntersection(target_features, features);
+        double distance=computeDistance(feature_vector,target_feature_vector);
         // double distance = combinedHistogramDistance(target_hist, image_hist);
 
         if (distance >= 0) { // Ensure distance is valid
@@ -192,7 +188,7 @@ int main(int argc, char *argv[])
     }
     closedir(dirp);
 
-    sort(distances, false);
+    sort(distances, true);
 
     int N = 3; // Number of top matches to display
     printf("Top %d matches:\n", N);
