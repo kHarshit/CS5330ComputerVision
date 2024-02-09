@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
     std::vector<std::pair<std::string, double>> distances;
     for (size_t i = 0; i < data.size(); ++i)
     {
-        double distance = computeDistance(target_feature_vector, data[i]);
+        double distance = sumSquaredDistance(target_feature_vector, data[i]);
         if (distance >= 0)
         { // Ensure distance is valid
             cout << "Distance: " << distance << endl;
@@ -204,7 +204,7 @@ int main(int argc, char *argv[])
             if (featureType == "baseline")
             {
                 std::vector<float> feature_vector = computeBaselineFeatures(image);
-                distance = computeDistance(target_feature_vector, feature_vector);
+                distance = sumSquaredDistance(target_feature_vector, feature_vector);
             }
             else if (featureType == "histogram")
             {

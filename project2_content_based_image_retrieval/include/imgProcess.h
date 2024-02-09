@@ -22,13 +22,22 @@
 std::vector <float> computeBaselineFeatures(const cv::Mat& image);
 
 /**
- * @brief Compute distance between two feature vectors
+ * @brief Compute sum of squared distance between two feature vectors
  * 
  * @param features1 Feature vector 1
  * @param features2 Feature vector 2
- * @return double Distance between the two feature vectors
+ * @return double SSD between the two feature vectors
 */
-double computeDistance(const std::vector<float>& feature1, const std::vector<float>& feature2);
+double sumSquaredDistance(const std::vector<float>& feature1, const std::vector<float>& feature2);
+
+/**
+ * @brief Compute cosine distance between two feature vectors
+ * 
+ * @param feature1 Feature vector 1
+ * @param feature2 Feature vector 2
+ * @return double Cosine distance between the two feature vectors
+*/
+double cosineDistance(const std::vector<float> &feature1, const std::vector<float> &feature2);
 
 /**
  * @brief Compute 2D RG Chromaticity Histogram

@@ -38,7 +38,7 @@ std::vector<float> computeBaselineFeatures(const cv::Mat &image)
     return matToVector(image(cv::Rect(startX, startY, 7, 7)));
 }
 
-double computeDistance(const std::vector<float> &feature1, const std::vector<float> &feature2)
+double sumSquaredDistance(const std::vector<float> &feature1, const std::vector<float> &feature2)
 {
     if (feature1.size() != feature2.size())
     {
@@ -54,6 +54,28 @@ double computeDistance(const std::vector<float> &feature1, const std::vector<flo
     }
 
     return sumSquaredDifferences;
+}
+
+double cosineDistance(const std::vector<float> &feature1, const std::vector<float> &feature2)
+{
+    if (feature1.size() != feature2.size())
+    {
+        std::cerr << "Error: Feature vectors must have the same length!" << std::endl;
+        return -1.0;
+    }
+
+    double dotProduct = 0.0, norm1 = 0.0, norm2 = 0.0;
+    for (size_t i = 0; i < feature1.size(); ++i)
+    {
+        dotProduct += feature1[i] * feature2[i];
+        norm1 += feature1[i] * feature1[i];
+        norm2 += feature2[i] * feature2[i];
+    }
+
+    double cosineSimilarity = dotProduct / (std::sqrt(norm1) * std::sqrt(norm2));
+    double cosineDistance = 1.0 - cosineSimilarity;
+
+    return cosineDistance;
 }
 
 cv::Mat computeRGChromaticityHistogram(const cv::Mat &image, int bins)
