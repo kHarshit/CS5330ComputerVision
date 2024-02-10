@@ -188,5 +188,20 @@ double computeGrassCoverage(const cv::Mat& image);
  * @return double Composite distance
 */
 double compositeDistance(const cv::Mat& hist1, const cv::Mat& hist2, double edgeDensity1, double edgeDensity2, double grassCoverage1, double grassCoverage2, const std::vector<float>& dnnFeatures1, const std::vector<float>& dnnFeatures2);
+/**
+ * @brief Creates textured image using gabor filter.
+ * @param image input image
+ * @param bins Number of bins in histogram.
+ * @return float textured image vector
+*/
+cv::Mat gaborTexture(cv::Mat &image,int bins);
+/**
+ * @brief Compute spatial textured histograms with gabor filter
+ * 
+ * @param image Input image
+ * @param bins Number of bins for the histogram
+ * @return std::pair<cv::Mat, cv::Mat> Pair of spatial histograms
+*/
+std::pair<cv::Mat, cv::Mat> computeSpatialHistograms_gabor(const cv::Mat &image, int bins );
 
 #endif // IMG_PROCESS_H

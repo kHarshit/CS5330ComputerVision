@@ -185,11 +185,13 @@ int main(int argc, char *argv[])
         std::cerr << "Error reading feature vector file." << std::endl;
         return -1;
     }
-
+    //std::cout<<"Target Image name "<<targetImageFilename<<endl; 
     // Find the feature vector for the target image
     bool targetFound = false;
     for (size_t i = 0; i < filenames.size(); ++i) {
-        if (std::string(filenames[i]) == targetImageFilename) {
+        //std::cout<<std::string(filenames[i]);
+        if (std::string(filenames[i]) == argv[2]) {
+            
             target_feature_vector = data[i];
             targetFound = true;
             break;
@@ -225,6 +227,10 @@ int main(int argc, char *argv[])
     else if(featureType =="texture")
     {
         target_hist=computeSpatialHistograms_texture(target_image, 8);
+    }
+    else if(featureType=="gabor")
+    {
+        target_hist=computeSpatialHistograms_gabor(target_image,8);
     }
     else
     {
@@ -278,28 +284,33 @@ int main(int argc, char *argv[])
                 std::pair<cv::Mat, cv::Mat> features_hist = computeSpatialHistograms_texture(image,8);
                 distance=combinedHistogramDistance_texture(target_hist,features_hist);
             }
-            else if(featureType == "grass")
+            else if(featureType=="gabor")
             {
-                cv::Mat features = computeGrassChromaticityHistogram(image, 16);
-                double edgeDensity2 = computeEdgeDensity(image);
-                double skyToLandRatio2 = computeGrassCoverage(image);
-                // Find DNN feature vector
-                std::vector<float> feature_vector;
-                bool featureFound = false;
-                for (size_t i = 0; i < filenames.size(); ++i) {
-                    if (std::string(filenames[i]) == dp->d_name) {
-                        feature_vector = data[i];
-                        featureFound = true;
-                        break;
-                    }
-                }
-                if (!featureFound) {
-                    std::cerr << "Feature vector for target image not found." << std::endl;
-                    return -1;
-                }
-                distance = compositeDistance(target_features, features, edgeDensity, edgeDensity2, skyToLandRatio, skyToLandRatio2, target_feature_vector, feature_vector);
-                cout << "Distance: " << distance << endl;
+                std::pair<cv::Mat, cv::Mat> features_hist = computeSpatialHistograms_gabor(image,8);
+                distance=combinedHistogramDistance_texture(target_hist,features_hist);
             }
+            // else if(featureType == "grass")
+            // {
+            //     cv::Mat features = computeGrassChromaticityHistogram(image, 16);
+            //     double edgeDensity2 = computeEdgeDensity(image);
+            //     double skyToLandRatio2 = computeGrassCoverage(image);
+            //     // Find DNN feature vector
+            //     std::vector<float> feature_vector;
+            //     bool featureFound = false;
+            //     for (size_t i = 0; i < filenames.size(); ++i) {
+            //         if (std::string(filenames[i]) == dp->d_name) {
+            //             feature_vector = data[i];
+            //             featureFound = true;
+            //             break;
+            //         }
+            //     }
+            //     if (!featureFound) {
+            //         std::cerr << "Feature vector for target image not found." << std::endl;
+            //         return -1;
+            //     }
+            //     distance = compositeDistance(target_features, features, edgeDensity, edgeDensity2, skyToLandRatio, skyToLandRatio2, target_feature_vector, feature_vector);
+            //     cout << "Distance: " << distance << endl;
+            // }
             else
             {
                 printf("Invalid feature type: %s\n", featureType.c_str());

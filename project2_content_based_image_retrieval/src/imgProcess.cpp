@@ -281,7 +281,7 @@ std::pair<cv::Mat, cv::Mat> computeSpatialHistograms_texture(const cv::Mat &imag
     
     cv::Mat topHist = computeRGBHistogram(image, bins);
     cv::Mat bottomHist = texture(image, bins);
-
+    //std::cout<<bottomHist<<std::endl;
     return {topHist, bottomHist};
 }
 double combinedHistogramDistance_texture(const std::pair<cv::Mat, cv::Mat> &histPair1, const std::pair<cv::Mat, cv::Mat> &histPair2)
@@ -311,7 +311,7 @@ cv::Mat texture(cv::Mat image, int bins){
     cv::magnitude(sobelx,sobely,grad);
     dst_img=orientation(grayscale,sobelx,sobely);
     
-    //histogram=computeRGChromaticityHistogram(dst_img,bins);
+    histogram=computeRGChromaticityHistogram(dst_img,bins);
 
     // cv::Mat feature(2, histSize, CV_32F, cv::Scalar(0));
     cv::Mat feature = cv::Mat::zeros(bins, bins, CV_32F);
@@ -339,6 +339,65 @@ cv::Mat texture(cv::Mat image, int bins){
     return histogram;
 
 }
+
+
+cv::Mat gaborTexture(const cv::Mat &image,int bins) {
+    std::vector<float> feature;
+
+    // convert image to grayscale
+    cv::Mat grayscale,gaborKernel,filteredImage,histogram;
+    cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
+    int kernelSize = 31;  // Size of the Gabor kernel
+    double sigma = 5;     // Standard deviation of the Gaussian envelope
+    double theta = CV_PI / 4; // Orientation of the Gabor filter (in radians)
+    double lambda = 10;   // Wavelength of the sinusoidal factor
+    double gamma = 0.5; 
+    gaborKernel=cv::getGaborKernel(cv::Size(kernelSize, kernelSize), sigma, theta, lambda, gamma,0,CV_32F);
+    cv::filter2D(image, filteredImage, CV_32F, gaborKernel);
+    //cv::normalize(filteredImage, filteredImage, 0, 255, cv::NORM_L2, CV_32F);
+    histogram=computeRGChromaticityHistogram(filteredImage,bins);
+    
+    
+    // get gabor kernels and apply to the grayscale image
+    // float sigmaValue[] = {1.0, 2.0, 4.0};
+    // for (auto s : sigmaValue) {
+    //     for (int k = 0; k < 16; k++) {
+    //         float t = k * CV_PI / 8;
+    //         cv::Mat gaborKernel = cv::getGaborKernel( cv::Size(31,31), s, t, 10.0, 0.5, 0, CV_32F );
+    //         cv::Mat filteredImage;
+    //         std::vector<float> hist(9, 0);
+    //         cv::filter2D(grayscale, filteredImage, CV_32F, gaborKernel);
+
+    //         // calculate the mean and standard deviation of each filtered image
+    //         cv::Scalar mean, stddev;
+    //         meanStdDev(filteredImage, mean, stddev);
+    //         feature.push_back(mean[0]);
+    //         feature.push_back(stddev[0]);
+    //     }
+    // }
+
+    // // L2 normalize the feature vector
+    // normalize(feature, feature, 1, 0, cv::NORM_L2, -1, cv::Mat());
+    
+    return histogram;
+}
+
+std::pair<cv::Mat, cv::Mat> computeSpatialHistograms_gabor(const cv::Mat &image, int bins )
+{
+    
+    cv::Mat topHist = computeRGBHistogram(image, bins);
+    cv::Mat bottomHist = gaborTexture(image,bins);
+    // std::vector<float> gaborResult = gaborTexture(image);
+    
+    // // Convert the vector to a single-row cv::Mat
+    // cv::Mat bottomHist(1, gaborResult.size(), CV_32F);
+    // for (int i = 0; i < gaborResult.size(); ++i) {
+    //     bottomHist.at<float>(0, i) = gaborResult[i];
+    // }
+    
+    return {topHist, bottomHist};
+}
+
 int sobelX3x3(cv::Mat &src, cv::Mat &dst)
 {
     cv::Mat temp = src.clone();
