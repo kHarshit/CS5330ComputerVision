@@ -133,15 +133,18 @@ double histogramIntersection(const cv::Mat &hist1, const cv::Mat &hist2)
     return intersection;
 }
 
-
-double histogramIntersection3d(const cv::Mat& hist1, const cv::Mat& hist2) {
+double histogramIntersection3d(const cv::Mat &hist1, const cv::Mat &hist2)
+{
     CV_Assert(hist1.size == hist2.size && hist1.type() == hist2.type());
 
     double intersection = 0.0;
     // Assuming hist1 and hist2 are CV_32F type
-    for (int i = 0; i < hist1.size[0]; ++i) {
-        for (int j = 0; j < hist1.size[1]; ++j) {
-            for (int k = 0; k < hist1.size[2]; ++k) {
+    for (int i = 0; i < hist1.size[0]; ++i)
+    {
+        for (int j = 0; j < hist1.size[1]; ++j)
+        {
+            for (int k = 0; k < hist1.size[2]; ++k)
+            {
                 int idx[3] = {i, j, k};
                 intersection += std::min(hist1.at<float>(idx), hist2.at<float>(idx));
             }
@@ -150,7 +153,6 @@ double histogramIntersection3d(const cv::Mat& hist1, const cv::Mat& hist2) {
     // Convert intersection to a measure of distance
     return intersection;
 }
-
 
 cv::Mat computeRGBHistogram(const cv::Mat &image, int bins)
 {
@@ -191,7 +193,7 @@ cv::Mat computeRGBHistogram(const cv::Mat &image, int bins)
     return histogram;
 }
 
-std::pair<cv::Mat, cv::Mat> computeSpatialHistograms(const cv::Mat &image, int bins )
+std::pair<cv::Mat, cv::Mat> computeSpatialHistograms(const cv::Mat &image, int bins)
 {
     // Split image into top and bottom halves
     cv::Mat topHalf = image(cv::Rect(0, 0, image.cols, image.rows / 2));
@@ -213,23 +215,27 @@ double combinedHistogramDistance(const std::pair<cv::Mat, cv::Mat> &histPair1, c
 
     // Example of a simple weighted average of distances
     // Assuming equal importance for top and bottom histograms
-    double combinedDistance = 0.5*topIntersection + 0.5*bottomIntersection;
+    double combinedDistance = 0.5 * topIntersection + 0.5 * bottomIntersection;
 
     // Convert intersection to a measure of distance
     return 1.0 - combinedDistance;
 }
 
-cv::Mat computeGrassChromaticityHistogram(const cv::Mat &image, int bins) {
+cv::Mat computeGrassChromaticityHistogram(const cv::Mat &image, int bins)
+{
     cv::Mat histogram = cv::Mat::zeros(bins, bins, CV_32F);
 
-    for (int y = 0; y < image.rows; y++) {
-        for (int x = 0; x < image.cols; x++) {
+    for (int y = 0; y < image.rows; y++)
+    {
+        for (int x = 0; x < image.cols; x++)
+        {
             cv::Vec3b pixel = image.at<cv::Vec3b>(y, x);
             float G = pixel[1];
             float B = pixel[0];
             float sum = G + B;
 
-            if (sum > 0) { // Avoid division by zero
+            if (sum > 0)
+            { // Avoid division by zero
                 float g = G / sum;
                 float b = B / sum;
 
@@ -249,7 +255,8 @@ cv::Mat computeGrassChromaticityHistogram(const cv::Mat &image, int bins) {
     return histogram;
 }
 
-double computeEdgeDensity(const cv::Mat& image) {
+double computeEdgeDensity(const cv::Mat &image)
+{
     cv::Mat gray, edges;
     cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
     cv::Canny(gray, edges, 100, 200); // Parameters may need adjustment
@@ -257,7 +264,8 @@ double computeEdgeDensity(const cv::Mat& image) {
     return cv::sum(edges)[0] / (edges.rows * edges.cols);
 }
 
-double computeGrassCoverage(const cv::Mat& image) {
+double computeGrassCoverage(const cv::Mat &image)
+{
     // compute the amount of green in the lower half of the image
     cv::Mat lowerHalf = image(cv::Rect(0, image.rows / 2, image.cols, image.rows / 2));
     cv::Mat hsv;
@@ -266,7 +274,8 @@ double computeGrassCoverage(const cv::Mat& image) {
     return meanVal[1]; // Assuming green is emphasized in the HSV's S channel
 }
 
-double compositeDistance(const cv::Mat& hist1, const cv::Mat& hist2, double edgeDensity1, double edgeDensity2, double grassCoverage1, double grassCoverage2, const std::vector<float>& dnnFeatures1, const std::vector<float>& dnnFeatures2) {
+double compositeDistance(const cv::Mat &hist1, const cv::Mat &hist2, double edgeDensity1, double edgeDensity2, double grassCoverage1, double grassCoverage2, const std::vector<float> &dnnFeatures1, const std::vector<float> &dnnFeatures2)
+{
     double colorDist = cv::compareHist(hist1, hist2, cv::HISTCMP_BHATTACHARYYA);
     double edgeDist = std::abs(edgeDensity1 - edgeDensity2);
     double spatialDistance = std::abs(grassCoverage1 - grassCoverage2);
@@ -276,12 +285,12 @@ double compositeDistance(const cv::Mat& hist1, const cv::Mat& hist2, double edge
     return colorDist * 0.5 + edgeDist * 0.1 + spatialDistance * 0.1 + dnnDist * 0.3;
 }
 
-std::pair<cv::Mat, cv::Mat> computeSpatialHistograms_texture(const cv::Mat &image, int bins )
+std::pair<cv::Mat, cv::Mat> computeSpatialHistograms_texture(const cv::Mat &image, int bins)
 {
-    
+
     cv::Mat topHist = computeRGBHistogram(image, bins);
     cv::Mat bottomHist = texture(image, bins);
-    //std::cout<<bottomHist<<std::endl;
+    // std::cout<<bottomHist<<std::endl;
     return {topHist, bottomHist};
 }
 double combinedHistogramDistance_texture(const std::pair<cv::Mat, cv::Mat> &histPair1, const std::pair<cv::Mat, cv::Mat> &histPair2)
@@ -293,25 +302,26 @@ double combinedHistogramDistance_texture(const std::pair<cv::Mat, cv::Mat> &hist
 
     // Example of a simple weighted average of distances
     // Assuming equal importance for top and bottom histograms
-    double combinedDistance = 0.5*topIntersection + 0.5*bottomIntersection;
+    double combinedDistance = 0.5 * topIntersection + 0.5 * bottomIntersection;
 
     // Convert intersection to a measure of distance
     return 1.0 - combinedDistance;
 }
 
-cv::Mat texture(cv::Mat image, int bins){
-    cv::Mat sobelx,sobely,grad,histogram,dst_img,grayscale;
-    //cv::Mat feature = Mat::zeros(2, histSize, CV_32F); 
+cv::Mat texture(cv::Mat image, int bins)
+{
+    cv::Mat sobelx, sobely, grad, histogram, dst_img, grayscale;
+    // cv::Mat feature = Mat::zeros(2, histSize, CV_32F);
     cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
     // sobelX3x3(grayscale,sobelx);
     // sobelY3x3(grayscale,sobely);
     // magnitude(sobelx,sobely,grad);
-    cv::Sobel(grayscale,sobelx,CV_32F,1,0,3);
-    cv::Sobel(grayscale,sobely,CV_32F,0,1,3);
-    cv::magnitude(sobelx,sobely,grad);
-    dst_img=orientation(grayscale,sobelx,sobely);
-    
-    histogram=computeRGChromaticityHistogram(dst_img,bins);
+    cv::Sobel(grayscale, sobelx, CV_32F, 1, 0, 3);
+    cv::Sobel(grayscale, sobely, CV_32F, 0, 1, 3);
+    cv::magnitude(sobelx, sobely, grad);
+    dst_img = orientation(grayscale, sobelx, sobely);
+
+    histogram = computeRGChromaticityHistogram(dst_img, bins);
 
     // cv::Mat feature(2, histSize, CV_32F, cv::Scalar(0));
     cv::Mat feature = cv::Mat::zeros(bins, bins, CV_32F);
@@ -331,33 +341,30 @@ cv::Mat texture(cv::Mat image, int bins){
     // }
 
     // L2 normalize the histogram
-    //normalize(feature, feature, 1, 0, cv::NORM_L2, -1, cv::Mat());
+    // normalize(feature, feature, 1, 0, cv::NORM_L2, -1, cv::Mat());
 
     // convert the 2D histogram into a 1D vector
 
-
     return histogram;
-
 }
 
-
-cv::Mat gaborTexture(const cv::Mat &image,int bins) {
+cv::Mat gaborTexture(const cv::Mat &image, int bins)
+{
     std::vector<float> feature;
 
     // convert image to grayscale
-    cv::Mat grayscale,gaborKernel,filteredImage,histogram;
+    cv::Mat grayscale, gaborKernel, filteredImage, histogram;
     cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
-    int kernelSize = 31;  // Size of the Gabor kernel
-    double sigma = 5;     // Standard deviation of the Gaussian envelope
+    int kernelSize = 31;      // Size of the Gabor kernel
+    double sigma = 5;         // Standard deviation of the Gaussian envelope
     double theta = CV_PI / 4; // Orientation of the Gabor filter (in radians)
-    double lambda = 10;   // Wavelength of the sinusoidal factor
-    double gamma = 0.5; 
-    gaborKernel=cv::getGaborKernel(cv::Size(kernelSize, kernelSize), sigma, theta, lambda, gamma,0,CV_32F);
+    double lambda = 10;       // Wavelength of the sinusoidal factor
+    double gamma = 0.5;
+    gaborKernel = cv::getGaborKernel(cv::Size(kernelSize, kernelSize), sigma, theta, lambda, gamma, 0, CV_32F);
     cv::filter2D(image, filteredImage, CV_32F, gaborKernel);
-    //cv::normalize(filteredImage, filteredImage, 0, 255, cv::NORM_L2, CV_32F);
-    histogram=computeRGChromaticityHistogram(filteredImage,bins);
-    
-    
+    // cv::normalize(filteredImage, filteredImage, 0, 255, cv::NORM_L2, CV_32F);
+    histogram = computeRGChromaticityHistogram(filteredImage, bins);
+
     // get gabor kernels and apply to the grayscale image
     // float sigmaValue[] = {1.0, 2.0, 4.0};
     // for (auto s : sigmaValue) {
@@ -378,23 +385,23 @@ cv::Mat gaborTexture(const cv::Mat &image,int bins) {
 
     // // L2 normalize the feature vector
     // normalize(feature, feature, 1, 0, cv::NORM_L2, -1, cv::Mat());
-    
+
     return histogram;
 }
 
-std::pair<cv::Mat, cv::Mat> computeSpatialHistograms_gabor(const cv::Mat &image, int bins )
+std::pair<cv::Mat, cv::Mat> computeSpatialHistograms_gabor(const cv::Mat &image, int bins)
 {
-    
+
     cv::Mat topHist = computeRGBHistogram(image, bins);
-    cv::Mat bottomHist = gaborTexture(image,bins);
+    cv::Mat bottomHist = gaborTexture(image, bins);
     // std::vector<float> gaborResult = gaborTexture(image);
-    
+
     // // Convert the vector to a single-row cv::Mat
     // cv::Mat bottomHist(1, gaborResult.size(), CV_32F);
     // for (int i = 0; i < gaborResult.size(); ++i) {
     //     bottomHist.at<float>(0, i) = gaborResult[i];
     // }
-    
+
     return {topHist, bottomHist};
 }
 
@@ -403,7 +410,7 @@ int sobelX3x3(cv::Mat &src, cv::Mat &dst)
     cv::Mat temp = src.clone();
     dst = cv::Mat::zeros(src.size(), CV_16SC3);
 
-    // horizontal filter 
+    // horizontal filter
     for (int i = 0; i < src.rows; i++)
     {
         cv::Vec3b *tempptr = temp.ptr<cv::Vec3b>(i);
@@ -515,28 +522,29 @@ int magnitude(cv::Mat &sobelX, cv::Mat &sobelY, cv::Mat &dst)
             for (int c = 0; c < 3; c++)
             {
 
-                //std::cout<< "Magnitude: "<<magnitude<<std::endl;
+                // std::cout<< "Magnitude: "<<magnitude<<std::endl;
                 dptr[j][c] = static_cast<uchar>(magnitude);
             }
         }
-        
-    
 
-    //cv::normalize(dst, dst, 0, 255, cv::NORM_L1);
+        // cv::normalize(dst, dst, 0, 255, cv::NORM_L1);
     }
 
     return 0;
 }
 
-cv::Mat orientation(cv::Mat &image,cv::Mat sx,cv::Mat sy) {
+cv::Mat orientation(cv::Mat &image, cv::Mat sx, cv::Mat sy)
+{
     // calculate sobelX and sobelY
     // cv::Mat sx = sobelX(image);
     // cv::Mat sy = sobelY(image);
 
     // calculate orientation
     cv::Mat dst(image.size(), CV_32F);
-    for (int i = 0; i < image.rows; i++) {
-        for (int j = 0; j < image.cols; j++) {
+    for (int i = 0; i < image.rows; i++)
+    {
+        for (int j = 0; j < image.cols; j++)
+        {
             dst.at<float>(i, j) = atan2(sy.at<float>(i, j), sx.at<float>(i, j));
         }
     }
