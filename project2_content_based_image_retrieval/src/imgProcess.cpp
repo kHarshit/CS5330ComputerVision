@@ -218,3 +218,61 @@ double combinedHistogramDistance(const std::pair<cv::Mat, cv::Mat> &histPair1, c
     // Convert intersection to a measure of distance
     return 1.0 - combinedDistance;
 }
+
+cv::Mat computeGrassChromaticityHistogram(const cv::Mat &image, int bins) {
+    cv::Mat histogram = cv::Mat::zeros(bins, bins, CV_32F);
+
+    for (int y = 0; y < image.rows; y++) {
+        for (int x = 0; x < image.cols; x++) {
+            cv::Vec3b pixel = image.at<cv::Vec3b>(y, x);
+            float G = pixel[1];
+            float B = pixel[0];
+            float sum = G + B;
+
+            if (sum > 0) { // Avoid division by zero
+                float g = G / sum;
+                float b = B / sum;
+
+                // Calculate bin indices for G and B
+                int g_bin = static_cast<int>(g * (bins - 1) + 0.5);
+                int b_bin = static_cast<int>(b * (bins - 1) + 0.5);
+
+                // Increment the histogram bin for green-blue chromaticity
+                histogram.at<float>(g_bin, b_bin) += 1.0f;
+            }
+        }
+    }
+
+    // Normalize the histogram so that the sum of histogram bins = 1
+    cv::normalize(histogram, histogram, 1, 0, cv::NORM_L1);
+
+    return histogram;
+}
+
+double computeEdgeDensity(const cv::Mat& image) {
+    cv::Mat gray, edges;
+    cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
+    cv::Canny(gray, edges, 100, 200); // Parameters may need adjustment
+
+    return cv::sum(edges)[0] / (edges.rows * edges.cols);
+}
+
+double computeGrassCoverage(const cv::Mat& image) {
+    // compute the amount of green in the lower half of the image
+    cv::Mat lowerHalf = image(cv::Rect(0, image.rows / 2, image.cols, image.rows / 2));
+    cv::Mat hsv;
+    cv::cvtColor(lowerHalf, hsv, cv::COLOR_BGR2HSV);
+    cv::Scalar meanVal = cv::mean(hsv);
+    return meanVal[1]; // Assuming green is emphasized in the HSV's S channel
+}
+
+double compositeDistance(const cv::Mat& hist1, const cv::Mat& hist2, double edgeDensity1, double edgeDensity2, double grassCoverage1, double grassCoverage2, const std::vector<float>& dnnFeatures1, const std::vector<float>& dnnFeatures2) {
+    double colorDist = cv::compareHist(hist1, hist2, cv::HISTCMP_BHATTACHARYYA);
+    double edgeDist = std::abs(edgeDensity1 - edgeDensity2);
+    double spatialDistance = std::abs(grassCoverage1 - grassCoverage2);
+    double dnnDist = cosineDistance(dnnFeatures1, dnnFeatures2);
+
+    // Weighted average of distances
+    return colorDist * 0.5 + edgeDist * 0.1 + spatialDistance * 0.1 + dnnDist * 0.3;
+}
+
