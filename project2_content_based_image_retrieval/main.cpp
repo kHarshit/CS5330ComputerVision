@@ -19,7 +19,7 @@ using namespace std;
 // and compares them to the target image, storing the result in an array or vector,
 // sorts the list of matches and returns the top N
 // Part 2: writes the feature vector for each image to a file to save processing time
-#define RUN_PART1 0
+#define RUN_PART1 1
 // if RUN_PART1 is 0 and you want to write data to csv, set it to 1
 #define WRITE_CSV 0
 
@@ -162,7 +162,7 @@ int main(int argc, char *argv[])
     std::pair<cv::Mat, cv::Mat> target_hist;
     if (argc < 4)
     {
-        printf("usage: %s <directory path> <target image path> <feature type>\n", argv[0]);
+        printf("usage: %s <directory path> <target image path> <feature type> <dnn feature file>\n", argv[0]);
         exit(-1);
     }
 
@@ -172,9 +172,36 @@ int main(int argc, char *argv[])
     cout << "Feature type: " << featureType << endl;
 
     // Reading the target image and computing its features
+    std::string imgPath = argv[2];
+    std::string targetImageFilename = imgPath.substr(imgPath.find_last_of("/\\") + 1);
     target_image = cv::imread(argv[2]);
     cv::imshow("Target Image", target_image);
     cv::waitKey(0);
+
+    std::vector<char *> filenames;
+    std::vector<std::vector<float>> data;
+    if (read_image_data_csv(argv[4], filenames, data, 0) != 0)
+    {
+        std::cerr << "Error reading feature vector file." << std::endl;
+        return -1;
+    }
+
+    // Find the feature vector for the target image
+    bool targetFound = false;
+    for (size_t i = 0; i < filenames.size(); ++i) {
+        if (std::string(filenames[i]) == targetImageFilename) {
+            target_feature_vector = data[i];
+            targetFound = true;
+            break;
+        }
+    }
+    if (!targetFound) {
+        std::cerr << "Feature vector for target image not found." << std::endl;
+        return -1;
+    }
+
+    double edgeDensity = -1.0;
+    double skyToLandRatio = -1.0;
 
     printf("Computing target features : ");
     if (featureType == "baseline")
@@ -188,6 +215,12 @@ int main(int argc, char *argv[])
     else if (featureType == "multihistogram")
     {
         target_hist = computeSpatialHistograms(target_image, 8);
+    }
+    else if (featureType == "grass")
+    {
+       target_features = computeGrassChromaticityHistogram(target_image, 16); 
+       edgeDensity = computeEdgeDensity(target_image);
+       skyToLandRatio = computeGrassCoverage(target_image);
     }
     else if(featureType =="texture")
     {
@@ -245,7 +278,33 @@ int main(int argc, char *argv[])
                 std::pair<cv::Mat, cv::Mat> features_hist = computeSpatialHistograms_texture(image,8);
                 distance=combinedHistogramDistance_texture(target_hist,features_hist);
             }
-
+            else if(featureType == "grass")
+            {
+                cv::Mat features = computeGrassChromaticityHistogram(image, 16);
+                double edgeDensity2 = computeEdgeDensity(image);
+                double skyToLandRatio2 = computeGrassCoverage(image);
+                // Find DNN feature vector
+                std::vector<float> feature_vector;
+                bool featureFound = false;
+                for (size_t i = 0; i < filenames.size(); ++i) {
+                    if (std::string(filenames[i]) == dp->d_name) {
+                        feature_vector = data[i];
+                        featureFound = true;
+                        break;
+                    }
+                }
+                if (!featureFound) {
+                    std::cerr << "Feature vector for target image not found." << std::endl;
+                    return -1;
+                }
+                distance = compositeDistance(target_features, features, edgeDensity, edgeDensity2, skyToLandRatio, skyToLandRatio2, target_feature_vector, feature_vector);
+                cout << "Distance: " << distance << endl;
+            }
+            else
+            {
+                printf("Invalid feature type: %s\n", featureType.c_str());
+                exit(-1);
+            }
             if (distance >= 0)
             { // Ensure distance is valid
                 // cout << "Distance: " << distance << endl;
@@ -256,7 +315,7 @@ int main(int argc, char *argv[])
     }
     closedir(dirp);
 
-    if (featureType == "baseline" || featureType == "multihistogram" || featureType =="texture")
+    if (featureType == "baseline" || featureType == "multihistogram" || featureType =="texture" || featureType == "grass")
     {
         sort(distances, true);
     }

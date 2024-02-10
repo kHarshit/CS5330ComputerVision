@@ -149,4 +149,44 @@ cv::Mat texture(const cv::Mat image, int bins);
  */
 cv::Mat orientation(cv::Mat &image,cv::Mat sx,cv::Mat sy);
 
+/**
+ * @brief Compute grass chromaticity histogram
+ * 
+ * @param image Input image
+ * @param bins Number of bins for the histogram
+ * @return cv::Mat Grass chromaticity histogram
+*/
+cv::Mat computeGrassChromaticityHistogram(const cv::Mat &image, int bins);
+
+/**
+ * @brief Compute edge density of an image
+ * 
+ * @param image Input image
+ * @return double Edge density
+*/
+double computeEdgeDensity(const cv::Mat& image);
+
+/**
+ * @brief Compute grass coverage in an image
+ * 
+ * @param image Input image
+ * @return double Grass coverage
+*/
+double computeGrassCoverage(const cv::Mat& image);
+
+/**
+ * @brief Compute composite distance between two images using various features
+ * 
+ * @param hist1 RGB histogram 1
+ * @param hist2 RGB histogram 2
+ * @param edgeDensity1 Edge density 1
+ * @param edgeDensity2 Edge density 2
+ * @param grassCoverage1 Grass coverage 1
+ * @param grassCoverage2 Grass coverage 2
+ * @param dnnFeatures1 DNN features 1
+ * @param dnnFeatures2 DNN features 2
+ * @return double Composite distance
+*/
+double compositeDistance(const cv::Mat& hist1, const cv::Mat& hist2, double edgeDensity1, double edgeDensity2, double grassCoverage1, double grassCoverage2, const std::vector<float>& dnnFeatures1, const std::vector<float>& dnnFeatures2);
+
 #endif // IMG_PROCESS_H
