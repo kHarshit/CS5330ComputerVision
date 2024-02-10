@@ -6,8 +6,15 @@
  *
  */
 
-#include "imgProcess.h"
+#include "distance.h"
+#include "feature.h"
 #include <iostream>
+
+/**
+ * Convert a cv::Mat to a 1D vector of floats
+ * @param m Input cv::Mat
+ * @return std::vector<float> 1D vector of floats
+ */
 std::vector<float> matToVector(const cv::Mat &m)
 {
     // cv::Mat flat = m.reshape(1, m.total() * m.channels());
@@ -38,46 +45,6 @@ std::vector<float> computeBaselineFeatures(const cv::Mat &image)
     return matToVector(image(cv::Rect(startX, startY, 7, 7)));
 }
 
-double sumSquaredDistance(const std::vector<float> &feature1, const std::vector<float> &feature2)
-{
-    if (feature1.size() != feature2.size())
-    {
-        std::cerr << "Error: Feature vectors must have the same length!" << std::endl;
-        return -1.0;
-    }
-
-    double sumSquaredDifferences = 0.0;
-    for (size_t i = 0; i < feature1.size(); ++i)
-    {
-        double diff = static_cast<double>(feature1[i]) - static_cast<double>(feature2[i]);
-        sumSquaredDifferences += diff * diff;
-    }
-
-    return sumSquaredDifferences;
-}
-
-double cosineDistance(const std::vector<float> &feature1, const std::vector<float> &feature2)
-{
-    if (feature1.size() != feature2.size())
-    {
-        std::cerr << "Error: Feature vectors must have the same length!" << std::endl;
-        return -1.0;
-    }
-
-    double dotProduct = 0.0, norm1 = 0.0, norm2 = 0.0;
-    for (size_t i = 0; i < feature1.size(); ++i)
-    {
-        dotProduct += feature1[i] * feature2[i];
-        norm1 += feature1[i] * feature1[i];
-        norm2 += feature2[i] * feature2[i];
-    }
-
-    double cosineSimilarity = dotProduct / (std::sqrt(norm1) * std::sqrt(norm2));
-    double cosineDistance = 1.0 - cosineSimilarity;
-
-    return cosineDistance;
-}
-
 cv::Mat computeRGChromaticityHistogram(const cv::Mat &image, int bins)
 {
     cv::Mat histogram = cv::Mat::zeros(bins, bins, CV_32F);
@@ -97,11 +64,9 @@ cv::Mat computeRGChromaticityHistogram(const cv::Mat &image, int bins)
                 float r = R / sum;
                 float g = G / sum;
 
+                // calculate bin indices for R and G
                 int r_bin = static_cast<int>(r * (bins - 1) + 0.5);
                 int g_bin = static_cast<int>(g * (bins - 1) + 0.5);
-
-                // int r_bin = std::min(static_cast<int>(r * bins), bins - 1);
-                // int g_bin = std::min(static_cast<int>(g * bins), bins - 1);
 
                 histogram.at<float>(r_bin, g_bin) += 1.0f;
             }
@@ -115,43 +80,6 @@ cv::Mat computeRGChromaticityHistogram(const cv::Mat &image, int bins)
     histogram /= totalPixels;
 
     return histogram;
-}
-
-double histogramIntersection(const cv::Mat &hist1, const cv::Mat &hist2)
-{
-    CV_Assert(hist1.size() == hist2.size() && hist1.type() == hist2.type());
-
-    double intersection = 0.0;
-    for (int r = 0; r < hist1.rows; ++r)
-    {
-        for (int g = 0; g < hist1.cols; ++g)
-        {
-            intersection += std::min(hist1.at<float>(r, g), hist2.at<float>(r, g));
-        }
-    }
-
-    return intersection;
-}
-
-double histogramIntersection3d(const cv::Mat &hist1, const cv::Mat &hist2)
-{
-    CV_Assert(hist1.size == hist2.size && hist1.type() == hist2.type());
-
-    double intersection = 0.0;
-    // Assuming hist1 and hist2 are CV_32F type
-    for (int i = 0; i < hist1.size[0]; ++i)
-    {
-        for (int j = 0; j < hist1.size[1]; ++j)
-        {
-            for (int k = 0; k < hist1.size[2]; ++k)
-            {
-                int idx[3] = {i, j, k};
-                intersection += std::min(hist1.at<float>(idx), hist2.at<float>(idx));
-            }
-        }
-    }
-    // Convert intersection to a measure of distance
-    return intersection;
 }
 
 cv::Mat computeRGBHistogram(const cv::Mat &image, int bins)
@@ -179,7 +107,6 @@ cv::Mat computeRGBHistogram(const cv::Mat &image, int bins)
             int b_bin = static_cast<int>(B * (bins - 1) / 255.0 + 0.5);
 
             // Increment the corresponding bin
-            // Ensure 3D access to histogram is correct: histogram.at<float>(b_bin, g_bin, r_bin) for CV_32F
             *histogram.ptr<float>(r_bin, g_bin, b_bin) += 1.0f;
         }
     }
@@ -204,21 +131,6 @@ std::pair<cv::Mat, cv::Mat> computeSpatialHistograms(const cv::Mat &image, int b
     cv::Mat bottomHist = computeRGBHistogram(bottomHalf, bins);
 
     return {topHist, bottomHist};
-}
-
-double combinedHistogramDistance(const std::pair<cv::Mat, cv::Mat> &histPair1, const std::pair<cv::Mat, cv::Mat> &histPair2)
-{
-    // Compute histogram intersections
-    double topIntersection = histogramIntersection3d(histPair1.first, histPair2.first);
-    double bottomIntersection = histogramIntersection3d(histPair1.second, histPair2.second);
-    std::cout << "topIntersection: " << topIntersection << " bottomIntersection: " << bottomIntersection << std::endl;
-
-    // Example of a simple weighted average of distances
-    // Assuming equal importance for top and bottom histograms
-    double combinedDistance = 0.5 * topIntersection + 0.5 * bottomIntersection;
-
-    // Convert intersection to a measure of distance
-    return 1.0 - combinedDistance;
 }
 
 cv::Mat computeGrassChromaticityHistogram(const cv::Mat &image, int bins)
@@ -295,7 +207,7 @@ double computeEdgeDensity(const cv::Mat &image)
 {
     cv::Mat gray, edges;
     cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
-    cv::Canny(gray, edges, 100, 200); // Parameters may need adjustment
+    cv::Canny(gray, edges, 100, 200); // params may need adjustment
 
     return cv::sum(edges)[0] / (edges.rows * edges.cols);
 }
@@ -307,30 +219,8 @@ double computeGrassCoverage(const cv::Mat &image)
     cv::Mat hsv;
     cv::cvtColor(lowerHalf, hsv, cv::COLOR_BGR2HSV);
     cv::Scalar meanVal = cv::mean(hsv);
+    // Assuming green is emphasized in the HSV's S channel
     return meanVal[1]; // Assuming green is emphasized in the HSV's S channel
-}
-
-double compositeDistance(const cv::Mat &hist1, const cv::Mat &hist2, double edgeDensity1, double edgeDensity2, double grassCoverage1, double grassCoverage2, const std::vector<float> &dnnFeatures1, const std::vector<float> &dnnFeatures2)
-{
-    double colorDist = cv::compareHist(hist1, hist2, cv::HISTCMP_BHATTACHARYYA);
-    double edgeDist = std::abs(edgeDensity1 - edgeDensity2);
-    double spatialDistance = std::abs(grassCoverage1 - grassCoverage2);
-    double dnnDist = cosineDistance(dnnFeatures1, dnnFeatures2);
-
-    // Weighted average of distances
-    return colorDist * 0.5 + edgeDist * 0.1 + spatialDistance * 0.1 + dnnDist * 0.3;
-}
-
-double computeDistanceBins(const cv::Mat &hist1, const cv::Mat &hist2, const std::vector<float> &dnnFeatures1, const std::vector<float> &dnnFeatures2, double weightHist, double weightDNN)
-{
-    double histDist = cv::compareHist(hist1, hist2, cv::HISTCMP_BHATTACHARYYA);
-    double dnnDist = cosineDistance(dnnFeatures1, dnnFeatures2);
-
-    // Calculate weighted average
-    double totalWeight = weightHist + weightDNN;
-    double weightedAvg = (weightHist * histDist + weightDNN * dnnDist) / totalWeight;
-
-    return weightedAvg;
 }
 
 std::pair<cv::Mat, cv::Mat> computeSpatialHistograms_texture(const cv::Mat &image, int bins)
@@ -340,20 +230,6 @@ std::pair<cv::Mat, cv::Mat> computeSpatialHistograms_texture(const cv::Mat &imag
     cv::Mat bottomHist = texture(image, bins);
     // std::cout<<bottomHist<<std::endl;
     return {topHist, bottomHist};
-}
-double combinedHistogramDistance_texture(const std::pair<cv::Mat, cv::Mat> &histPair1, const std::pair<cv::Mat, cv::Mat> &histPair2)
-{
-    // Compute histogram intersections
-    double topIntersection = histogramIntersection3d(histPair1.first, histPair2.first);
-    double bottomIntersection = histogramIntersection(histPair1.second, histPair2.second);
-    std::cout << "topIntersection: " << topIntersection << " bottomIntersection: " << bottomIntersection << std::endl;
-
-    // Example of a simple weighted average of distances
-    // Assuming equal importance for top and bottom histograms
-    double combinedDistance = 0.5 * topIntersection + 0.5 * bottomIntersection;
-
-    // Convert intersection to a measure of distance
-    return 1.0 - combinedDistance;
 }
 
 cv::Mat texture(cv::Mat image, int bins)

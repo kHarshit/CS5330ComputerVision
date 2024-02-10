@@ -9,7 +9,8 @@
 #include <cstdlib>
 #include <dirent.h>
 #include <vector>
-#include "include/imgProcess.h"
+#include "include/distance.h"
+#include "include/feature.h"
 #include "include/csv_util.h"
 
 using namespace std;
@@ -38,7 +39,8 @@ void sort(std::vector<std::pair<std::string, double>> &distances, bool ascending
     }
 }
 
-cv::Rect selectROI(const cv::Mat& image) {
+cv::Rect selectROI(const cv::Mat &image)
+{
     // Let the user select a region of interest on the image
     cv::Rect roi = cv::selectROI("Select ROI", image);
     cv::destroyWindow("Select ROI");
@@ -160,6 +162,9 @@ int main(int argc, char *argv[])
 #else
 int main(int argc, char *argv[])
 {
+
+    cout << "Suported feature types: baseline, histogram, multihistogram, dnn, texture, gabor, grass, bluebins" << endl;
+
     char dirname[256];
     char buffer[256];
     FILE *fp;
@@ -172,7 +177,7 @@ int main(int argc, char *argv[])
     std::pair<cv::Mat, cv::Mat> target_hist;
     if (argc < 4)
     {
-        printf("usage: %s <directory path> <target image path> <feature type> <n> <dnn feature file> <select ROI boolean>\n", argv[0]);
+        printf("usage: %s <directory path> <target image path> <feature type> <n> <dnn feature file (optional)> <select ROI boolean (optional)>\n", argv[0]);
         exit(-1);
     }
 
@@ -192,7 +197,8 @@ int main(int argc, char *argv[])
 
     // Allow the user to select a Region of Interest (ROI) from the target image
     bool selectROIbool = 0; // Default value
-    if (argc > 6) {
+    if (argc > 6)
+    {
         selectROIbool = std::atoi(argv[6]);
     }
     cv::Mat targetImgROI = target_image;
@@ -355,7 +361,7 @@ int main(int argc, char *argv[])
             else if (featureType == "histogram")
             {
                 cv::Mat features = computeRGChromaticityHistogram(image, 16);
-                distance = histogramIntersection(target_features, features);
+                distance = histogramIntersection2d(target_features, features);
             }
             else if (featureType == "multihistogram")
             {
@@ -437,7 +443,7 @@ int main(int argc, char *argv[])
                     std::cerr << "Feature vector for feature image not found." << std::endl;
                     return -1;
                 }
-                distance = computeDistanceBins(target_features, features, target_feature_vector, feature_vector, 0.5, 0.5);
+                distance = compositeDistanceBins(target_features, features, target_feature_vector, feature_vector, 0.5, 0.5);
             }
             else
             {
@@ -471,13 +477,36 @@ int main(int argc, char *argv[])
     }
 
     // Displaying top N matches, starting from the second match to avoid the target image itself if present
+    // for (int i = 1; i <= N && i < distances.size(); ++i)
+    // {
+    //     cv::Mat picture = cv::imread(distances[i].first.c_str());
+    //     cv::imshow("Picture", picture);
+    //     cv::waitKey(0);
+    //     std::cout << "Distance: " << distances[i].second << endl;
+    // }
+    cv::Mat allMatches;
     for (int i = 1; i <= N && i < distances.size(); ++i)
     {
         cv::Mat picture = cv::imread(distances[i].first.c_str());
-        cv::imshow("Picture", picture);
-        cv::waitKey(0);
-        std::cout << "Distance: " << distances[i].second << endl;
+
+        // Add image name as text overlay
+        std::string displayImgPath = distances[i].first;
+        std::string displayImgName = displayImgPath.substr(displayImgPath.find_last_of("/\\") + 1);
+        cv::putText(picture, displayImgName, cv::Point(5, picture.rows - 5), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 0), 2);
+
+        if (allMatches.empty())
+        {
+            allMatches = picture;
+        }
+        else
+        {
+            cv::hconcat(allMatches, picture, allMatches);
+        }
+        std::cout << "Distance: " << distances[i].second << std::endl;
     }
+    string title = featureType + ": Top " + std::to_string(N) + " Matches for " + targetImageFilename;
+    cv::imshow(title, allMatches);
+    cv::waitKey(0);
 
     return 0;
 }
