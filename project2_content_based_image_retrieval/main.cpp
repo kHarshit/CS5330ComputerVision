@@ -39,6 +39,12 @@ void sort(std::vector<std::pair<std::string, double>> &distances, bool ascending
     }
 }
 
+/**
+ * @brief Select a region of interest (ROI) from an image
+ * 
+ * @param image Input image
+ * @return cv::Rect ROI
+*/
 cv::Rect selectROI(const cv::Mat &image)
 {
     // Let the user select a region of interest on the image
@@ -78,10 +84,7 @@ int main(int argc, char *argv[])
             if (!image.empty())
             {
                 std::vector<float> features = computeBaselineFeatures(image);
-
-                // Convert features to a vector<float>
-                // std::vector<float> feature_vector(features.begin<float>(), features.end<float>());
-                append_image_data_csv(argv[2], const_cast<char *>(filepath.c_str()), features, reset_file);
+                append_image_data_csv(argv[2], const_cast<char *>(dp->d_name), features, reset_file);
                 reset_file = false; // Only reset the file once, for the first image
             }
         }
@@ -136,8 +139,8 @@ int main(int argc, char *argv[])
     std::vector<std::pair<std::string, double>> distances;
     for (size_t i = 0; i < data.size(); ++i)
     {
-        // double distance = sumSquaredDistance(target_feature_vector, data[i]);
-        double distance = cosineDistance(target_feature_vector, data[i]);
+        double distance = sumSquaredDistance(target_feature_vector, data[i]);
+        // double distance = cosineDistance(target_feature_vector, data[i]);
         if (distance >= 0)
         { // Ensure distance is valid
             cout << "Distance: " << distance << endl;
