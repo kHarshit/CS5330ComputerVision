@@ -12,6 +12,15 @@ The purpose of this project is to continue the process of learning how to manipu
 
 Suported feature types: baseline, histogram, multihistogram, dnn, texture, gabor, grass, bluebins, select ROI.
 
+For main.cpp
 ```
-usage: ./project2_app <directory path> <target image path> <feature type> <n> <dnn feature file (optional)> <select ROI boolean (optional)>
+./project2_app <directory path> <target image path> <feature type> <n> <dnn feature file (optional)> <select ROI boolean (optional)>
+```
+
+For main_part2.cpp:
+```
+# Writing CSV: Usage: 
+./project2_app <directory path> <output CSV file>
+# Comparing images: Usage: 
+./project2_app <target image> <feature vector file> <N>
 ```
