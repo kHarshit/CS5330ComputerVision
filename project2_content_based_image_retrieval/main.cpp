@@ -38,6 +38,13 @@ void sort(std::vector<std::pair<std::string, double>> &distances, bool ascending
     }
 }
 
+cv::Rect selectROI(const cv::Mat& image) {
+    // Let the user select a region of interest on the image
+    cv::Rect roi = cv::selectROI("Select ROI", image);
+    cv::destroyWindow("Select ROI");
+    return roi;
+}
+
 #if !RUN_PART1
 
 int main(int argc, char *argv[])
@@ -165,7 +172,7 @@ int main(int argc, char *argv[])
     std::pair<cv::Mat, cv::Mat> target_hist;
     if (argc < 4)
     {
-        printf("usage: %s <directory path> <target image path> <feature type> <dnn feature file>\n", argv[0]);
+        printf("usage: %s <directory path> <target image path> <feature type> <n> <dnn feature file> <select ROI boolean>\n", argv[0]);
         exit(-1);
     }
 
@@ -173,6 +180,8 @@ int main(int argc, char *argv[])
     printf("Processing directory %s\n", dirname);
     string featureType = argv[3];
     cout << "Feature type: " << featureType << endl;
+    // number of similar images to display
+    int N = std::atoi(argv[4]);
 
     // Reading the target image and computing its features
     std::string imgPath = argv[2];
@@ -181,14 +190,39 @@ int main(int argc, char *argv[])
     cv::imshow("Target Image", target_image);
     cv::waitKey(0);
 
+    // Allow the user to select a Region of Interest (ROI) from the target image
+    bool selectROIbool = 0; // Default value
+    if (argc > 6) {
+        selectROIbool = std::atoi(argv[6]);
+    }
+    cv::Mat targetImgROI = target_image;
+    if (selectROIbool)
+    {
+        cv::Rect roi = selectROI(target_image);
+        if (roi.width > 10 && roi.height > 10)
+        { // Check if a valid ROI was selected
+            // Crop the target image to the selected ROI
+            targetImgROI = target_image(roi);
+        }
+        else
+        {
+            cout << "No Valid ROI selected. Using the entire image." << endl;
+        }
+    }
     std::vector<char *> filenames;
     std::vector<std::vector<float>> data;
-    if (read_image_data_csv(argv[4], filenames, data, 0) != 0)
+    if (argc > 5)
     {
-        std::cerr << "Error reading feature vector file." << std::endl;
-        return -1;
+        if (read_image_data_csv(argv[5], filenames, data, 0) != 0)
+        {
+            std::cerr << "Error reading feature vector file." << std::endl;
+            return -1;
+        }
     }
-    // std::cout<<"Target Image name "<<targetImageFilename<<endl;
+    else
+    {
+        std::cout << "Feature vector file not provided. Some feature types may not work." << std::endl;
+    }
 
     double edgeDensity = -1.0;
     double grassCoverage = -1.0;
@@ -196,15 +230,15 @@ int main(int argc, char *argv[])
     printf("Computing target features : ");
     if (featureType == "baseline")
     {
-        target_feature_vector = computeBaselineFeatures(target_image);
+        target_feature_vector = computeBaselineFeatures(targetImgROI);
     }
     else if (featureType == "histogram")
     {
-        target_features = computeRGChromaticityHistogram(target_image, 16);
+        target_features = computeRGChromaticityHistogram(targetImgROI, 16);
     }
     else if (featureType == "multihistogram")
     {
-        target_hist = computeSpatialHistograms(target_image, 8);
+        target_hist = computeSpatialHistograms(targetImgROI, 8);
     }
     else if (featureType == "dnn")
     {
@@ -247,17 +281,39 @@ int main(int argc, char *argv[])
             std::cerr << "Feature vector for target image not found." << std::endl;
             return -1;
         }
-        target_features = computeGrassChromaticityHistogram(target_image, 16);
-        edgeDensity = computeEdgeDensity(target_image);
-        grassCoverage = computeGrassCoverage(target_image);
+        target_features = computeGrassChromaticityHistogram(targetImgROI, 16);
+        edgeDensity = computeEdgeDensity(targetImgROI);
+        grassCoverage = computeGrassCoverage(targetImgROI);
     }
     else if (featureType == "texture")
     {
-        target_hist = computeSpatialHistograms_texture(target_image, 8);
+        target_hist = computeSpatialHistograms_texture(targetImgROI, 8);
     }
     else if (featureType == "gabor")
     {
-        target_hist = computeSpatialHistograms_gabor(target_image, 8);
+        target_hist = computeSpatialHistograms_gabor(targetImgROI, 8);
+    }
+    else if (featureType == "bluebins")
+    {
+        // Find the feature vector for the target image
+        bool targetFound = false;
+        for (size_t i = 0; i < filenames.size(); ++i)
+        {
+            // std::cout<<std::string(filenames[i]);
+            if (std::string(filenames[i]) == targetImageFilename)
+            {
+
+                target_feature_vector = data[i];
+                targetFound = true;
+                break;
+            }
+        }
+        if (!targetFound)
+        {
+            std::cerr << "Feature vector for target image not found." << std::endl;
+            return -1;
+        }
+        target_features = computeBlueChromaticityHistogram(targetImgROI, 16);
     }
     else
     {
@@ -361,6 +417,28 @@ int main(int argc, char *argv[])
                 distance = compositeDistance(target_features, features, edgeDensity, edgeDensity2, grassCoverage, grassCoverage2, target_feature_vector, feature_vector);
                 cout << "Distance: " << distance << endl;
             }
+            else if (featureType == "bluebins")
+            {
+                cv::Mat features = computeBlueChromaticityHistogram(image, 16);
+                // Find DNN feature vector
+                std::vector<float> feature_vector;
+                bool featureFound = false;
+                for (size_t i = 0; i < filenames.size(); ++i)
+                {
+                    if (std::string(filenames[i]) == dp->d_name)
+                    {
+                        feature_vector = data[i];
+                        featureFound = true;
+                        break;
+                    }
+                }
+                if (!featureFound)
+                {
+                    std::cerr << "Feature vector for feature image not found." << std::endl;
+                    return -1;
+                }
+                distance = computeDistanceBins(target_features, features, target_feature_vector, feature_vector, 0.5, 0.5);
+            }
             else
             {
                 printf("Invalid feature type: %s\n", featureType.c_str());
@@ -381,7 +459,9 @@ int main(int argc, char *argv[])
         featureType == "multihistogram" ||
         featureType == "texture" ||
         featureType == "dnn" ||
-        featureType == "grass" || featureType == "gabor")
+        featureType == "grass" ||
+        featureType == "bluebins" ||
+        featureType == "gabor")
     {
         sort(distances, true);
     }
@@ -390,8 +470,6 @@ int main(int argc, char *argv[])
         sort(distances, false);
     }
 
-    int N = 3; // Number of top matches to display
-    printf("Top %d matches:\n", N);
     // Displaying top N matches, starting from the second match to avoid the target image itself if present
     for (int i = 1; i <= N && i < distances.size(); ++i)
     {

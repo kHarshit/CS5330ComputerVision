@@ -132,6 +132,7 @@ int sobelY3x3(cv::Mat &src, cv::Mat &dst);
  * @return 0 if the operation is successful.
  */
 int magnitude(cv::Mat &sobelX, cv::Mat &sobelY, cv::Mat &dst);
+
 /**
  * @brief generates a gradient magnitude to an image.
  * @param image Input image.
@@ -139,6 +140,7 @@ int magnitude(cv::Mat &sobelX, cv::Mat &sobelY, cv::Mat &dst);
  * @return cv::Mat gradient magnitude image.
  */
 cv::Mat texture(const cv::Mat image, int bins);
+
 /**
  * @brief generates an orientation to an image.
  * @param image Input image.
@@ -156,6 +158,14 @@ cv::Mat orientation(cv::Mat &image, cv::Mat sx, cv::Mat sy);
  * @return cv::Mat Grass chromaticity histogram
  */
 cv::Mat computeGrassChromaticityHistogram(const cv::Mat &image, int bins);
+
+/**
+ * @brief Compute blue chromaticity histogram
+ * @param image Input image
+ * @param bins Number of bins for the histogram
+ * @return cv::Mat Blue chromaticity histogram
+*/
+cv::Mat computeBlueChromaticityHistogram(const cv::Mat &image, int bins);
 
 /**
  * @brief Compute edge density of an image
@@ -187,6 +197,19 @@ double computeGrassCoverage(const cv::Mat &image);
  * @return double Composite distance
  */
 double compositeDistance(const cv::Mat &hist1, const cv::Mat &hist2, double edgeDensity1, double edgeDensity2, double grassCoverage1, double grassCoverage2, const std::vector<float> &dnnFeatures1, const std::vector<float> &dnnFeatures2);
+
+/**
+ * @brief Compute distance between two images using various features
+ * @param hist1 RGB histogram 1
+ * @param hist2 RGB histogram 2
+ * @param dnnFeatures1 DNN features 1
+ * @param dnnFeatures2 DNN features 2
+ * @param weightHist Weight for histogram
+ * @param weightDNN Weight for DNN features
+ * @return double Distance
+*/
+double computeDistanceBins(const cv::Mat &hist1, const cv::Mat &hist2, const std::vector<float> &dnnFeatures1, const std::vector<float> &dnnFeatures2, double weightHist, double weightDNN);
+
 /**
  * @brief Creates textured image using gabor filter.
  * @param image input image
@@ -194,6 +217,7 @@ double compositeDistance(const cv::Mat &hist1, const cv::Mat &hist2, double edge
  * @return float textured image vector
  */
 cv::Mat gaborTexture(cv::Mat &image, int bins);
+
 /**
  * @brief Compute spatial textured histograms with gabor filter
  *

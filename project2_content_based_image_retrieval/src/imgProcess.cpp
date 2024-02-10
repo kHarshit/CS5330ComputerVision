@@ -255,6 +255,42 @@ cv::Mat computeGrassChromaticityHistogram(const cv::Mat &image, int bins)
     return histogram;
 }
 
+cv::Mat computeBlueChromaticityHistogram(const cv::Mat &image, int bins)
+{
+    cv::Mat histogram = cv::Mat::zeros(bins, bins, CV_32F);
+
+    for (int y = 0; y < image.rows; y++)
+    {
+        for (int x = 0; x < image.cols; x++)
+        {
+            cv::Vec3b pixel = image.at<cv::Vec3b>(y, x);
+            float R = pixel[2];
+            float G = pixel[1];
+            float B = pixel[0];
+            float sum = R + G + B;
+
+            if (sum > 0)
+            { // Avoid division by zero
+                // Adjust chromaticity computation to emphasize blue
+                float b = B / sum;
+                float rg = (R + G) / sum; // Combined chromaticity of R and G to contrast with B
+
+                // Calculate bin indices for B and RG (using RG as a contrast to B)
+                int b_bin = static_cast<int>(b * (bins - 1) + 0.5);
+                int rg_bin = static_cast<int>(rg * (bins - 1) + 0.5);
+
+                // Increment the histogram bin for blue chromaticity
+                histogram.at<float>(b_bin, rg_bin) += 1.0f;
+            }
+        }
+    }
+
+    // Normalize the histogram so that the sum of histogram bins = 1
+    cv::normalize(histogram, histogram, 1, 0, cv::NORM_L1);
+
+    return histogram;
+}
+
 double computeEdgeDensity(const cv::Mat &image)
 {
     cv::Mat gray, edges;
@@ -283,6 +319,18 @@ double compositeDistance(const cv::Mat &hist1, const cv::Mat &hist2, double edge
 
     // Weighted average of distances
     return colorDist * 0.5 + edgeDist * 0.1 + spatialDistance * 0.1 + dnnDist * 0.3;
+}
+
+double computeDistanceBins(const cv::Mat &hist1, const cv::Mat &hist2, const std::vector<float> &dnnFeatures1, const std::vector<float> &dnnFeatures2, double weightHist, double weightDNN)
+{
+    double histDist = cv::compareHist(hist1, hist2, cv::HISTCMP_BHATTACHARYYA);
+    double dnnDist = cosineDistance(dnnFeatures1, dnnFeatures2);
+
+    // Calculate weighted average
+    double totalWeight = weightHist + weightDNN;
+    double weightedAvg = (weightHist * histDist + weightDNN * dnnDist) / totalWeight;
+
+    return weightedAvg;
 }
 
 std::pair<cv::Mat, cv::Mat> computeSpatialHistograms_texture(const cv::Mat &image, int bins)
