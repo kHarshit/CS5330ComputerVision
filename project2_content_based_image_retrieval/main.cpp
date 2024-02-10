@@ -222,6 +222,10 @@ int main(int argc, char *argv[])
        edgeDensity = computeEdgeDensity(target_image);
        skyToLandRatio = computeGrassCoverage(target_image);
     }
+    else if(featureType =="texture")
+    {
+        target_hist=computeSpatialHistograms_texture(target_image, 8);
+    }
     else
     {
         printf("Invalid feature type: %s\n", featureType.c_str());
@@ -237,9 +241,10 @@ int main(int argc, char *argv[])
         printf("Cannot open directory %s\n", dirname);
         exit(-1);
     }
+    int img_counter=0;
     while ((dp = readdir(dirp)) != NULL)
     {
-
+        img_counter+=1;
         // check if the file is an image
         if (strstr(dp->d_name, ".jpg") ||
             strstr(dp->d_name, ".png") ||
@@ -268,6 +273,11 @@ int main(int argc, char *argv[])
                 std::pair<cv::Mat, cv::Mat> features_hist = computeSpatialHistograms(image, 8);
                 distance = combinedHistogramDistance(target_hist, features_hist);
             }
+            else if(featureType =="texture")
+            {
+                std::pair<cv::Mat, cv::Mat> features_hist = computeSpatialHistograms_texture(image,8);
+                distance=combinedHistogramDistance_texture(target_hist,features_hist);
+            }
             else if(featureType == "grass")
             {
                 cv::Mat features = computeGrassChromaticityHistogram(image, 16);
@@ -295,17 +305,17 @@ int main(int argc, char *argv[])
                 printf("Invalid feature type: %s\n", featureType.c_str());
                 exit(-1);
             }
-
             if (distance >= 0)
             { // Ensure distance is valid
                 // cout << "Distance: " << distance << endl;
                 distances.push_back(std::make_pair(buffer, distance));
             }
         }
+        std:cout<<"Image Count: "<<img_counter<<endl;
     }
     closedir(dirp);
 
-    if (featureType == "baseline" || featureType == "multihistogram" || featureType == "grass")
+    if (featureType == "baseline" || featureType == "multihistogram" || featureType =="texture" || featureType == "grass")
     {
         sort(distances, true);
     }

@@ -83,6 +83,22 @@ cv::Mat computeRGBHistogram(const cv::Mat& imagePart, int bins);
  * @return std::pair<cv::Mat, cv::Mat> Pair of spatial histograms
 */
 std::pair<cv::Mat, cv::Mat> computeSpatialHistograms(const cv::Mat& image, int bins);
+/**
+ * @brief Compute spatial textured histograms
+ * 
+ * @param image Input image
+ * @param bins Number of bins for the histogram
+ * @return std::pair<cv::Mat, cv::Mat> Pair of spatial histograms
+*/
+std::pair<cv::Mat, cv::Mat> computeSpatialHistograms_texture(const cv::Mat &image, int bins );
+/**
+ * @brief Compute combined textured histogram distance
+ * 
+ * @param histPair1 Pair of spatial histograms 1
+ * @param histPair2 Pair of spatial histograms 2
+ * @return double Combined histogram distance
+*/
+double combinedHistogramDistance_texture(const std::pair<cv::Mat, cv::Mat> &histPair1, const std::pair<cv::Mat, cv::Mat> &histPair2);
 
 /**
  * @brief Compute combined histogram distance
@@ -92,6 +108,46 @@ std::pair<cv::Mat, cv::Mat> computeSpatialHistograms(const cv::Mat& image, int b
  * @return double Combined histogram distance
 */
 double combinedHistogramDistance(const std::pair<cv::Mat, cv::Mat>& histPair1, const std::pair<cv::Mat, cv::Mat>& histPair2);
+/*
+ * @brief Applies SobelX filter (horizontal edge detection) to an image
+ * @param src Input image
+ * @param dst Output image
+ * @return 0 if the operation is succesful.
+ */
+
+int sobelX3x3(cv::Mat &src, cv::Mat &dst);
+
+/*
+ * @brief Applies SobelY filter (vertical edge detection) to an image
+ * @param src Input image
+ * @param dst Output image
+ * @return 0 if the operation is succesful.
+ */
+int sobelY3x3(cv::Mat &src, cv::Mat &dst);
+
+/**
+ * @brief generates a gradient magnitude to an image.
+ * @param sobelX Input image.
+ * @param sobelY Input image.
+ * @param dst Output image.
+ * @return 0 if the operation is successful.
+ */
+int magnitude(cv::Mat &sobelX, cv::Mat &sobelY, cv::Mat &dst);
+/**
+ * @brief generates a gradient magnitude to an image.
+ * @param image Input image.
+ * @param bins Number of bins in a histogram.
+ * @return cv::Mat gradient magnitude image.
+ */
+cv::Mat texture(const cv::Mat image, int bins);
+/**
+ * @brief generates an orientation to an image.
+ * @param image Input image.
+ * @param sx SobelX of an image.
+ * @param sy SobelY of an image.
+ * @return cv::Mat orientated image.
+ */
+cv::Mat orientation(cv::Mat &image,cv::Mat sx,cv::Mat sy);
 
 /**
  * @brief Compute grass chromaticity histogram
