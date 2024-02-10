@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
     }
     closedir(dirp);
 
-    if (featureType == "baseline" || featureType == "multihistogram" || featureType =="texture" || featureType == "grass")
+    if (featureType == "baseline" || featureType == "multihistogram" || featureType =="texture" || featureType == "grass"|| featureType=="gabor")
     {
         sort(distances, true);
     }
