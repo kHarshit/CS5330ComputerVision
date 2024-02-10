@@ -266,15 +266,15 @@ double computeGrassCoverage(const cv::Mat& image) {
     return meanVal[1]; // Assuming green is emphasized in the HSV's S channel
 }
 
-// double compositeDistance(const cv::Mat& hist1, const cv::Mat& hist2, double edgeDensity1, double edgeDensity2, double grassCoverage1, double grassCoverage2, const std::vector<float>& dnnFeatures1, const std::vector<float>& dnnFeatures2) {
-//     double colorDist = cv::compareHist(hist1, hist2, cv::HISTCMP_BHATTACHARYYA);
-//     double edgeDist = std::abs(edgeDensity1 - edgeDensity2);
-//     double spatialDistance = std::abs(grassCoverage1 - grassCoverage2);
-//     double dnnDist = cosineDistance(dnnFeatures1, dnnFeatures2);
+double compositeDistance(const cv::Mat& hist1, const cv::Mat& hist2, double edgeDensity1, double edgeDensity2, double grassCoverage1, double grassCoverage2, const std::vector<float>& dnnFeatures1, const std::vector<float>& dnnFeatures2) {
+    double colorDist = cv::compareHist(hist1, hist2, cv::HISTCMP_BHATTACHARYYA);
+    double edgeDist = std::abs(edgeDensity1 - edgeDensity2);
+    double spatialDistance = std::abs(grassCoverage1 - grassCoverage2);
+    double dnnDist = cosineDistance(dnnFeatures1, dnnFeatures2);
 
-//     // Weighted average of distances
-//     return colorDist * 0.5 + edgeDist * 0.1 + spatialDistance * 0.1 + dnnDist * 0.3;
-// }
+    // Weighted average of distances
+    return colorDist * 0.5 + edgeDist * 0.1 + spatialDistance * 0.1 + dnnDist * 0.3;
+}
 
 std::pair<cv::Mat, cv::Mat> computeSpatialHistograms_texture(const cv::Mat &image, int bins )
 {
