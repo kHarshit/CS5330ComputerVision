@@ -97,7 +97,12 @@ double combinedHistogramDistance(const std::pair<cv::Mat, cv::Mat> &histPair1, c
 
 double compositeDistance(const cv::Mat &hist1, const cv::Mat &hist2, double edgeDensity1, double edgeDensity2, double grassCoverage1, double grassCoverage2, const std::vector<float> &dnnFeatures1, const std::vector<float> &dnnFeatures2)
 {
+    // the Bhattacharyya distance is a way of quantifying the differences between 
+    // two probability distributions. It tells us how much overlap there is between 
+    // the two distributions, and can help us determine how similar or dissimilar they are.
     double colorDist = cv::compareHist(hist1, hist2, cv::HISTCMP_BHATTACHARYYA);
+    // # or use
+    // double colorDist = histogramIntersection2d(hist1, hist2);
     double edgeDist = std::abs(edgeDensity1 - edgeDensity2);
     double spatialDistance = std::abs(grassCoverage1 - grassCoverage2);
     double dnnDist = cosineDistance(dnnFeatures1, dnnFeatures2);
@@ -108,7 +113,12 @@ double compositeDistance(const cv::Mat &hist1, const cv::Mat &hist2, double edge
 
 double compositeDistanceBins(const cv::Mat &hist1, const cv::Mat &hist2, const std::vector<float> &dnnFeatures1, const std::vector<float> &dnnFeatures2, double weightHist, double weightDNN)
 {
+    // the Bhattacharyya distance is a way of quantifying the differences between 
+    // two probability distributions. It tells us how much overlap there is between 
+    // the two distributions, and can help us determine how similar or dissimilar they are.
     double histDist = cv::compareHist(hist1, hist2, cv::HISTCMP_BHATTACHARYYA);
+    // # or use
+    // double histDist = histogramIntersection2d(hist1, hist2);
     double dnnDist = cosineDistance(dnnFeatures1, dnnFeatures2);
 
     // Calculate weighted average

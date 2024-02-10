@@ -18,21 +18,6 @@ using namespace std;
 // If you want to write data to csv, set it to 1
 #define WRITE_CSV 0
 
-void sort(std::vector<std::pair<std::string, double>> &distances, bool ascending = true)
-{
-    // Sorting the distances in ascending or descending order based on the 'ascending' argument
-    if (ascending)
-    {
-        std::sort(distances.begin(), distances.end(), [](const std::pair<std::string, double> &a, const std::pair<std::string, double> &b)
-                  { return a.second < b.second; });
-    }
-    else
-    {
-        std::sort(distances.begin(), distances.end(), [](const std::pair<std::string, double> &a, const std::pair<std::string, double> &b)
-                  { return a.second > b.second; });
-    }
-}
-
 /**
  * @brief Select a region of interest (ROI) from an image
  * 
@@ -140,8 +125,9 @@ int main(int argc, char *argv[])
         }
     }
 
-    // Sorting the distances in ascending order
-    sort(distances);
+    // sort the distances in ascending order
+    std::sort(distances.begin(), distances.end(), [](const std::pair<std::string, double> &a, const std::pair<std::string, double> &b)
+                { return a.second < b.second; });
 
     // Displaying top N matches, starting from the second match to avoid the target image itself if present
     for (int i = 1; i <= N && i < distances.size(); ++i)

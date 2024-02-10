@@ -372,6 +372,7 @@ int sobelX3x3(cv::Mat &src, cv::Mat &dst)
             }
         }
     }
+    // cv::normalize(dst, dst, 0, 255, cv::NORM_L1);
 
     return 0;
 }
@@ -418,6 +419,7 @@ int sobelY3x3(cv::Mat &src, cv::Mat &dst)
             }
         }
     }
+    // cv::normalize(dst, dst, 0, 255, cv::NORM_L1);
 
     return 0;
 }

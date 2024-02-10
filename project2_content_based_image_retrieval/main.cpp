@@ -16,28 +16,6 @@
 using namespace std;
 
 /**
- * @brief Sort the distances in ascending or descending order
- * 
- * @param distances Vector of distances
- * @param ascending Sort in ascending order if true, else sort in descending order
- * @return void
-*/
-void sort(std::vector<std::pair<std::string, double>> &distances, bool ascending = true)
-{
-    // Sorting the distances in ascending or descending order based on the 'ascending' argument
-    if (ascending)
-    {
-        std::sort(distances.begin(), distances.end(), [](const std::pair<std::string, double> &a, const std::pair<std::string, double> &b)
-                  { return a.second < b.second; });
-    }
-    else
-    {
-        std::sort(distances.begin(), distances.end(), [](const std::pair<std::string, double> &a, const std::pair<std::string, double> &b)
-                  { return a.second > b.second; });
-    }
-}
-
-/**
  * @brief Select a region of interest (ROI) from an image
  * 
  * @param image Input image
@@ -252,7 +230,7 @@ int main(int argc, char *argv[])
             else if (featureType == "histogram")
             {
                 cv::Mat features = computeRGChromaticityHistogram(image, 16);
-                distance = histogramIntersection2d(target_features, features);
+                distance = 1.0 - histogramIntersection2d(target_features, features);
             }
             else if (featureType == "multihistogram")
             {
@@ -352,20 +330,9 @@ int main(int argc, char *argv[])
     }
     closedir(dirp);
 
-    if (featureType == "baseline" ||
-        featureType == "multihistogram" ||
-        featureType == "texture" ||
-        featureType == "dnn" ||
-        featureType == "grass" ||
-        featureType == "bluebins" ||
-        featureType == "gabor")
-    {
-        sort(distances, true);
-    }
-    else if (featureType == "histogram")
-    {
-        sort(distances, false);
-    }
+    // sort the distances in ascending order
+    std::sort(distances.begin(), distances.end(), [](const std::pair<std::string, double> &a, const std::pair<std::string, double> &b)
+                { return a.second < b.second; });
 
     // Displaying top N matches, starting from the second match to avoid the target image itself if present
     // for (int i = 1; i <= N && i < distances.size(); ++i)
