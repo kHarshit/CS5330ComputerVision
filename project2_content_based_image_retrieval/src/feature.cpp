@@ -237,6 +237,7 @@ cv::Mat texture(cv::Mat image, int bins)
     cv::Mat sobelx, sobely, grad, histogram, dst_img, grayscale;
     // cv::Mat feature = Mat::zeros(2, histSize, CV_32F);
     cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
+    // the below method calculates sobel for grayscale
     // sobelX3x3(grayscale,sobelx);
     // sobelY3x3(grayscale,sobely);
     // magnitude(sobelx,sobely,grad);
