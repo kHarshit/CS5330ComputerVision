@@ -73,34 +73,35 @@ int blur5x5_2(cv::Mat &src, cv::Mat &dst)
     return 0; // Success
 }
 
-double calculateDynamicThreshold(const Mat& src, int k) {
+double calculateDynamicThreshold(const Mat &src, int k)
+{
     // Reshape the image to a 1D array of pixels
     Mat samples(src.rows * src.cols, 1, CV_32F);
-    for(int y = 0; y < src.rows; y++)
-        for(int x = 0; x < src.cols; x++)
+    for (int y = 0; y < src.rows; y++)
+        for (int x = 0; x < src.cols; x++)
             samples.at<float>(y + x * src.rows, 0) = src.at<uchar>(y, x);
 
     // Apply k-means clustering
     Mat labels, centers;
-    kmeans(samples, k, labels, TermCriteria(TermCriteria::EPS+TermCriteria::COUNT, 10, 1.0), 3, KMEANS_PP_CENTERS, centers);
+    kmeans(samples, k, labels, TermCriteria(TermCriteria::EPS + TermCriteria::COUNT, 10, 1.0), 3, KMEANS_PP_CENTERS, centers);
 
     // Assuming K=2, calculate the mean threshold
     double thresholdValue = (centers.at<float>(0, 0) + centers.at<float>(1, 0)) / 2.0;
     return thresholdValue;
 }
 
-cv::Mat customThreshold(const cv::Mat& grayImage, double thresh, double maxValue)
+cv::Mat customThreshold(const cv::Mat &grayImage, double thresh, double maxValue)
 {
     // clone the input image
     cv::Mat outputImage = grayImage.clone();
 
     // loop over the input image and apply the thresholding
-    for(int i = 0; i < grayImage.rows; ++i)
+    for (int i = 0; i < grayImage.rows; ++i)
     {
-        for(int j = 0; j < grayImage.cols; ++j)
+        for (int j = 0; j < grayImage.cols; ++j)
         {
             // apply the thresholding
-            if(grayImage.at<uchar>(i, j) < thresh)
+            if (grayImage.at<uchar>(i, j) < thresh)
             {
                 // set the pixel value to the maximum value
                 outputImage.at<uchar>(i, j) = static_cast<uchar>(maxValue);
@@ -116,7 +117,8 @@ cv::Mat customThreshold(const cv::Mat& grayImage, double thresh, double maxValue
 }
 
 // Function to preprocess and threshold the video frame
-Mat preprocessAndThreshold(const Mat& frame) {
+Mat preprocessAndThreshold(const Mat &frame)
+{
     // Convert to grayscale
     Mat grayFrame;
     cvtColor(frame, grayFrame, COLOR_BGR2GRAY);

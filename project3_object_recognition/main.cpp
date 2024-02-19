@@ -9,31 +9,32 @@ using namespace cv;
 
 int main()
 {
-    //to open a default camera
-    cv::VideoCapture cap(0); 
-    cv::Mat frame,blur,hsv;
-    if(!cap.isOpened())
+    // to open a default camera
+    cv::VideoCapture cap(0);
+    cv::Mat frame, blur, hsv;
+    if (!cap.isOpened())
     {
         printf("Error opening the default camera");
         return -1;
     }
-    cv::namedWindow("Original Video",WINDOW_NORMAL);
-    cv::namedWindow("Thresholded",WINDOW_NORMAL);
-    for(;;)
+    cv::namedWindow("Original Video", WINDOW_NORMAL);
+    cv::namedWindow("Thresholded", WINDOW_NORMAL);
+    for (;;)
     {
-        
-        //cv::Mat frame;
-        cap>>frame;
-        if (frame.empty()) {
+
+        // cv::Mat frame;
+        cap >> frame;
+        if (frame.empty())
+        {
             std::cout << "Error: Blank frame grabbed" << std::endl;
             continue;
         }
-        cv::imshow("Original Video",frame);
+        cv::imshow("Original Video", frame);
 
         // Preprocess and threshold the frame
         cv::Mat thresholdedFrame = preprocessAndThreshold(frame);
 
-        #if 0
+#if 0
         cv::imshow("Blurred Video",hsv);
         
         blur5x5_2(frame,blur);
@@ -55,13 +56,14 @@ int main()
         // // Thresholding
         Mat thresholdedFrame;
         cv::threshold(sat, thresholdedFrame, thresholdValue, 255, THRESH_BINARY);
-        #endif
+#endif
 
         // thresholded video
         cv::imshow("Thresholded", thresholdedFrame);
 
         char key = cv::waitKey(10);
-        if (key == 'q') {
+        if (key == 'q')
+        {
             break;
         }
     }
@@ -69,5 +71,4 @@ int main()
     cap.release();
     cv::destroyAllWindows();
     return 0;
-
 }
