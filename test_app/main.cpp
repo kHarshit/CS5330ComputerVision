@@ -7,7 +7,7 @@ using namespace cv;
 
 int main()
 {
-    std::string image_path = samples::findFile("/Users/harshit/Documents/CS5330ComputerVision/test_app/starry_night.jpg");
+    std::string image_path = samples::findFile("/Users/khushi/Desktop/CVPR/CS5330ComputerVision/test_app/starry_night.jpg");
     Mat img = imread(image_path, IMREAD_COLOR);
     if(img.empty())
     {
