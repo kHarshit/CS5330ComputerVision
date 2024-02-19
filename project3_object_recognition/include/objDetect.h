@@ -10,11 +10,11 @@
 
 #include <opencv2/opencv.hpp>
 
-double calculateDynamicThreshold(const Mat& src, int k);
+double calculateDynamicThreshold(const cv::Mat& src, int k);
 
 cv::Mat customThreshold(const cv::Mat& grayImage, double thresh, double maxValue);
 
-Mat preprocessAndThreshold(const Mat& frame);
+cv::Mat preprocessAndThreshold(const cv::Mat& frame);
 
 
 #endif // OBJ_DETECT_H

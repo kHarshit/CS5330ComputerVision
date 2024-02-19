@@ -1,9 +1,20 @@
+/**
+ * author: Harshit Kumar, Khushi Neema
+ * date: Feb 19, 2024
+ * purpose: Implements various object detection algorithms
+ *
+ */
+
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <vector>
+#include "objDetect.h"
+
+using namespace std;
+using namespace cv;
 
 // Function to dynamically calculate the threshold using k-means (ISODATA algorithm)
 double calculateDynamicThreshold(const Mat& src, int k) {
@@ -30,9 +41,9 @@ cv::Mat customThreshold(const cv::Mat& grayImage, double thresh, double maxValue
     {
         for(int j = 0; j < grayImage.cols; ++j)
         {
-            if(grayImage.at<uchar>(i, j) > thresh)
+            if(grayImage.at<uchar>(i, j) < thresh)
             {
-                outputImage.at<uchar>(i, j) = = static_cast<uchar>(maxValue);
+                outputImage.at<uchar>(i, j) = static_cast<uchar>(maxValue);
             }
             else
             {

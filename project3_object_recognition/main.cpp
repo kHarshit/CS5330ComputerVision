@@ -3,6 +3,7 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iostream>
+#include "objDetect.h"
 
 using namespace cv;
 
@@ -78,15 +79,19 @@ int main()
     for(;;)
     {
         
-        #if 0
         //cv::Mat frame;
         cap>>frame;
         if (frame.empty()) {
             std::cout << "Error: Blank frame grabbed" << std::endl;
             continue;
         }
-        //cv::imshow("Original Video",frame);
-        //cv::imshow("Blurred Video",hsv);
+        cv::imshow("Original Video",frame);
+
+        // Preprocess and threshold the frame
+        cv::Mat thresholdedFrame = preprocessAndThreshold(frame);
+
+        #if 0
+        cv::imshow("Blurred Video",hsv);
         
         blur5x5_2(frame,blur);
         
@@ -105,18 +110,17 @@ int main()
         double thresholdValue = (minVal + maxVal) / 2.0;
 
         // // Thresholding
-        Mat thresholded;
-        cv::threshold(sat, thresholded, thresholdValue, 255, THRESH_BINARY);
+        Mat thresholdedFrame;
+        cv::threshold(sat, thresholdedFrame, thresholdValue, 255, THRESH_BINARY);
+        #endif
 
-        // Display original and thresholded video
-        cv::imshow("Original Video", frame);
-        cv::imshow("Thresholded", thresholded);
+        // thresholded video
+        cv::imshow("Thresholded", thresholdedFrame);
 
         char key = cv::waitKey(10);
         if (key == 'q') {
             break;
         }
-        #endif
     }
 
     cap.release();
