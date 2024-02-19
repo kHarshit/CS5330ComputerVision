@@ -16,13 +16,71 @@
 using namespace std;
 using namespace cv;
 
-// Function to dynamically calculate the threshold using k-means (ISODATA algorithm)
+int blur5x5_2(cv::Mat &src, cv::Mat &dst)
+{
+    dst = cv::Mat::zeros(src.size(), src.type());
+    cv::Mat temp = cv::Mat::zeros(src.size(), src.type());
+
+    // row filter
+    for (int i = 2; i < src.rows - 2; i++)
+    {
+        cv::Vec3b *rowptr = src.ptr<cv::Vec3b>(i);
+        cv::Vec3b *tempptr = temp.ptr<cv::Vec3b>(i);
+
+        // loop over columns
+        for (int j = 2; j < src.cols - 2; j++)
+        {
+            // loop over color channels
+            for (int c = 0; c < 3; c++)
+            {
+                // row filter [1 , 2, 4, 2, 1]
+                tempptr[j][c] = (1 * rowptr[j - 2][c] + 2 * rowptr[j - 1][c] + 4 * rowptr[j][c] + 2 * rowptr[j + 1][c] + 1 * rowptr[j + 2][c]) / 10.0;
+            }
+        }
+    }
+
+    // column filter
+    for (int i = 2; i < src.rows - 2; i++)
+    {
+        cv::Vec3b *rowptrm2 = temp.ptr<cv::Vec3b>(i - 2);
+        cv::Vec3b *rowptrm1 = temp.ptr<cv::Vec3b>(i - 1);
+        cv::Vec3b *rowptr = temp.ptr<cv::Vec3b>(i);
+        cv::Vec3b *rowptrp1 = temp.ptr<cv::Vec3b>(i + 1);
+        cv::Vec3b *rowptrp2 = temp.ptr<cv::Vec3b>(i + 2);
+
+        cv::Vec3b *dptr = dst.ptr<cv::Vec3b>(i);
+
+        // loop over columns
+        for (int j = 2; j < src.cols - 2; j++)
+        {
+            // loop over color channels
+            for (int c = 0; c < 3; c++)
+            {
+                /*column filter
+                    [1]  m2
+                    [2]  m1
+                    [4]  r
+                    [2]  p1
+                    [1]  p2
+                */
+                dptr[j][c] = (1 * rowptrm2[j][c] + 2 * rowptrm1[j][c] + 4 * rowptr[j][c] + 2 * rowptrp1[j][c] + 1 * rowptrp2[j][c]) / 10.0;
+                // clip b/w 0 and 255
+                dptr[j][c] = dptr[j][c] > 255 ? 255 : dptr[j][c];
+            }
+        }
+    }
+
+    return 0; // Success
+}
+
 double calculateDynamicThreshold(const Mat& src, int k) {
+    // Reshape the image to a 1D array of pixels
     Mat samples(src.rows * src.cols, 1, CV_32F);
     for(int y = 0; y < src.rows; y++)
         for(int x = 0; x < src.cols; x++)
             samples.at<float>(y + x * src.rows, 0) = src.at<uchar>(y, x);
 
+    // Apply k-means clustering
     Mat labels, centers;
     kmeans(samples, k, labels, TermCriteria(TermCriteria::EPS+TermCriteria::COUNT, 10, 1.0), 3, KMEANS_PP_CENTERS, centers);
 
@@ -41,8 +99,10 @@ cv::Mat customThreshold(const cv::Mat& grayImage, double thresh, double maxValue
     {
         for(int j = 0; j < grayImage.cols; ++j)
         {
+            // apply the thresholding
             if(grayImage.at<uchar>(i, j) < thresh)
             {
+                // set the pixel value to the maximum value
                 outputImage.at<uchar>(i, j) = static_cast<uchar>(maxValue);
             }
             else
@@ -62,6 +122,7 @@ Mat preprocessAndThreshold(const Mat& frame) {
     cvtColor(frame, grayFrame, COLOR_BGR2GRAY);
 
     // Optional: Blur the image to make regions more uniform
+    // blur5x5_2(grayFrame, grayFrame);
     GaussianBlur(grayFrame, grayFrame, Size(5, 5), 0);
 
     // Dynamically calculate the threshold
