@@ -11,6 +11,15 @@
 #include <opencv2/opencv.hpp>
 
 /**
+ * @brief Apply 5x5 Gaussian blur to the input image
+ *
+ * @param src input image
+ * @param dst output image
+ * @return int
+ */
+int blur5x5_2(cv::Mat &src, cv::Mat &dst);
+
+/**
  * @brief Calculate the dynamic threshold using k-means clustering algorithm
  *
  * @param src input image
