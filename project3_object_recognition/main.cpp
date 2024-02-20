@@ -60,10 +60,10 @@ int main()
 #endif
 
         //To clean the noise/holes : we need external kernel, we have chosen a kernel filter of size 3X3
-        Mat kernel = (Mat_<int>(3,3) << 1, 1, 1,
-                                    1, 1, 1,
-                                    1, 1, 1);
-
+        // Mat kernel = (Mat_<int>(3,3) << 1, 1, 1,
+        //                             1, 1, 1,
+        //                             1, 1, 1);
+        Mat kernel = getStructuringElement(MORPH_RECT, Size(11, 11));
         //Calling morphological filtering function
         cv::Mat cleaned;
         morphologyEx(thresholdedFrame,cleaned,MORPH_CLOSE,kernel);
