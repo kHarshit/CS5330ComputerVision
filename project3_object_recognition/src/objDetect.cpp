@@ -117,19 +117,23 @@ cv::Mat customThreshold(const cv::Mat &grayImage, double thresh, double maxValue
 }
 
 // Function to preprocess and threshold the video frame
-Mat preprocessAndThreshold(const Mat &frame)
+Mat preprocessAndThreshold(const cv::Mat &frame)
 {
     // Convert to grayscale
-    Mat grayFrame;
-    cvtColor(frame, grayFrame, COLOR_BGR2GRAY);
+    Mat grayFrame,blur;
+    Mat input=frame;
+    blur5x5_2(input, blur);
+    cv::convertScaleAbs(blur,blur);
+    cvtColor(blur, grayFrame, COLOR_BGR2GRAY);
 
     // Optional: Blur the image to make regions more uniform
     // blur5x5_2(grayFrame, grayFrame);
-    GaussianBlur(grayFrame, grayFrame, Size(5, 5), 0);
+    // cv::convertScaleAbs(grayFrame,grayFrame);
+    //GaussianBlur(grayFrame, grayFrame, Size(5, 5), 0);
 
     // Dynamically calculate the threshold
     double thresholdValue = calculateDynamicThreshold(grayFrame, 2);
-    cout << "Threshold: " << thresholdValue << endl;
+    std::cout << "Threshold: " << thresholdValue << std::endl;
 
     // Apply the threshold
     // Mat thresholded;
@@ -137,4 +141,30 @@ Mat preprocessAndThreshold(const Mat &frame)
     cv::Mat thresholded = customThreshold(grayFrame, thresholdValue, 255);
 
     return thresholded;
+}
+
+void morphologyEx(const cv::Mat& src, cv::Mat& dst, int operation, const cv::Mat& kernel) {
+    switch (operation) {
+        case MORPH_DILATE:
+            dilate(src, dst, kernel);
+            break;
+        case MORPH_ERODE:
+            erode(src, dst, kernel);
+            break;
+        case MORPH_OPEN: {
+            Mat temp;
+            erode(src, temp, kernel);
+            dilate(temp, dst, kernel);
+            break;
+        }
+        case MORPH_CLOSE: {
+            Mat temp;
+            dilate(src, temp, kernel);
+            erode(temp, dst, kernel);
+            break;
+        }
+        default:
+            std::cout<< "Invalid morphological operation" << std::endl;
+            break;
+    }
 }

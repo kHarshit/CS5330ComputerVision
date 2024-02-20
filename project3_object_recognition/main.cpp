@@ -19,6 +19,7 @@ int main()
     }
     cv::namedWindow("Original Video", WINDOW_NORMAL);
     cv::namedWindow("Thresholded", WINDOW_NORMAL);
+    cv::namedWindow("Cleaned Threholded",WINDOW_NORMAL);
     for (;;)
     {
 
@@ -58,9 +59,18 @@ int main()
         cv::threshold(sat, thresholdedFrame, thresholdValue, 255, THRESH_BINARY);
 #endif
 
+        //To clean the noise/holes : we need external kernel, we have chosen a kernel filter of size 3X3
+        Mat kernel = (Mat_<int>(3,3) << 1, 1, 1,
+                                    1, 1, 1,
+                                    1, 1, 1);
+
+        //Calling morphological filtering function
+        cv::Mat cleaned;
+        morphologyEx(thresholdedFrame,cleaned,MORPH_CLOSE,kernel);
+        
         // thresholded video
         cv::imshow("Thresholded", thresholdedFrame);
-
+        cv::imshow("Cleaned thresholded video",cleaned);
         char key = cv::waitKey(10);
         if (key == 'q')
         {
