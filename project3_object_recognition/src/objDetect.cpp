@@ -168,3 +168,38 @@ void morphologyEx(const cv::Mat& src, cv::Mat& dst, int operation, const cv::Mat
             break;
     }
 }
+
+void dfs(const Mat& binaryImage, Mat& labels, int i, int j, int label) {
+    int rows = binaryImage.rows;
+    int cols = binaryImage.cols;
+
+    // Check if current pixel is within image boundaries and is foreground
+    if (i < 0 || i >= rows || j < 0 || j >= cols || binaryImage.at<uchar>(i, j) == 0 || labels.at<int>(i, j) != 0) {
+        return; // Out of bounds, background pixel, or already labeled
+    }
+
+    labels.at<int>(i, j) = label; // Label current pixel
+
+    // Recursively label neighboring pixels
+    dfs(binaryImage, labels, i + 1, j, label);
+    dfs(binaryImage, labels, i - 1, j, label);
+    dfs(binaryImage, labels, i, j + 1, label);
+    dfs(binaryImage, labels, i, j - 1, label);
+}
+
+
+// Function to perform connected components analysis
+void connectedComponents(const Mat& binaryImage, Mat& labeledImage) {
+    labeledImage = Mat::zeros(binaryImage.size(), CV_32S); // Initialize labeled image
+
+    int label = 1; // Start labeling from 1
+    for (int i = 0; i < binaryImage.rows; ++i) {
+        for (int j = 0; j < binaryImage.cols; ++j) {
+            if (binaryImage.at<uchar>(i, j) != 0 && labeledImage.at<int>(i, j) == 0) {
+                std::cout << "Processing pixel (" << i << ", " << j << ")" << std::endl; 
+                dfs(binaryImage, labeledImage, i, j, label++);
+            }
+        }
+    }
+}
+

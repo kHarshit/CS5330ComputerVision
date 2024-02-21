@@ -6,6 +6,76 @@
 #include "objDetect.h"
 
 using namespace cv;
+//2nd APPROACH
+class UnionFind {
+private:
+    std::vector<int> parent;
+public:
+    UnionFind(int size) {
+        parent.resize(size);
+        for (int i = 0; i < size; ++i)
+            parent[i] = i;
+    }
+
+    int find(int x) {
+        if (parent[x] != x)
+            parent[x] = find(parent[x]);
+        return parent[x];
+    }
+
+    void merge(int x, int y) {
+        parent[find(x)] = find(y);
+    }
+};
+
+// Connected components analysis using two-pass algorithm with union-find
+Mat connectedComponentsAnalysis(const Mat& binaryImage) {
+    Mat labels(binaryImage.size(), CV_32S, Scalar(0));
+    UnionFind uf(binaryImage.rows * binaryImage.cols);
+
+    int label = 1; // Start labeling from 1
+    std::unordered_map<int, int> labelMap; // Map to track merged labels
+
+    // First Pass
+    for (int i = 0; i < binaryImage.rows; ++i) {
+        for (int j = 0; j < binaryImage.cols; ++j) {
+            if (binaryImage.at<uchar>(i, j) > 0) { // Foreground pixel
+                int upLabel = (i > 0) ? labels.at<int>(i - 1, j) : 0;
+                int leftLabel = (j > 0) ? labels.at<int>(i, j - 1) : 0;
+
+                if (upLabel == 0 && leftLabel == 0) { // New label
+                    labels.at<int>(i, j) = label;
+                    labelMap[label] = label;
+                    label++;
+                } else {
+                    if (upLabel != 0 && leftLabel != 0 && upLabel != leftLabel) {
+                        int rootUp = uf.find(upLabel);
+                        int rootLeft = uf.find(leftLabel);
+                        if (rootUp != rootLeft) { // Merge equivalence classes
+                            uf.merge(rootUp, rootLeft);
+                            labelMap[label] = min(rootUp, rootLeft); // Store merged label
+                        }
+                    }
+                    int maxLabel = max(upLabel, leftLabel);
+                    labels.at<int>(i, j) = maxLabel;
+                    labelMap[maxLabel] = maxLabel; // Store label
+                }
+            }
+        }
+    }
+
+    // Second Pass
+    for (int i = 0; i < binaryImage.rows; ++i) {
+        for (int j = 0; j < binaryImage.cols; ++j) {
+            int currentLabel = labels.at<int>(i, j);
+            if (currentLabel != 0) {
+                labels.at<int>(i, j) = labelMap[uf.find(currentLabel)]; // Propagate correct label
+            }
+        }
+    }
+
+    return labels;
+}
 
 int main()
 {
@@ -20,6 +90,7 @@ int main()
     cv::namedWindow("Original Video", WINDOW_NORMAL);
     cv::namedWindow("Thresholded", WINDOW_NORMAL);
     cv::namedWindow("Cleaned Threholded",WINDOW_NORMAL);
+    cv::namedWindow("Defined Regions",WINDOW_NORMAL);
     for (;;)
     {
 
@@ -68,9 +139,20 @@ int main()
         cv::Mat cleaned;
         morphologyEx(thresholdedFrame,cleaned,MORPH_CLOSE,kernel);
         
-        // thresholded video
+        cv:Mat labeledImage(cleaned.size(), CV_32S); 
+        cv::Mat labeledImage8U;
+        labeledImage.convertTo(labeledImage8U, CV_8U);
+        connectedComponents(cleaned,labeledImage);
+        cv::imshow("Defined Regions",labeledImage);
+        
+        //2nd apprach
+        labeledImage=connectedComponentsAnalysis(cleaned);
+        cv::imshow("Defined Regions", labeledImage8U * (255 / labeledImage8U.rows));
+
+
+
         cv::imshow("Thresholded", thresholdedFrame);
-        cv::imshow("Cleaned thresholded video",cleaned);
+        cv::imshow("Cleaned thresholded",cleaned);
         char key = cv::waitKey(10);
         if (key == 'q')
         {
