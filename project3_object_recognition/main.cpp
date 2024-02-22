@@ -65,7 +65,21 @@ int main()
 
         // 2. Clean the thresholded frame
         cv::Mat cleaned;
-        Mat kernel = getStructuringElement(MORPH_RECT, Size(11, 11));
+        // use 11x11 kernel
+        // Mat kernel = getStructuringElement(MORPH_RECT, Size(11, 11));
+        // use 3x3 8-connected kernel
+        cv::Mat kernel = cv::Mat::ones(3, 3, CV_8U);
+        // or use 3x3 4-connected kernel
+        // 0 1 0
+        // 1 1 1
+        // 0 1 0
+        // cv::Mat kernel = cv::Mat::zeros(3, 3, CV_8U);
+        // kernel.at<uchar>(1, 0) = 1;
+        // kernel.at<uchar>(0, 1) = 1;
+        // kernel.at<uchar>(1, 1) = 1;
+        // kernel.at<uchar>(1, 2) = 1;
+        // kernel.at<uchar>(2, 1) = 1;
+
         morphologyEx(thresholdedFrame,cleaned,MORPH_CLOSE,kernel);
         
         cv:Mat labeledImage(cleaned.size(), CV_32S); 
