@@ -65,7 +65,7 @@ void morphologyEx(const cv::Mat& src, cv::Mat& dst, int operation, const cv::Mat
 *@param j y-coordinae of the image
 *@param label current label to be assigned
 */
-void dfs(const cv::Mat& binaryImage, cv::Mat& labels, int i, int j, int label);
+//void dfs(const cv::Mat& binaryImage, cv::Mat& labels, int i, int j, int label);
 /**
 * @brief Assigns labels to the binary image 
 *
@@ -73,6 +73,6 @@ void dfs(const cv::Mat& binaryImage, cv::Mat& labels, int i, int j, int label);
 *@param binaryImage Input image frame
 *@param labeledImage getting labels for every pixels of an image
 */
-void connectedComponents(const cv::Mat& binaryImage, cv::Mat& labeledImage);
+//void connectedComponents(const cv::Mat& binaryImage, cv::Mat& labeledImage);
 
 #endif // OBJ_DETECT_H

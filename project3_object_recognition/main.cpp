@@ -6,77 +6,81 @@
 #include "objDetect.h"
 
 using namespace cv;
-//2nd APPROACH
+
 class UnionFind {
 private:
     std::vector<int> parent;
+    std::vector<int> rank;
+
 public:
-    UnionFind(int size) {
-        parent.resize(size);
-        for (int i = 0; i < size; ++i)
+    UnionFind(int n) {
+        parent.resize(n);
+        rank.resize(n);
+        for (int i = 0; i < n; ++i) {
             parent[i] = i;
+            rank[i] = 0;
+        }
     }
 
-    int find(int x) {
-        if (parent[x] != x)
-            parent[x] = find(parent[x]);
-        return parent[x];
+    int find(int u) {
+        if (parent[u] != u) {
+            parent[u] = find(parent[u]); // Path compression
+        }
+        return parent[u];
     }
 
-    void merge(int x, int y) {
-        parent[find(x)] = find(y);
+    void unite(int u, int v) {
+        int rootU = find(u);
+        int rootV = find(v);
+        if (rootU == rootV) return;
+
+        if (rank[rootU] < rank[rootV]) {
+            parent[rootU] = rootV;
+        } else if (rank[rootU] > rank[rootV]) {
+            parent[rootV] = rootU;
+        } else {
+            parent[rootV] = rootU;
+            rank[rootU]++;
+        }
     }
 };
 
-// Connected components analysis using two-pass algorithm with union-find
-Mat connectedComponentsAnalysis(const Mat& binaryImage) {
-    Mat labels(binaryImage.size(), CV_32S, Scalar(0));
-    UnionFind uf(binaryImage.rows * binaryImage.cols);
+void connectedComponents2(const Mat& binaryImage, Mat& labeledImage) {
+    labeledImage = Mat::zeros(binaryImage.size(), CV_32S); // Initialize labeled image
+
+    int rows = binaryImage.rows;
+    int cols = binaryImage.cols;
+    UnionFind uf(rows * cols);
 
     int label = 1; // Start labeling from 1
-    std::unordered_map<int, int> labelMap; // Map to track merged labels
 
-    // First Pass
-    for (int i = 0; i < binaryImage.rows; ++i) {
-        for (int j = 0; j < binaryImage.cols; ++j) {
-            if (binaryImage.at<uchar>(i, j) > 0) { // Foreground pixel
-                int upLabel = (i > 0) ? labels.at<int>(i - 1, j) : 0;
-                int leftLabel = (j > 0) ? labels.at<int>(i, j - 1) : 0;
+    // Traverse the image pixels
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            if (binaryImage.at<uchar>(i, j) != 0) {
+                int current = i * cols + j;
+                int up = (i > 0) ? (current - cols) : -1;
+                int left = (j > 0) ? (current - 1) : -1;
 
-                if (upLabel == 0 && leftLabel == 0) { // New label
-                    labels.at<int>(i, j) = label;
-                    labelMap[label] = label;
-                    label++;
-                } else {
-                    if (upLabel != 0 && leftLabel != 0 && upLabel != leftLabel) {
-                        int rootUp = uf.find(upLabel);
-                        int rootLeft = uf.find(leftLabel);
-                        if (rootUp != rootLeft) { // Merge equivalence classes
-                            uf.merge(rootUp, rootLeft);
-                            labelMap[label] = min(rootUp, rootLeft); // Store merged label
-                        }
-                    }
-                    int maxLabel = max(upLabel, leftLabel);
-                    labels.at<int>(i, j) = maxLabel;
-                    labelMap[maxLabel] = maxLabel; // Store label
-                }
+                // Union with neighboring pixels
+                if (up != -1 && binaryImage.at<uchar>(i - 1, j) != 0)
+                    uf.unite(current, up);
+                if (left != -1 && binaryImage.at<uchar>(i, j - 1) != 0)
+                    uf.unite(current, left);
             }
         }
     }
 
-    // Second Pass
-    for (int i = 0; i < binaryImage.rows; ++i) {
-        for (int j = 0; j < binaryImage.cols; ++j) {
-            int currentLabel = labels.at<int>(i, j);
-            if (currentLabel != 0) {
-                labels.at<int>(i, j) = labelMap[uf.find(currentLabel)]; // Propagate correct label
+    // Assign labels to connected components
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            int current = i * cols + j;
+            if (binaryImage.at<uchar>(i, j) != 0) {
+                labeledImage.at<int>(i, j) = uf.find(current);
             }
         }
     }
-
-    return labels;
 }
-
 int main()
 {
     // to open a default camera
@@ -101,7 +105,7 @@ int main()
             std::cout << "Error: Blank frame grabbed" << std::endl;
             continue;
         }
-        cv::imshow("Original Video", frame);
+        
 
         // Preprocess and threshold the frame
         cv::Mat thresholdedFrame = preprocessAndThreshold(frame);
@@ -130,10 +134,7 @@ int main()
         cv::threshold(sat, thresholdedFrame, thresholdValue, 255, THRESH_BINARY);
 #endif
 
-        //To clean the noise/holes : we need external kernel, we have chosen a kernel filter of size 3X3
-        // Mat kernel = (Mat_<int>(3,3) << 1, 1, 1,
-        //                             1, 1, 1,
-        //                             1, 1, 1);
+
         Mat kernel = getStructuringElement(MORPH_RECT, Size(11, 11));
         //Calling morphological filtering function
         cv::Mat cleaned;
@@ -141,16 +142,18 @@ int main()
         
         cv:Mat labeledImage(cleaned.size(), CV_32S); 
         cv::Mat labeledImage8U;
-        labeledImage.convertTo(labeledImage8U, CV_8U);
-        connectedComponents(cleaned,labeledImage);
-        cv::imshow("Defined Regions",labeledImage);
         
-        //2nd apprach
-        labeledImage=connectedComponentsAnalysis(cleaned);
-        cv::imshow("Defined Regions", labeledImage8U * (255 / labeledImage8U.rows));
+        connectedComponents2(cleaned,labeledImage);
+        //cv::imshow("Defined Regions",labeledImage);
+        labeledImage.convertTo(labeledImage8U, CV_8U);
 
 
+        Mat coloredImage;
+        applyColorMap(labeledImage8U, coloredImage, COLORMAP_JET);
+        //std::cout<<labeledImage8U<<std::endl;
 
+        cv::imshow("Original Video", frame);
+        cv::imshow("Defined Regions", coloredImage);
         cv::imshow("Thresholded", thresholdedFrame);
         cv::imshow("Cleaned thresholded",cleaned);
         char key = cv::waitKey(10);
