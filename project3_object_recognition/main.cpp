@@ -6,81 +6,9 @@
 #include "objDetect.h"
 
 using namespace cv;
+using namespace std;
 
-class UnionFind {
-private:
-    std::vector<int> parent;
-    std::vector<int> rank;
 
-public:
-    UnionFind(int n) {
-        parent.resize(n);
-        rank.resize(n);
-        for (int i = 0; i < n; ++i) {
-            parent[i] = i;
-            rank[i] = 0;
-        }
-    }
-
-    int find(int u) {
-        if (parent[u] != u) {
-            parent[u] = find(parent[u]); // Path compression
-        }
-        return parent[u];
-    }
-
-    void unite(int u, int v) {
-        int rootU = find(u);
-        int rootV = find(v);
-        if (rootU == rootV) return;
-
-        if (rank[rootU] < rank[rootV]) {
-            parent[rootU] = rootV;
-        } else if (rank[rootU] > rank[rootV]) {
-            parent[rootV] = rootU;
-        } else {
-            parent[rootV] = rootU;
-            rank[rootU]++;
-        }
-    }
-};
-
-void connectedComponents2(const Mat& binaryImage, Mat& labeledImage) {
-    labeledImage = Mat::zeros(binaryImage.size(), CV_32S); // Initialize labeled image
-
-    int rows = binaryImage.rows;
-    int cols = binaryImage.cols;
-    UnionFind uf(rows * cols);
-
-    int label = 1; // Start labeling from 1
-
-    // Traverse the image pixels
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            if (binaryImage.at<uchar>(i, j) != 0) {
-                int current = i * cols + j;
-                int up = (i > 0) ? (current - cols) : -1;
-                int left = (j > 0) ? (current - 1) : -1;
-
-                // Union with neighboring pixels
-                if (up != -1 && binaryImage.at<uchar>(i - 1, j) != 0)
-                    uf.unite(current, up);
-                if (left != -1 && binaryImage.at<uchar>(i, j - 1) != 0)
-                    uf.unite(current, left);
-            }
-        }
-    }
-
-    // Assign labels to connected components
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            int current = i * cols + j;
-            if (binaryImage.at<uchar>(i, j) != 0) {
-                labeledImage.at<int>(i, j) = uf.find(current);
-            }
-        }
-    }
-}
 int main()
 {
     // to open a default camera
@@ -94,7 +22,7 @@ int main()
     cv::namedWindow("Original Video", WINDOW_NORMAL);
     cv::namedWindow("Thresholded", WINDOW_NORMAL);
     cv::namedWindow("Cleaned Threholded",WINDOW_NORMAL);
-    cv::namedWindow("Defined Regions",WINDOW_NORMAL);
+    cv::namedWindow("Conected Components",WINDOW_NORMAL);
     for (;;)
     {
 
@@ -107,7 +35,7 @@ int main()
         }
         
 
-        // Preprocess and threshold the frame
+        // 1. Preprocess and threshold the frame
         cv::Mat thresholdedFrame = preprocessAndThreshold(frame);
 
 #if 0
@@ -135,29 +63,25 @@ int main()
 #endif
 
 
-        Mat kernel = getStructuringElement(MORPH_RECT, Size(11, 11));
-        //Calling morphological filtering function
+        // 2. Clean the thresholded frame
         cv::Mat cleaned;
+        Mat kernel = getStructuringElement(MORPH_RECT, Size(11, 11));
         morphologyEx(thresholdedFrame,cleaned,MORPH_CLOSE,kernel);
         
         cv:Mat labeledImage(cleaned.size(), CV_32S); 
         cv::Mat labeledImage8U;
         
-        connectedComponents2(cleaned,labeledImage);
-        //cv::imshow("Defined Regions",labeledImage);
-        labeledImage.convertTo(labeledImage8U, CV_8U);
+        // 3. Find connected components
+        cv::Mat colorLabeledImage;
+        connectedComponentsTwoPass(cleaned,labeledImage);
+        cv::normalize(labeledImage, labeledImage, 0, 255, cv::NORM_MINMAX, CV_8U);
+        cv::applyColorMap(labeledImage, colorLabeledImage, cv::COLORMAP_JET);
 
-        Mat mask = (labeledImage8U > 0);
-        Mat coloredImage;
-        applyColorMap(mask, coloredImage, COLORMAP_JET);
-            //std::cout<<labeledImage8U<<std::endl;
-        cvtColor(coloredImage, coloredImage, COLOR_BGR2RGB);
+        // 4. Compute features for each connected component
 
-        // Set background pixels to black
-        coloredImage.setTo(Scalar(0, 0, 0), labeledImage8U == 0);
-
+        // Display the images
         cv::imshow("Original Video", frame);
-        cv::imshow("Defined Regions", coloredImage);
+        cv::imshow("Connected Components", colorLabeledImage);
         cv::imshow("Thresholded", thresholdedFrame);
         cv::imshow("Cleaned thresholded",cleaned);
         char key = cv::waitKey(10);

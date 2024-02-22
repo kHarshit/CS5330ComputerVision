@@ -75,4 +75,11 @@ void morphologyEx(const cv::Mat& src, cv::Mat& dst, int operation, const cv::Mat
 */
 //void connectedComponents(const cv::Mat& binaryImage, cv::Mat& labeledImage);
 
+/**
+ * @brief Assigns labels to the binary image by utilizing two-pass method
+ * 
+ * @param binaryImage Input image frame
+ * @param labeledImage getting labels for every pixels of an image
+*/
+void connectedComponentsTwoPass(const cv::Mat& binaryImage, cv::Mat& labeledImage);
 #endif // OBJ_DETECT_H

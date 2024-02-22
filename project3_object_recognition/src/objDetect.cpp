@@ -16,9 +16,6 @@
 using namespace std;
 using namespace cv;
 
-
-
-
 int blur5x5_2(cv::Mat &src, cv::Mat &dst)
 {
     dst = cv::Mat::zeros(src.size(), src.type());
@@ -123,20 +120,20 @@ cv::Mat customThreshold(const cv::Mat &grayImage, double thresh, double maxValue
 Mat preprocessAndThreshold(const cv::Mat &frame)
 {
     // Convert to grayscale
-    Mat grayFrame,blur;
-    Mat input=frame;
+    Mat grayFrame, blur;
+    Mat input = frame;
     blur5x5_2(input, blur);
-    cv::convertScaleAbs(blur,blur);
+    cv::convertScaleAbs(blur, blur);
     cvtColor(blur, grayFrame, COLOR_BGR2GRAY);
 
     // Optional: Blur the image to make regions more uniform
     // blur5x5_2(grayFrame, grayFrame);
     // cv::convertScaleAbs(grayFrame,grayFrame);
-    //GaussianBlur(grayFrame, grayFrame, Size(5, 5), 0);
+    // GaussianBlur(grayFrame, grayFrame, Size(5, 5), 0);
 
     // Dynamically calculate the threshold
     double thresholdValue = calculateDynamicThreshold(grayFrame, 2);
-    std::cout << "Threshold: " << thresholdValue << std::endl;
+    // std::cout << "Threshold: " << thresholdValue << std::endl;
 
     // Apply the threshold
     // Mat thresholded;
@@ -146,38 +143,44 @@ Mat preprocessAndThreshold(const cv::Mat &frame)
     return thresholded;
 }
 
-void morphologyEx(const cv::Mat& src, cv::Mat& dst, int operation, const cv::Mat& kernel) {
-    switch (operation) {
-        case MORPH_DILATE:
-            dilate(src, dst, kernel);
-            break;
-        case MORPH_ERODE:
-            erode(src, dst, kernel);
-            break;
-        case MORPH_OPEN: {
-            Mat temp;
-            erode(src, temp, kernel);
-            dilate(temp, dst, kernel);
-            break;
-        }
-        case MORPH_CLOSE: {
-            Mat temp;
-            dilate(src, temp, kernel);
-            erode(temp, dst, kernel);
-            break;
-        }
-        default:
-            std::cout<< "Invalid morphological operation" << std::endl;
-            break;
+void morphologyEx(const cv::Mat &src, cv::Mat &dst, int operation, const cv::Mat &kernel)
+{
+    switch (operation)
+    {
+    case MORPH_DILATE:
+        dilate(src, dst, kernel);
+        break;
+    case MORPH_ERODE:
+        erode(src, dst, kernel);
+        break;
+    case MORPH_OPEN:
+    {
+        Mat temp;
+        erode(src, temp, kernel);
+        dilate(temp, dst, kernel);
+        break;
+    }
+    case MORPH_CLOSE:
+    {
+        Mat temp;
+        dilate(src, temp, kernel);
+        erode(temp, dst, kernel);
+        break;
+    }
+    default:
+        std::cout << "Invalid morphological operation" << std::endl;
+        break;
     }
 }
 
-void dfs(const Mat& binaryImage, Mat& labels, int i, int j, int label) {
+void dfs(const Mat &binaryImage, Mat &labels, int i, int j, int label)
+{
     int rows = binaryImage.rows;
     int cols = binaryImage.cols;
 
     // Check if current pixel is within image boundaries and is foreground
-    if (i < 0 || i >= rows || j < 0 || j >= cols || binaryImage.at<uchar>(i, j) == 0 || labels.at<int>(i, j) != 0) {
+    if (i < 0 || i >= rows || j < 0 || j >= cols || binaryImage.at<uchar>(i, j) == 0 || labels.at<int>(i, j) != 0)
+    {
         return; // Out of bounds, background pixel, or already labeled
     }
 
@@ -190,19 +193,120 @@ void dfs(const Mat& binaryImage, Mat& labels, int i, int j, int label) {
     dfs(binaryImage, labels, i, j - 1, label);
 }
 
-
 // Function to perform connected components analysis
-void connectedComponents(const Mat& binaryImage, Mat& labeledImage) {
+void connectedComponents(const Mat &binaryImage, Mat &labeledImage)
+{
     labeledImage = Mat::zeros(binaryImage.size(), CV_32S); // Initialize labeled image
 
     int label = 1; // Start labeling from 1
-    for (int i = 0; i < binaryImage.rows; ++i) {
-        for (int j = 0; j < binaryImage.cols; ++j) {
-            if (binaryImage.at<uchar>(i, j) != 0 && labeledImage.at<int>(i, j) == 0) {
-                std::cout << "Processing pixel (" << i << ", " << j << ")" << std::endl; 
+    for (int i = 0; i < binaryImage.rows; ++i)
+    {
+        for (int j = 0; j < binaryImage.cols; ++j)
+        {
+            if (binaryImage.at<uchar>(i, j) != 0 && labeledImage.at<int>(i, j) == 0)
+            {
+                std::cout << "Processing pixel (" << i << ", " << j << ")" << std::endl;
                 dfs(binaryImage, labeledImage, i, j, label++);
             }
         }
     }
 }
 
+class UnionFind
+{
+private:
+    std::vector<int> parent;
+    std::vector<int> rank;
+
+public:
+    UnionFind(int n)
+    {
+        parent.resize(n);
+        rank.resize(n);
+        for (int i = 0; i < n; ++i)
+        {
+            parent[i] = i;
+            rank[i] = 0;
+        }
+    }
+
+    int find(int u)
+    {
+        if (parent[u] != u)
+        {
+            parent[u] = find(parent[u]); // Path compression
+        }
+        return parent[u];
+    }
+
+    void unite(int u, int v)
+    {
+        int rootU = find(u);
+        int rootV = find(v);
+        if (rootU == rootV)
+            return;
+
+        if (rank[rootU] < rank[rootV])
+        {
+            parent[rootU] = rootV;
+        }
+        else if (rank[rootU] > rank[rootV])
+        {
+            parent[rootV] = rootU;
+        }
+        else
+        {
+            parent[rootV] = rootU;
+            rank[rootU]++;
+        }
+    }
+};
+
+void connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage)
+{
+    labeledImage = Mat::zeros(binaryImage.size(), CV_32S); // Initialize labeled image
+
+    int rows = binaryImage.rows;
+    int cols = binaryImage.cols;
+    UnionFind uf(rows * cols);
+
+    // Traverse the image pixels
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < cols; ++j)
+        {
+            if (binaryImage.at<uchar>(i, j) != 0)
+            {
+                int current = i * cols + j;
+                int up = (i > 0) ? (current - cols) : -1;
+                int left = (j > 0) ? (current - 1) : -1;
+
+                // Union with neighboring pixels
+                if (up != -1 && binaryImage.at<uchar>(i - 1, j) != 0)
+                    uf.unite(current, up);
+                if (left != -1 && binaryImage.at<uchar>(i, j - 1) != 0)
+                    uf.unite(current, left);
+            }
+        }
+    }
+
+    // Assign labels to connected components
+    std::map<int, int> labelsMap;
+    int newLabel = 0;
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < cols; ++j)
+        {
+            int current = i * cols + j;
+            if (binaryImage.at<uchar>(i, j) != 0)
+            {
+                int label = uf.find(current);
+                if (labelsMap.find(label) == labelsMap.end())
+                {
+                    labelsMap[label] = newLabel++;
+                }
+                labeledImage.at<int>(i, j) = labelsMap[label];
+            }
+        }
+    }
+}
