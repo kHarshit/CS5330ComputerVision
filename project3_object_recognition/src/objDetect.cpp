@@ -262,7 +262,7 @@ public:
     }
 };
 
-void connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage)
+std::map<int, int> connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage)
 {
     labeledImage = Mat::zeros(binaryImage.size(), CV_32S); // Initialize labeled image
 
@@ -308,5 +308,57 @@ void connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage)
                 labeledImage.at<int>(i, j) = labelsMap[label];
             }
         }
+    }
+
+    return labelsMap;
+}
+
+
+void computeFeatures(const cv::Mat &labeledImage, std::map<int, int> &connectedComponents, cv::Mat &outputImage) {
+    // Create a copy of the labeled image for visualization
+    outputImage = labeledImage.clone();
+    // Convert outputImage to CV_8U for visualization if it's not already
+    if (outputImage.type() != CV_8U) {
+        double minVal, maxVal;
+        cv::minMaxLoc(outputImage, &minVal, &maxVal); // Find min and max values to scale the image
+        outputImage.convertTo(outputImage, CV_8U, 255.0 / (maxVal - minVal), -minVal * 255.0 / (maxVal - minVal));
+    }
+
+    for (const auto &component : connectedComponents) {
+        int label = component.second;
+
+        // Extract the component as a binary mask
+        cv::Mat mask = labeledImage == label;
+
+        // Calculate moments for this component
+        cv::Moments moments = cv::moments(mask, true);
+
+        // Calculate centroid
+        double centerX = moments.m10 / moments.m00;
+        double centerY = moments.m01 / moments.m00;
+
+        // Calculate the orientation (angle of the axis of least moment)
+        double angle = 0.5 * atan2(2 * moments.mu11, moments.mu20 - moments.mu02);
+
+        // Use non-zero locations for minAreaRect
+        std::vector<cv::Point> nonZeroLocations;
+        cv::findNonZero(mask, nonZeroLocations);
+        cv::RotatedRect rotatedRect = cv::minAreaRect(nonZeroLocations);
+
+        // Draw the oriented bounding box
+        cv::Point2f vertices[4];
+        rotatedRect.points(vertices);
+        for (int i = 0; i < 4; i++) {
+            cv::line(outputImage, vertices[i], vertices[(i + 1) % 4], static_cast<uchar>(label), 2);
+        }
+
+        // Draw the axis of least moment
+        cv::Point2f pt1, pt2;
+        double length = std::max(rotatedRect.size.width, rotatedRect.size.height) / 2;
+        pt1.x = static_cast<float>(centerX + length * cos(angle));
+        pt1.y = static_cast<float>(centerY + length * sin(angle));
+        pt2.x = static_cast<float>(centerX - length * cos(angle));
+        pt2.y = static_cast<float>(centerY - length * sin(angle));
+        cv::line(outputImage, pt1, pt2, static_cast<uchar>(label), 2);
     }
 }

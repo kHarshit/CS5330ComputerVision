@@ -80,6 +80,18 @@ void morphologyEx(const cv::Mat& src, cv::Mat& dst, int operation, const cv::Mat
  * 
  * @param binaryImage Input image frame
  * @param labeledImage getting labels for every pixels of an image
+ * @return std::map<int, int> map of connected components
 */
-void connectedComponentsTwoPass(const cv::Mat& binaryImage, cv::Mat& labeledImage);
+std::map<int, int> connectedComponentsTwoPass(const cv::Mat& binaryImage, cv::Mat& labeledImage);
+
+
+/**
+ * @brief Compute features of the connected components
+ * 
+ * @param labeledImage labeled image
+ * @param connectedComponents map of connected components
+ * @param outputImage output image
+*/
+void computeFeatures(const cv::Mat &labeledImage, std::map<int, int> &connectedComponents, cv::Mat &outputImage);
+
 #endif // OBJ_DETECT_H

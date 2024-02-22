@@ -2,6 +2,8 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/opencv.hpp>
+#include <map>
+#include <vector>
 #include <iostream>
 #include "objDetect.h"
 
@@ -23,6 +25,7 @@ int main()
     cv::namedWindow("Thresholded", WINDOW_NORMAL);
     cv::namedWindow("Cleaned Threholded",WINDOW_NORMAL);
     cv::namedWindow("Conected Components",WINDOW_NORMAL);
+    cv::namedWindow("Connected Components Features",WINDOW_NORMAL);
     for (;;)
     {
 
@@ -64,7 +67,7 @@ int main()
 
 
         // 2. Clean the thresholded frame
-        cv::Mat cleaned;
+        cv::Mat cleanedImg;
         // use 11x11 kernel
         // Mat kernel = getStructuringElement(MORPH_RECT, Size(11, 11));
         // use 3x3 8-connected kernel
@@ -80,24 +83,31 @@ int main()
         // kernel.at<uchar>(1, 2) = 1;
         // kernel.at<uchar>(2, 1) = 1;
 
-        morphologyEx(thresholdedFrame,cleaned,MORPH_CLOSE,kernel);
+        morphologyEx(thresholdedFrame,cleanedImg,MORPH_CLOSE,kernel);
         
-        cv:Mat labeledImage(cleaned.size(), CV_32S); 
-        cv::Mat labeledImage8U;
+        cv::Mat labeledImg(cleanedImg.size(), CV_32S); 
+        cv::Mat labeledImgNormalized;
         
         // 3. Find connected components
-        cv::Mat colorLabeledImage;
-        connectedComponentsTwoPass(cleaned,labeledImage);
-        cv::normalize(labeledImage, labeledImage, 0, 255, cv::NORM_MINMAX, CV_8U);
-        cv::applyColorMap(labeledImage, colorLabeledImage, cv::COLORMAP_JET);
+        cv::Mat colorLabeledImg;
+        // returns a map of connected components {pixel number: connected component number}
+        std::map<int, int> connectedComponents = connectedComponentsTwoPass(cleanedImg, labeledImg);
+        cv::normalize(labeledImg, labeledImgNormalized, 0, 255, cv::NORM_MINMAX, CV_8U);
+        cv::applyColorMap(labeledImgNormalized, colorLabeledImg, cv::COLORMAP_JET);
 
         // 4. Compute features for each connected component
+        cv::Mat colorLabeledFeatureImg;
+        cv::Mat featureOutImg;
+        computeFeatures(labeledImg, connectedComponents, featureOutImg);
+        cv::normalize(featureOutImg, featureOutImg, 0, 255, cv::NORM_MINMAX, CV_8U);
+        cv::applyColorMap(featureOutImg, colorLabeledFeatureImg, cv::COLORMAP_JET);
 
         // Display the images
-        cv::imshow("Original Video", frame);
-        cv::imshow("Connected Components", colorLabeledImage);
-        cv::imshow("Thresholded", thresholdedFrame);
-        cv::imshow("Cleaned thresholded",cleaned);
+        cv::imshow("0. Original Video", frame);
+        cv::imshow("1. Thresholded", thresholdedFrame);
+        cv::imshow("2. Cleaned thresholded",cleanedImg);
+        cv::imshow("3. Connected Components", colorLabeledImg);
+        cv::imshow("4. Connected Components Features", colorLabeledFeatureImg);
         char key = cv::waitKey(10);
         if (key == 'q')
         {
