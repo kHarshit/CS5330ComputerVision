@@ -147,10 +147,14 @@ int main()
         //cv::imshow("Defined Regions",labeledImage);
         labeledImage.convertTo(labeledImage8U, CV_8U);
 
-
+        Mat mask = (labeledImage8U > 0);
         Mat coloredImage;
-        applyColorMap(labeledImage8U, coloredImage, COLORMAP_JET);
-        //std::cout<<labeledImage8U<<std::endl;
+        applyColorMap(mask, coloredImage, COLORMAP_JET);
+            //std::cout<<labeledImage8U<<std::endl;
+        cvtColor(coloredImage, coloredImage, COLOR_BGR2RGB);
+
+        // Set background pixels to black
+        coloredImage.setTo(Scalar(0, 0, 0), labeledImage8U == 0);
 
         cv::imshow("Original Video", frame);
         cv::imshow("Defined Regions", coloredImage);
