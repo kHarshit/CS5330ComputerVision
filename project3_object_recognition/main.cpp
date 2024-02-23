@@ -101,6 +101,7 @@ int main()
         cv::Mat colorLabeledFeatureImg;
         cv::Mat featureOutImg;
         map<int, ObjectFeatures> featuresMap = computeFeatures(labeledImg, connectedComponents, featureOutImg);
+        cout << "Number of connected components: " << featuresMap.size() << endl;
         cv::normalize(featureOutImg, featureOutImg, 0, 255, cv::NORM_MINMAX, CV_8U);
         cv::applyColorMap(featureOutImg, colorLabeledFeatureImg, cv::COLORMAP_JET);
 

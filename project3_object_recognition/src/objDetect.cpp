@@ -262,6 +262,7 @@ public:
     }
 };
 
+#if 0
 std::map<int, int> connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage)
 {
     labeledImage = Mat::zeros(binaryImage.size(), CV_32S); // Initialize labeled image
@@ -310,6 +311,66 @@ std::map<int, int> connectedComponentsTwoPass(const Mat &binaryImage, Mat &label
         }
     }
 
+    return labelsMap;
+}
+#endif
+
+std::map<int, int> connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage) {
+    labeledImage = Mat::zeros(binaryImage.size(), CV_32S); // Initialize labeled image
+
+    int rows = binaryImage.rows;
+    int cols = binaryImage.cols;
+    UnionFind uf(rows * cols); // Assume UnionFind is a correctly implemented class
+
+    // First pass: Label the components
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            if (binaryImage.at<uchar>(i, j) != 0) {
+                int current = i * cols + j;
+                int up = (i > 0) ? (current - cols) : -1;
+                int left = (j > 0) ? (current - 1) : -1;
+
+                // Union with neighboring pixels
+                if (up != -1 && binaryImage.at<uchar>(i - 1, j) != 0)
+                    uf.unite(current, up);
+                if (left != -1 && binaryImage.at<uchar>(i, j - 1) != 0)
+                    uf.unite(current, left);
+            }
+        }
+    }
+
+    // Second pass: Map the root of each union-find set to a label
+    map<int, int> componentSizes;
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            if (binaryImage.at<uchar>(i, j) != 0) {
+                int label = uf.find(i * cols + j);
+                labeledImage.at<int>(i, j) = label;
+                componentSizes[label]++;
+            }
+        }
+    }
+
+    // Filter out small components
+    int sizeThreshold = 100; // Minimum size of a connected component
+    map<int, int> labelsMap;
+    int newLabel = 1; // Start labeling from 1
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < cols; ++j) {
+            int originalLabel = labeledImage.at<int>(i, j);
+            // cout << componentSizes[originalLabel] << endl;
+            if (originalLabel > 0 && componentSizes[originalLabel] >= sizeThreshold) {
+                if (labelsMap.find(originalLabel) == labelsMap.end()) {
+                    labelsMap[originalLabel] = newLabel++;
+                }
+                labeledImage.at<int>(i, j) = labelsMap[originalLabel];
+            } else {
+                labeledImage.at<int>(i, j) = 0; // Set to background
+            }
+        }
+    }
+
+    // Return the modified labelsMap, which now only contains mappings for sufficiently large components
     return labelsMap;
 }
 
