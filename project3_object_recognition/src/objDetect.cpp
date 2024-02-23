@@ -444,7 +444,7 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::M
         cv::line(outputImage, pt1, pt2, static_cast<uchar>(255), 2);
 
         // label object on image
-        cv::putText(outputImage, std::to_string(label), cv::Point(centerX, centerY), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 3);
+        cv::putText(outputImage, std::to_string(label), cv::Point(centerX, centerY), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 3);
     }
 
     return featuresMap;

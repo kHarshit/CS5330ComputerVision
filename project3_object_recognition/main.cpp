@@ -114,7 +114,7 @@ int main()
             // iterate through the featuresMap and store the feature vectors
             // map<int, ObjectFeatures> featuresMap where ObjectFeatures is structstruct ObjectFeatures { double percentFilled; double aspectRatio;};
             for (const auto& featurePair : featuresMap) {
-                std::cout << "Enter label for the object: ";
+                std::cout << "Enter label for the object " << featurePair.first << ": ";
                 std::string label;
                 std::cin >> label;
 
