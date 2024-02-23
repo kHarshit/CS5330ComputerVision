@@ -548,3 +548,67 @@ std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const st
 
     return bestMatch;
 }
+
+void updateConfusionMatrix(std::map<std::string, std::map<std::string, int>> &matrix, const std::string &trueLabel, const std::string &classifiedLabel)
+{
+    // Add true label to matrix if it doesn't exist
+    if (matrix.find(trueLabel) == matrix.end())
+    {
+        for (auto &row : matrix)
+        {
+            row.second[trueLabel] = 0; // Add the new label to existing rows
+        }
+        matrix[trueLabel]; // Create a new row for the true label
+    }
+
+    // Add classified label to matrix (and all sub-maps) if it doesn't exist
+    if (matrix.begin()->second.find(classifiedLabel) == matrix.begin()->second.end())
+    {
+        for (auto &row : matrix)
+        {
+            row.second[classifiedLabel] = 0; // Ensure all rows have the new label
+        }
+    }
+
+    // Update the count for the true-classified label pair
+    matrix[trueLabel][classifiedLabel]++;
+}
+
+std::set<std::string> collectAllLabels(const std::map<std::string, std::map<std::string, int>> &matrix)
+{
+    std::set<std::string> labels;
+    for (const auto &row : matrix)
+    {
+        labels.insert(row.first); // Insert true labels
+        for (const auto &cell : row.second)
+        {
+            labels.insert(cell.first); // Insert classified labels
+        }
+    }
+    return labels;
+}
+
+void makeMatrixNxN(std::map<std::string, std::map<std::string, int>> &matrix)
+{
+    auto labels = collectAllLabels(matrix);
+
+    // Ensure all labels exist in both dimensions without resetting counts
+    for (const auto &label : labels)
+    {
+        // Check if the label exists in the rows; if not, initialize its row
+        if (matrix.find(label) == matrix.end())
+        {
+            matrix[label] = std::map<std::string, int>(); // Initialize with an empty map
+        }
+
+        // Now ensure the label and all other labels exist in the columns of each row
+        for (const auto &subLabel : labels)
+        {
+            // If the subLabel does not exist in the column of the current label's row, initialize it to 0
+            if (matrix[label].find(subLabel) == matrix[label].end())
+            {
+                matrix[label][subLabel] = 0; // Initialize count to 0 if not present
+            }
+        }
+    }
+}

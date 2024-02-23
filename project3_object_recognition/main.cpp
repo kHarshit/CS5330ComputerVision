@@ -98,11 +98,11 @@ int main()
         cv::Mat colorLabeledFeatureImg;
         cv::Mat featureOutImg;
         map<int, ObjectFeatures> featuresMap = computeFeatures(labeledImg, featureOutImg);
-        cout << "Number of connected components: " << featuresMap.size() << endl;
+        // cout << "Number of connected components: " << featuresMap.size() << endl;
         cv::normalize(featureOutImg, featureOutImg, 0, 255, cv::NORM_MINMAX, CV_8U);
         cv::applyColorMap(featureOutImg, colorLabeledFeatureImg, cv::COLORMAP_JET);
 
-        // 5. Enable your system to collect feature vectors from objects, attach labels, and store them in an object DB (e.g. a file). In other words, your system needs to have a training mode that enables you to collect the feature vectors of known objects and store them for later use in classifying unknown objects. You may want to implement this as a response to a key press: when the user types an N, for example, have the system prompt the user for a name/label and then store the feature vector for the current object along with its label into a file. This could also be done from labeled still images of the object, such as those from a training set.
+        // 5. Collect training data
         if (key == 'n')
         {
             // store the feature vector for the current object along with its label into a file
@@ -122,21 +122,61 @@ int main()
             }
         }
 
-        if (key == 'c')
+        // 6. Classify new images
+        std::string filename = "object_db.txt";
+        // load feature database
+        std::map<std::string, ObjectFeatures> objectFeaturesMap = loadFeatureDatabase(filename);
+        // calculate standard deviation
+        ObjectFeatures stdev = calculateStdDev(objectFeaturesMap);
+        static char lastKeyPressed = ' ';
+        // Initialize confusion matrix
+        // key: ground truth label, value: map of predicted label and count
+        static std::map<std::string, std::map<std::string, int>> confusionMatrix;
+
+        if (key == 'c' || lastKeyPressed == 'c')
         {
-            // 6. Enable your system to classify unknown objects by comparing their feature vectors to those in the object DB. In other words, your system needs to have a classification mode that enables you to compare the feature vectors of unknown objects to those in the object DB and determine the best match. You may want to implement this as a response to a key press: when the user types a C, for example, have the system prompt the user for the feature vector of the unknown object and then compare it to those in the object DB to determine the best match.
-            std::string filename = "object_db.txt";
-            // load feature database
-            std::map<std::string, ObjectFeatures> objectFeaturesMap = loadFeatureDatabase(filename);
-            // calculate standard deviation
-            ObjectFeatures stdev = calculateStdDev(objectFeaturesMap);
+            lastKeyPressed = 'c';
+            std::string labelText = "Label ";
             // classify each object in feature map
             for (const auto &featurePair : featuresMap)
             {
-                std::string label = classifyObject(featurePair.second, objectFeaturesMap, stdev);
-                std::cout << "Object with label " << label << " has feature vector: " << featurePair.second.percentFilled << ", " << featurePair.second.aspectRatio << std::endl;
-                // show label on the image
-                // cv::putText(colorLabeledFeatureImg, label, cv::Point(featurePair.second.centroid.x, featurePair.second.centroid.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+                std::string classifiedLabel = classifyObject(featurePair.second, objectFeaturesMap, stdev);
+                // std::cout << "Object classified as " << label << " has feature vector: " << featurePair.second.percentFilled << ", " << featurePair.second.aspectRatio << std::endl;
+                // show label on the image in top left corner
+                labelText += std::to_string(featurePair.first) + ": " + classifiedLabel + " ";
+
+                // 7. Evaluate the performance of your system
+                if (key == 'e')
+                {
+                    // evaluate the performance of your system
+                    std::string groundTruthLabel;
+                    std::cout << "Enter the ground truth label for the object " << featurePair.first << ": ";
+                    std::cin >> groundTruthLabel;
+                    if (classifiedLabel == groundTruthLabel)
+                    {
+                        std::cout << "Correct classification!" << std::endl;
+                    }
+                    else
+                    {
+                        std::cout << "Incorrect classification!" << std::endl;
+                    }
+                    // update confusion matrix
+                    updateConfusionMatrix(confusionMatrix, groundTruthLabel, classifiedLabel);
+                }
+            }
+            cv::putText(colorLabeledFeatureImg, labelText, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+            // Adjust the confusion matrix to make sure it's nxn
+            makeMatrixNxN(confusionMatrix);
+            // Print the dynamically updated confusion matrix
+            std::cout << "Confusion Matrix: " << std::endl;
+            for (const auto &row : confusionMatrix)
+            {
+                std::cout << row.first << ": ";
+                for (const auto &cell : row.second)
+                {
+                    std::cout << cell.first << "=" << cell.second << " ";
+                }
+                std::cout << std::endl;
             }
         }
 

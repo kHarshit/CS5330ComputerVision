@@ -134,4 +134,22 @@ double scaledEuclideanDistance(const ObjectFeatures &f1, const ObjectFeatures &f
  */
 std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const std::map<std::string, ObjectFeatures> &database, const ObjectFeatures &stdev);
 
+/**
+ * @brief Update the confusion matrix
+ *
+ * @param matrix confusion matrix
+ * @param trueLabel true label
+ * @param classifiedLabel classified label
+ * @return void
+ */
+void updateConfusionMatrix(std::map<std::string, std::map<std::string, int>> &matrix, const std::string &trueLabel, const std::string &classifiedLabel);
+
+/**
+ * @brief Make confusion matrix NxN square matrix
+ *
+ * @param matrix confusion matrix
+ * @return void
+ */
+void makeMatrixNxN(std::map<std::string, std::map<std::string, int>> &matrix);
+
 #endif // OBJ_DETECT_H
