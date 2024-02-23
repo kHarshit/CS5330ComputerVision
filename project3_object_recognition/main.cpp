@@ -11,7 +11,6 @@
 using namespace cv;
 using namespace std;
 
-
 int main()
 {
     // to open a default camera
@@ -24,9 +23,9 @@ int main()
     }
     cv::namedWindow("Original Video", WINDOW_NORMAL);
     cv::namedWindow("Thresholded", WINDOW_NORMAL);
-    cv::namedWindow("Cleaned Threholded",WINDOW_NORMAL);
-    cv::namedWindow("Conected Components",WINDOW_NORMAL);
-    cv::namedWindow("Connected Components Features",WINDOW_NORMAL);
+    cv::namedWindow("Cleaned Threholded", WINDOW_NORMAL);
+    cv::namedWindow("Conected Components", WINDOW_NORMAL);
+    cv::namedWindow("Connected Components Features", WINDOW_NORMAL);
     for (;;)
     {
         char key = cv::waitKey(10);
@@ -38,7 +37,6 @@ int main()
             std::cout << "Error: Blank frame grabbed" << std::endl;
             continue;
         }
-        
 
         // 1. Preprocess and threshold the frame
         cv::Mat thresholdedFrame = preprocessAndThreshold(frame);
@@ -67,7 +65,6 @@ int main()
         cv::threshold(sat, thresholdedFrame, thresholdValue, 255, THRESH_BINARY);
 #endif
 
-
         // 2. Clean the thresholded frame
         cv::Mat cleanedImg;
         // use 11x11 kernel
@@ -85,11 +82,11 @@ int main()
         // kernel.at<uchar>(1, 2) = 1;
         // kernel.at<uchar>(2, 1) = 1;
 
-        morphologyEx(thresholdedFrame,cleanedImg,MORPH_CLOSE,kernel);
-        
-        cv::Mat labeledImg(cleanedImg.size(), CV_32S); 
+        morphologyEx(thresholdedFrame, cleanedImg, MORPH_CLOSE, kernel);
+
+        cv::Mat labeledImg(cleanedImg.size(), CV_32S);
         cv::Mat labeledImgNormalized;
-        
+
         // 3. Find connected components
         cv::Mat colorLabeledImg;
         // returns a map of connected components {pixel number: connected component number}
@@ -113,7 +110,8 @@ int main()
 
             // iterate through the featuresMap and store the feature vectors
             // map<int, ObjectFeatures> featuresMap where ObjectFeatures is structstruct ObjectFeatures { double percentFilled; double aspectRatio;};
-            for (const auto& featurePair : featuresMap) {
+            for (const auto &featurePair : featuresMap)
+            {
                 std::cout << "Enter label for the object " << featurePair.first << ": ";
                 std::string label;
                 std::cin >> label;
@@ -133,20 +131,19 @@ int main()
             // calculate standard deviation
             ObjectFeatures stdev = calculateStdDev(objectFeaturesMap);
             // classify each object in feature map
-            for (const auto& featurePair : featuresMap) {
+            for (const auto &featurePair : featuresMap)
+            {
                 std::string label = classifyObject(featurePair.second, objectFeaturesMap, stdev);
                 std::cout << "Object with label " << label << " has feature vector: " << featurePair.second.percentFilled << ", " << featurePair.second.aspectRatio << std::endl;
                 // show label on the image
                 // cv::putText(colorLabeledFeatureImg, label, cv::Point(featurePair.second.centroid.x, featurePair.second.centroid.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
             }
-            
         }
-        
 
         // Display the images
         cv::imshow("0. Original Video", frame);
         cv::imshow("1. Thresholded", thresholdedFrame);
-        cv::imshow("2. Cleaned thresholded",cleanedImg);
+        cv::imshow("2. Cleaned thresholded", cleanedImg);
         cv::imshow("3. Connected Components", colorLabeledImg);
         cv::imshow("4. Connected Components Features", colorLabeledFeatureImg);
         if (key == 'q')

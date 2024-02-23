@@ -316,7 +316,8 @@ std::map<int, int> connectedComponentsTwoPass(const Mat &binaryImage, Mat &label
 }
 #endif
 
-void connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage) {
+void connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage)
+{
     labeledImage = Mat::zeros(binaryImage.size(), CV_32S); // Initialize labeled image
 
     int rows = binaryImage.rows;
@@ -324,9 +325,12 @@ void connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage) {
     UnionFind uf(rows * cols); // Assume UnionFind is a correctly implemented class
 
     // First pass: Label the components
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            if (binaryImage.at<uchar>(i, j) != 0) {
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < cols; ++j)
+        {
+            if (binaryImage.at<uchar>(i, j) != 0)
+            {
                 int current = i * cols + j;
                 int up = (i > 0) ? (current - cols) : -1;
                 int left = (j > 0) ? (current - 1) : -1;
@@ -342,9 +346,12 @@ void connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage) {
 
     // Second pass: Map the root of each union-find set to a label
     map<int, int> componentSizes;
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
-            if (binaryImage.at<uchar>(i, j) != 0) {
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < cols; ++j)
+        {
+            if (binaryImage.at<uchar>(i, j) != 0)
+            {
                 int label = uf.find(i * cols + j);
                 labeledImage.at<int>(i, j) = label;
                 componentSizes[label]++;
@@ -358,28 +365,35 @@ void connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage) {
     // key: original label, value: new label
     map<int, int> labelsMap;
     int newLabel = 1; // Start labeling from 1
-    for (int i = 0; i < rows; ++i) {
-        for (int j = 0; j < cols; ++j) {
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < cols; ++j)
+        {
             int originalLabel = labeledImage.at<int>(i, j);
             // cout << componentSizes[originalLabel] << endl;
-            if (originalLabel > 0 && componentSizes[originalLabel] >= sizeThreshold) {
-                if (labelsMap.find(originalLabel) == labelsMap.end()) {
+            if (originalLabel > 0 && componentSizes[originalLabel] >= sizeThreshold)
+            {
+                if (labelsMap.find(originalLabel) == labelsMap.end())
+                {
                     labelsMap[originalLabel] = newLabel++;
                 }
                 labeledImage.at<int>(i, j) = labelsMap[originalLabel];
-            } else {
+            }
+            else
+            {
                 labeledImage.at<int>(i, j) = 0; // Set to background
             }
         }
     }
-
 }
 
-std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::Mat &outputImage) {
+std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::Mat &outputImage)
+{
     // Create a copy of the labeled image for visualization
     outputImage = labeledImage.clone();
     // Convert outputImage to CV_8U for visualization if it's not already
-    if (outputImage.type() != CV_8U) {
+    if (outputImage.type() != CV_8U)
+    {
         double minVal, maxVal;
         cv::minMaxLoc(outputImage, &minVal, &maxVal); // Find min and max values to scale the image
         outputImage.convertTo(outputImage, CV_8U, 255.0 / (maxVal - minVal), -minVal * 255.0 / (maxVal - minVal));
@@ -390,16 +404,20 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::M
     std::set<int> uniqueLabels; // To keep track of unique labels (connected components)
 
     // Iterate over the labeledImage to find unique labels
-    for (int i = 0; i < labeledImage.rows; ++i) {
-        for (int j = 0; j < labeledImage.cols; ++j) {
+    for (int i = 0; i < labeledImage.rows; ++i)
+    {
+        for (int j = 0; j < labeledImage.cols; ++j)
+        {
             int label = labeledImage.at<int>(i, j);
-            if (label != 0) { // Exclude background
+            if (label != 0)
+            { // Exclude background
                 uniqueLabels.insert(label);
             }
         }
     }
 
-    for (int label: uniqueLabels) {
+    for (int label : uniqueLabels)
+    {
         // Extract the component as a binary mask
         cv::Mat mask = labeledImage == label;
 
@@ -430,7 +448,8 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::M
         // Draw the oriented bounding box
         cv::Point2f vertices[4];
         rotatedRect.points(vertices);
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++)
+        {
             cv::line(outputImage, vertices[i], vertices[(i + 1) % 4], static_cast<uchar>(255), 4);
         }
 
@@ -450,19 +469,22 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::M
     return featuresMap;
 }
 
-std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string& filename) {
+std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string &filename)
+{
     std::map<std::string, ObjectFeatures> database;
     std::ifstream file(filename);
     std::string line;
 
-    while (std::getline(file, line)) {
+    while (std::getline(file, line))
+    {
         std::istringstream iss(line);
         std::string label;
         ObjectFeatures features;
         char delimiter; // To consume the comma delimiter after the label
 
-        if (std::getline(iss, label, ',') && 
-            (iss >> features.percentFilled >> delimiter >> features.aspectRatio)) {
+        if (std::getline(iss, label, ',') &&
+            (iss >> features.percentFilled >> delimiter >> features.aspectRatio))
+        {
             database[label] = features;
         }
     }
@@ -470,12 +492,14 @@ std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string& fil
     return database;
 }
 
-ObjectFeatures calculateStdDev(const std::map<std::string, ObjectFeatures>& database) {
+ObjectFeatures calculateStdDev(const std::map<std::string, ObjectFeatures> &database)
+{
     ObjectFeatures mean = {0.0, 0.0}, stdDev = {0.0, 0.0};
     int count = database.size();
 
     // Calculate sums for each feature
-    for (const auto& entry : database) {
+    for (const auto &entry : database)
+    {
         mean.percentFilled += entry.second.percentFilled;
         mean.aspectRatio += entry.second.aspectRatio;
     }
@@ -485,7 +509,8 @@ ObjectFeatures calculateStdDev(const std::map<std::string, ObjectFeatures>& data
     mean.aspectRatio /= count;
 
     // Calculate squared sum for standard deviation
-    for (const auto& entry : database) {
+    for (const auto &entry : database)
+    {
         stdDev.percentFilled += std::pow(entry.second.percentFilled - mean.percentFilled, 2);
         stdDev.aspectRatio += std::pow(entry.second.aspectRatio - mean.aspectRatio, 2);
     }
@@ -497,21 +522,25 @@ ObjectFeatures calculateStdDev(const std::map<std::string, ObjectFeatures>& data
     return stdDev;
 }
 
-double scaledEuclideanDistance(const ObjectFeatures& f1, const ObjectFeatures& f2, const ObjectFeatures& stdev) {
+double scaledEuclideanDistance(const ObjectFeatures &f1, const ObjectFeatures &f2, const ObjectFeatures &stdev)
+{
     double distance = 0.0;
     distance += std::pow((f1.percentFilled - f2.percentFilled) / stdev.percentFilled, 2);
     distance += std::pow((f1.aspectRatio - f2.aspectRatio) / stdev.aspectRatio, 2);
     return std::sqrt(distance);
 }
 
-std::string classifyObject(const ObjectFeatures& unknownObjectFeatures, const std::map<std::string, ObjectFeatures>& database, const ObjectFeatures& stdev) {
+std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const std::map<std::string, ObjectFeatures> &database, const ObjectFeatures &stdev)
+{
     std::string bestMatch = "Unknown";
     double minDistance = std::numeric_limits<double>::max();
 
-    for (const auto& entry : database) {
+    for (const auto &entry : database)
+    {
         double distance = scaledEuclideanDistance(unknownObjectFeatures, entry.second, stdev);
-        
-        if (distance < minDistance) {
+
+        if (distance < minDistance)
+        {
             minDistance = distance;
             bestMatch = entry.first;
         }
