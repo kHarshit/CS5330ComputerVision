@@ -93,14 +93,14 @@ int main()
         // 3. Find connected components
         cv::Mat colorLabeledImg;
         // returns a map of connected components {pixel number: connected component number}
-        std::map<int, int> connectedComponents = connectedComponentsTwoPass(cleanedImg, labeledImg);
+        connectedComponentsTwoPass(cleanedImg, labeledImg);
         cv::normalize(labeledImg, labeledImgNormalized, 0, 255, cv::NORM_MINMAX, CV_8U);
         cv::applyColorMap(labeledImgNormalized, colorLabeledImg, cv::COLORMAP_JET);
 
         // 4. Compute features for each connected component
         cv::Mat colorLabeledFeatureImg;
         cv::Mat featureOutImg;
-        map<int, ObjectFeatures> featuresMap = computeFeatures(labeledImg, connectedComponents, featureOutImg);
+        map<int, ObjectFeatures> featuresMap = computeFeatures(labeledImg, featureOutImg);
         cout << "Number of connected components: " << featuresMap.size() << endl;
         cv::normalize(featureOutImg, featureOutImg, 0, 255, cv::NORM_MINMAX, CV_8U);
         cv::applyColorMap(featureOutImg, colorLabeledFeatureImg, cv::COLORMAP_JET);
@@ -123,6 +123,25 @@ int main()
                 file.close();
             }
         }
+
+        if (key == 'c')
+        {
+            // 6. Enable your system to classify unknown objects by comparing their feature vectors to those in the object DB. In other words, your system needs to have a classification mode that enables you to compare the feature vectors of unknown objects to those in the object DB and determine the best match. You may want to implement this as a response to a key press: when the user types a C, for example, have the system prompt the user for the feature vector of the unknown object and then compare it to those in the object DB to determine the best match.
+            std::string filename = "object_db.txt";
+            // load feature database
+            std::map<std::string, ObjectFeatures> objectFeaturesMap = loadFeatureDatabase(filename);
+            // calculate standard deviation
+            ObjectFeatures stdev = calculateStdDev(objectFeaturesMap);
+            // classify each object in feature map
+            for (const auto& featurePair : featuresMap) {
+                std::string label = classifyObject(featurePair.second, objectFeaturesMap, stdev);
+                std::cout << "Object with label " << label << " has feature vector: " << featurePair.second.percentFilled << ", " << featurePair.second.aspectRatio << std::endl;
+                // show label on the image
+                // cv::putText(colorLabeledFeatureImg, label, cv::Point(featurePair.second.centroid.x, featurePair.second.centroid.y), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
+            }
+            
+        }
+        
 
         // Display the images
         cv::imshow("0. Original Video", frame);

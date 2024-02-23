@@ -11,6 +11,7 @@
 #include <opencv2/highgui.hpp>
 #include <iostream>
 #include <vector>
+#include <fstream>
 #include "objDetect.h"
 
 using namespace std;
@@ -315,7 +316,7 @@ std::map<int, int> connectedComponentsTwoPass(const Mat &binaryImage, Mat &label
 }
 #endif
 
-std::map<int, int> connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage) {
+void connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage) {
     labeledImage = Mat::zeros(binaryImage.size(), CV_32S); // Initialize labeled image
 
     int rows = binaryImage.rows;
@@ -352,7 +353,9 @@ std::map<int, int> connectedComponentsTwoPass(const Mat &binaryImage, Mat &label
     }
 
     // Filter out small components
-    int sizeThreshold = 100; // Minimum size of a connected component
+    int sizeThreshold = 10000; // Minimum size of a connected component
+    // Create a map to store the new labels for sufficiently large components
+    // key: original label, value: new label
     map<int, int> labelsMap;
     int newLabel = 1; // Start labeling from 1
     for (int i = 0; i < rows; ++i) {
@@ -370,12 +373,9 @@ std::map<int, int> connectedComponentsTwoPass(const Mat &binaryImage, Mat &label
         }
     }
 
-    // Return the modified labelsMap, which now only contains mappings for sufficiently large components
-    return labelsMap;
 }
 
-
-std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, std::map<int, int> &connectedComponents, cv::Mat &outputImage) {
+std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::Mat &outputImage) {
     // Create a copy of the labeled image for visualization
     outputImage = labeledImage.clone();
     // Convert outputImage to CV_8U for visualization if it's not already
@@ -387,10 +387,19 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, std::
 
     // Create a map to store the features of each connected component
     std::map<int, ObjectFeatures> featuresMap;
+    std::set<int> uniqueLabels; // To keep track of unique labels (connected components)
 
-    for (const auto &component : connectedComponents) {
-        int label = component.second;
+    // Iterate over the labeledImage to find unique labels
+    for (int i = 0; i < labeledImage.rows; ++i) {
+        for (int j = 0; j < labeledImage.cols; ++j) {
+            int label = labeledImage.at<int>(i, j);
+            if (label != 0) { // Exclude background
+                uniqueLabels.insert(label);
+            }
+        }
+    }
 
+    for (int label: uniqueLabels) {
         // Extract the component as a binary mask
         cv::Mat mask = labeledImage == label;
 
@@ -422,7 +431,7 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, std::
         cv::Point2f vertices[4];
         rotatedRect.points(vertices);
         for (int i = 0; i < 4; i++) {
-            cv::line(outputImage, vertices[i], vertices[(i + 1) % 4], static_cast<uchar>(label), 2);
+            cv::line(outputImage, vertices[i], vertices[(i + 1) % 4], static_cast<uchar>(255), 4);
         }
 
         // Draw the axis of least moment
@@ -432,11 +441,81 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, std::
         pt1.y = static_cast<float>(centerY + length * sin(angle));
         pt2.x = static_cast<float>(centerX - length * cos(angle));
         pt2.y = static_cast<float>(centerY - length * sin(angle));
-        cv::line(outputImage, pt1, pt2, static_cast<uchar>(label), 2);
+        cv::line(outputImage, pt1, pt2, static_cast<uchar>(255), 2);
 
         // label object on image
-        cv::putText(outputImage, std::to_string(label), cv::Point(centerX, centerY), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 2);
+        cv::putText(outputImage, std::to_string(label), cv::Point(centerX, centerY), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 3);
     }
 
     return featuresMap;
+}
+
+std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string& filename) {
+    std::map<std::string, ObjectFeatures> database;
+    std::ifstream file(filename);
+    std::string line;
+
+    while (std::getline(file, line)) {
+        std::istringstream iss(line);
+        std::string label;
+        ObjectFeatures features;
+        char delimiter; // To consume the comma delimiter after the label
+
+        if (std::getline(iss, label, ',') && 
+            (iss >> features.percentFilled >> delimiter >> features.aspectRatio)) {
+            database[label] = features;
+        }
+    }
+
+    return database;
+}
+
+ObjectFeatures calculateStdDev(const std::map<std::string, ObjectFeatures>& database) {
+    ObjectFeatures mean = {0.0, 0.0}, stdDev = {0.0, 0.0};
+    int count = database.size();
+
+    // Calculate sums for each feature
+    for (const auto& entry : database) {
+        mean.percentFilled += entry.second.percentFilled;
+        mean.aspectRatio += entry.second.aspectRatio;
+    }
+
+    // Calculate mean
+    mean.percentFilled /= count;
+    mean.aspectRatio /= count;
+
+    // Calculate squared sum for standard deviation
+    for (const auto& entry : database) {
+        stdDev.percentFilled += std::pow(entry.second.percentFilled - mean.percentFilled, 2);
+        stdDev.aspectRatio += std::pow(entry.second.aspectRatio - mean.aspectRatio, 2);
+    }
+
+    // Finalize standard deviation calculation
+    stdDev.percentFilled = std::sqrt(stdDev.percentFilled / count);
+    stdDev.aspectRatio = std::sqrt(stdDev.aspectRatio / count);
+
+    return stdDev;
+}
+
+double scaledEuclideanDistance(const ObjectFeatures& f1, const ObjectFeatures& f2, const ObjectFeatures& stdev) {
+    double distance = 0.0;
+    distance += std::pow((f1.percentFilled - f2.percentFilled) / stdev.percentFilled, 2);
+    distance += std::pow((f1.aspectRatio - f2.aspectRatio) / stdev.aspectRatio, 2);
+    return std::sqrt(distance);
+}
+
+std::string classifyObject(const ObjectFeatures& unknownObjectFeatures, const std::map<std::string, ObjectFeatures>& database, const ObjectFeatures& stdev) {
+    std::string bestMatch = "Unknown";
+    double minDistance = std::numeric_limits<double>::max();
+
+    for (const auto& entry : database) {
+        double distance = scaledEuclideanDistance(unknownObjectFeatures, entry.second, stdev);
+        
+        if (distance < minDistance) {
+            minDistance = distance;
+            bestMatch = entry.first;
+        }
+    }
+
+    return bestMatch;
 }

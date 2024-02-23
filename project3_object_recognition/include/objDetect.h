@@ -12,8 +12,8 @@
 
 
 struct ObjectFeatures {
-    double percentFilled;
-    double aspectRatio;
+    double percentFilled; // Percentage of the bounding box filled by the object
+    double aspectRatio; // Aspect ratio of the bounding box
     // Add more features as needed
 };
 
@@ -87,18 +87,30 @@ void morphologyEx(const cv::Mat& src, cv::Mat& dst, int operation, const cv::Mat
  * 
  * @param binaryImage Input image frame
  * @param labeledImage getting labels for every pixels of an image
- * @return std::map<int, int> map of connected components
 */
-std::map<int, int> connectedComponentsTwoPass(const cv::Mat& binaryImage, cv::Mat& labeledImage);
+void connectedComponentsTwoPass(const cv::Mat& binaryImage, cv::Mat& labeledImage);
 
 
 /**
  * @brief Compute features of the connected components
  * 
  * @param labeledImage labeled image
- * @param connectedComponents map of connected components
  * @param outputImage output image
 */
-std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, std::map<int, int> &connectedComponents, cv::Mat &outputImage);
+std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::Mat &outputImage);
+
+/**
+ * @brief Load the feature database from a file
+ * 
+ * @param filename name of the file
+ * @return std::map<std::string, ObjectFeatures> map of object features
+*/
+std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string& filename);
+
+ObjectFeatures calculateStdDev(const std::map<std::string, ObjectFeatures>& database);
+
+double scaledEuclideanDistance(const ObjectFeatures& f1, const ObjectFeatures& f2, const ObjectFeatures& stdev);
+
+std::string classifyObject(const ObjectFeatures& unknownObjectFeatures, const std::map<std::string, ObjectFeatures>& database, const ObjectFeatures& stdev);
 
 #endif // OBJ_DETECT_H
