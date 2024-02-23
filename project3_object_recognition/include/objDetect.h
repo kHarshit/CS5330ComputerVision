@@ -10,6 +10,13 @@
 
 #include <opencv2/opencv.hpp>
 
+
+struct ObjectFeatures {
+    double percentFilled;
+    double aspectRatio;
+    // Add more features as needed
+};
+
 /**
  * @brief Apply 5x5 Gaussian blur to the input image
  *
@@ -92,6 +99,6 @@ std::map<int, int> connectedComponentsTwoPass(const cv::Mat& binaryImage, cv::Ma
  * @param connectedComponents map of connected components
  * @param outputImage output image
 */
-void computeFeatures(const cv::Mat &labeledImage, std::map<int, int> &connectedComponents, cv::Mat &outputImage);
+std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, std::map<int, int> &connectedComponents, cv::Mat &outputImage);
 
 #endif // OBJ_DETECT_H

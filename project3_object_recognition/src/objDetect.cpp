@@ -314,7 +314,7 @@ std::map<int, int> connectedComponentsTwoPass(const Mat &binaryImage, Mat &label
 }
 
 
-void computeFeatures(const cv::Mat &labeledImage, std::map<int, int> &connectedComponents, cv::Mat &outputImage) {
+std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, std::map<int, int> &connectedComponents, cv::Mat &outputImage) {
     // Create a copy of the labeled image for visualization
     outputImage = labeledImage.clone();
     // Convert outputImage to CV_8U for visualization if it's not already
@@ -323,6 +323,9 @@ void computeFeatures(const cv::Mat &labeledImage, std::map<int, int> &connectedC
         cv::minMaxLoc(outputImage, &minVal, &maxVal); // Find min and max values to scale the image
         outputImage.convertTo(outputImage, CV_8U, 255.0 / (maxVal - minVal), -minVal * 255.0 / (maxVal - minVal));
     }
+
+    // Create a map to store the features of each connected component
+    std::map<int, ObjectFeatures> featuresMap;
 
     for (const auto &component : connectedComponents) {
         int label = component.second;
@@ -345,6 +348,15 @@ void computeFeatures(const cv::Mat &labeledImage, std::map<int, int> &connectedC
         cv::findNonZero(mask, nonZeroLocations);
         cv::RotatedRect rotatedRect = cv::minAreaRect(nonZeroLocations);
 
+        // Feature calculations
+        double area = cv::contourArea(nonZeroLocations);
+        double boundingBoxArea = rotatedRect.size.width * rotatedRect.size.height;
+        double percentFilled = (area / boundingBoxArea) * 100.0;
+        double aspectRatio = rotatedRect.size.width / rotatedRect.size.height;
+
+        // Store the features
+        featuresMap[label] = {percentFilled, aspectRatio};
+
         // Draw the oriented bounding box
         cv::Point2f vertices[4];
         rotatedRect.points(vertices);
@@ -360,5 +372,10 @@ void computeFeatures(const cv::Mat &labeledImage, std::map<int, int> &connectedC
         pt2.x = static_cast<float>(centerX - length * cos(angle));
         pt2.y = static_cast<float>(centerY - length * sin(angle));
         cv::line(outputImage, pt1, pt2, static_cast<uchar>(label), 2);
+
+        // label object on image
+        cv::putText(outputImage, std::to_string(label), cv::Point(centerX, centerY), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 255, 255), 2);
     }
+
+    return featuresMap;
 }

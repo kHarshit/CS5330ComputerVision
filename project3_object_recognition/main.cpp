@@ -5,6 +5,7 @@
 #include <map>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include "objDetect.h"
 
 using namespace cv;
@@ -28,6 +29,7 @@ int main()
     cv::namedWindow("Connected Components Features",WINDOW_NORMAL);
     for (;;)
     {
+        char key = cv::waitKey(10);
 
         // cv::Mat frame;
         cap >> frame;
@@ -98,9 +100,28 @@ int main()
         // 4. Compute features for each connected component
         cv::Mat colorLabeledFeatureImg;
         cv::Mat featureOutImg;
-        computeFeatures(labeledImg, connectedComponents, featureOutImg);
+        map<int, ObjectFeatures> featuresMap = computeFeatures(labeledImg, connectedComponents, featureOutImg);
         cv::normalize(featureOutImg, featureOutImg, 0, 255, cv::NORM_MINMAX, CV_8U);
         cv::applyColorMap(featureOutImg, colorLabeledFeatureImg, cv::COLORMAP_JET);
+
+        // 5. Enable your system to collect feature vectors from objects, attach labels, and store them in an object DB (e.g. a file). In other words, your system needs to have a training mode that enables you to collect the feature vectors of known objects and store them for later use in classifying unknown objects. You may want to implement this as a response to a key press: when the user types an N, for example, have the system prompt the user for a name/label and then store the feature vector for the current object along with its label into a file. This could also be done from labeled still images of the object, such as those from a training set.
+        if (key == 'n')
+        {
+            // store the feature vector for the current object along with its label into a file
+            std::string filename = "object_db.txt";
+
+            // iterate through the featuresMap and store the feature vectors
+            // map<int, ObjectFeatures> featuresMap where ObjectFeatures is structstruct ObjectFeatures { double percentFilled; double aspectRatio;};
+            for (const auto& featurePair : featuresMap) {
+                std::cout << "Enter label for the object: ";
+                std::string label;
+                std::cin >> label;
+
+                std::ofstream file(filename, std::ios::app); // Append mode
+                file << label << "," << featurePair.second.percentFilled << "," << featurePair.second.aspectRatio << "\n";
+                file.close();
+            }
+        }
 
         // Display the images
         cv::imshow("0. Original Video", frame);
@@ -108,7 +129,6 @@ int main()
         cv::imshow("2. Cleaned thresholded",cleanedImg);
         cv::imshow("3. Connected Components", colorLabeledImg);
         cv::imshow("4. Connected Components Features", colorLabeledFeatureImg);
-        char key = cv::waitKey(10);
         if (key == 'q')
         {
             break;
