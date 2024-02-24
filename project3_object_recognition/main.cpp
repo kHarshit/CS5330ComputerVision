@@ -133,6 +133,7 @@ int main()
         std::map<std::string, ObjectFeatures> objectFeaturesMap = loadFeatureDatabase(filename);
         // calculate standard deviation
         ObjectFeatures stdev = calculateStdDev(objectFeaturesMap);
+        // track the last key pressed (enable classification by default)
         static char lastKeyPressed = 'c';
         // Initialize confusion matrix
         // key: ground truth label, value: map of predicted label and count
@@ -145,7 +146,9 @@ int main()
             // classify each object in feature map
             for (const auto &featurePair : featuresMap)
             {
-                std::string classifiedLabel = classifyObject(featurePair.second, objectFeaturesMap, stdev);
+                // minDistance is the minimum distance between the feature vector of the object and the feature vectors in the database
+                double minDistance = std::numeric_limits<double>::max();
+                std::string classifiedLabel = classifyObject(featurePair.second, objectFeaturesMap, stdev, minDistance);
                 // std::cout << "Object classified as " << label << " has feature vector: " << featurePair.second.percentFilled << ", " << featurePair.second.aspectRatio << std::endl;
                 // show label on the image in top left corner
                 labelText += std::to_string(featurePair.first) + ": " + classifiedLabel + " ";
@@ -170,18 +173,24 @@ int main()
                 }
             }
             cv::putText(colorLabeledFeatureImg, labelText, cv::Point(10, 30), cv::FONT_HERSHEY_SIMPLEX, 1, cv::Scalar(255, 255, 255), 2);
-            // Adjust the confusion matrix to make sure it's nxn
-            makeMatrixNxN(confusionMatrix);
-            // Print the dynamically updated confusion matrix
-            std::cout << "Confusion Matrix: " << std::endl;
-            for (const auto &row : confusionMatrix)
+            if (key == 'e')
             {
-                std::cout << row.first << ": ";
-                for (const auto &cell : row.second)
+                // Adjust the confusion matrix to make sure it's nxn
+                makeMatrixNxN(confusionMatrix);
+                // Print the dynamically updated confusion matrix
+                if (confusionMatrix.size() > 0)
                 {
-                    std::cout << cell.first << "=" << cell.second << " ";
+                    std::cout << "Confusion Matrix: " << std::endl;
+                    for (const auto &row : confusionMatrix)
+                    {
+                        std::cout << row.first << ": ";
+                        for (const auto &cell : row.second)
+                        {
+                            std::cout << cell.first << "=" << cell.second << " ";
+                        }
+                        std::cout << std::endl;
+                    }
                 }
-                std::cout << std::endl;
             }
         }
 

@@ -132,7 +132,8 @@ double scaledEuclideanDistance(const ObjectFeatures &f1, const ObjectFeatures &f
  * @param stdev standard deviation of the features
  * @return std::string label of the best match
  */
-std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const std::map<std::string, ObjectFeatures> &database, const ObjectFeatures &stdev);
+std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const std::map<std::string, ObjectFeatures> &database, const ObjectFeatures &stdev,
+                           double minDistance = std::numeric_limits<double>::max());
 
 /**
  * @brief Update the confusion matrix

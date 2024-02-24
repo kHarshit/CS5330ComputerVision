@@ -570,10 +570,9 @@ double scaledEuclideanDistance(const ObjectFeatures &f1, const ObjectFeatures &f
     return std::sqrt(distance);
 }
 
-std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const std::map<std::string, ObjectFeatures> &database, const ObjectFeatures &stdev)
+std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const std::map<std::string, ObjectFeatures> &database, const ObjectFeatures &stdev, double minDistance)
 {
     std::string bestMatch = "Unknown";
-    double minDistance = std::numeric_limits<double>::max();
 
     for (const auto &entry : database)
     {
