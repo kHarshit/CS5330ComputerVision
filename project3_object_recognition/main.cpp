@@ -106,7 +106,7 @@ int main()
         if (key == 'n')
         {
             // store the feature vector for the current object along with its label into a file
-            std::string filename = "object_db.txt";
+            std::string filename = "object_dbHuMoment.txt";
 
             // iterate through the featuresMap and store the feature vectors
             // map<int, ObjectFeatures> featuresMap where ObjectFeatures is structstruct ObjectFeatures { double percentFilled; double aspectRatio;};
@@ -117,18 +117,23 @@ int main()
                 std::cin >> label;
 
                 std::ofstream file(filename, std::ios::app); // Append mode
-                file << label << "," << featurePair.second.percentFilled << "," << featurePair.second.aspectRatio << "\n";
+                file << label << "," << featurePair.second.percentFilled << "," << featurePair.second.aspectRatio;
+                for (int i = 0; i < 7; ++i)
+                {
+                    file << "," << featurePair.second.huMoments[i];
+                }
+                file << "\n";
                 file.close();
             }
         }
 
         // 6. Classify new images
-        std::string filename = "object_db.txt";
+        std::string filename = "object_dbHuMoment.txt";
         // load feature database
         std::map<std::string, ObjectFeatures> objectFeaturesMap = loadFeatureDatabase(filename);
         // calculate standard deviation
         ObjectFeatures stdev = calculateStdDev(objectFeaturesMap);
-        static char lastKeyPressed = ' ';
+        static char lastKeyPressed = 'c';
         // Initialize confusion matrix
         // key: ground truth label, value: map of predicted label and count
         static std::map<std::string, std::map<std::string, int>> confusionMatrix;

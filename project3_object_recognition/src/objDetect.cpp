@@ -360,11 +360,11 @@ void connectedComponentsTwoPass(const Mat &binaryImage, Mat &labeledImage)
     }
 
     // Filter out small components
-    int sizeThreshold = 10000; // Minimum size of a connected component
+    int sizeThreshold = 1000; // Minimum size of a connected component
     // Create a map to store the new labels for sufficiently large components
     // key: original label, value: new label
     map<int, int> labelsMap;
-    int newLabel = 1; // Start labeling from 1
+    int newLabel = 0;
     for (int i = 0; i < rows; ++i)
     {
         for (int j = 0; j < cols; ++j)
@@ -423,6 +423,9 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::M
 
         // Calculate moments for this component
         cv::Moments moments = cv::moments(mask, true);
+        // Calculate hu moments
+        double huMoments[7];
+        cv::HuMoments(moments, huMoments);
 
         // Calculate centroid
         double centerX = moments.m10 / moments.m00;
@@ -443,7 +446,7 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::M
         double aspectRatio = rotatedRect.size.width / rotatedRect.size.height;
 
         // Store the features
-        featuresMap[label] = {percentFilled, aspectRatio};
+        featuresMap[label] = {percentFilled, aspectRatio, {huMoments[0], huMoments[1], huMoments[2], huMoments[3], huMoments[4], huMoments[5], huMoments[6]}};
 
         // Draw the oriented bounding box
         cv::Point2f vertices[4];
@@ -485,6 +488,10 @@ std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string &fil
         if (std::getline(iss, label, ',') &&
             (iss >> features.percentFilled >> delimiter >> features.aspectRatio))
         {
+            for (int i = 0; i < 7; ++i)
+            {
+                iss >> delimiter >> features.huMoments[i];
+            }
             database[label] = features;
         }
     }
@@ -494,7 +501,8 @@ std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string &fil
 
 ObjectFeatures calculateStdDev(const std::map<std::string, ObjectFeatures> &database)
 {
-    ObjectFeatures mean = {0.0, 0.0}, stdDev = {0.0, 0.0};
+    ObjectFeatures mean = {0.0, 0.0, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+    ObjectFeatures stdDev = {0.0, 0.0, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
     int count = database.size();
 
     // Calculate sums for each feature
@@ -502,22 +510,38 @@ ObjectFeatures calculateStdDev(const std::map<std::string, ObjectFeatures> &data
     {
         mean.percentFilled += entry.second.percentFilled;
         mean.aspectRatio += entry.second.aspectRatio;
+        for (int i = 0; i < 7; ++i)
+        {
+            mean.huMoments[i] += entry.second.huMoments[i];
+        }
     }
 
     // Calculate mean
     mean.percentFilled /= count;
     mean.aspectRatio /= count;
+    for (int i = 0; i < 7; ++i)
+    {
+        mean.huMoments[i] /= count;
+    }
 
     // Calculate squared sum for standard deviation
     for (const auto &entry : database)
     {
-        stdDev.percentFilled += std::pow(entry.second.percentFilled - mean.percentFilled, 2);
-        stdDev.aspectRatio += std::pow(entry.second.aspectRatio - mean.aspectRatio, 2);
+        stdDev.percentFilled += (entry.second.percentFilled - mean.percentFilled) * (entry.second.percentFilled - mean.percentFilled);
+        stdDev.aspectRatio += (entry.second.aspectRatio - mean.aspectRatio) * (entry.second.aspectRatio - mean.aspectRatio);
+        for (int i = 0; i < 7; ++i)
+        {
+            stdDev.huMoments[i] += (entry.second.huMoments[i] - mean.huMoments[i]) * (entry.second.huMoments[i] - mean.huMoments[i]);
+        }
     }
 
     // Finalize standard deviation calculation
     stdDev.percentFilled = std::sqrt(stdDev.percentFilled / count);
     stdDev.aspectRatio = std::sqrt(stdDev.aspectRatio / count);
+    for (int i = 0; i < 7; ++i)
+    {
+        stdDev.huMoments[i] = std::sqrt(stdDev.huMoments[i] / count);
+    }
 
     return stdDev;
 }
@@ -525,8 +549,20 @@ ObjectFeatures calculateStdDev(const std::map<std::string, ObjectFeatures> &data
 double scaledEuclideanDistance(const ObjectFeatures &f1, const ObjectFeatures &f2, const ObjectFeatures &stdev)
 {
     double distance = 0.0;
-    distance += std::pow((f1.percentFilled - f2.percentFilled) / stdev.percentFilled, 2);
-    distance += std::pow((f1.aspectRatio - f2.aspectRatio) / stdev.aspectRatio, 2);
+    double diff;
+
+    diff = (f1.percentFilled - f2.percentFilled) / stdev.percentFilled;
+    distance += diff * diff;
+
+    diff = (f1.aspectRatio - f2.aspectRatio) / stdev.aspectRatio;
+    distance += diff * diff;
+
+    for (int i = 0; i < 7; ++i)
+    {
+        diff = (f1.huMoments[i] - f2.huMoments[i]) / stdev.huMoments[i];
+        distance += diff * diff;
+    }
+
     return std::sqrt(distance);
 }
 
@@ -538,6 +574,7 @@ std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const st
     for (const auto &entry : database)
     {
         double distance = scaledEuclideanDistance(unknownObjectFeatures, entry.second, stdev);
+        // cout << "Distance: " << distance << endl;
 
         if (distance < minDistance)
         {

@@ -14,7 +14,7 @@ struct ObjectFeatures
 {
     double percentFilled; // Percentage of the bounding box filled by the object
     double aspectRatio;   // Aspect ratio of the bounding box
-    // Add more features as needed
+    double huMoments[7];  // Hu moments
 };
 
 /**
