@@ -557,11 +557,15 @@ double scaledEuclideanDistance(const ObjectFeatures &f1, const ObjectFeatures &f
     diff = (f1.aspectRatio - f2.aspectRatio) / stdev.aspectRatio;
     distance += diff * diff;
 
-    for (int i = 0; i < 7; ++i)
+    for (int i = 0; i < 6; ++i) // First six Hu Moments as usual 
     {
         diff = (f1.huMoments[i] - f2.huMoments[i]) / stdev.huMoments[i];
         distance += diff * diff;
     }
+
+    // Special handling for the seventh Hu Moment to account for reflection invariance
+    diff = (std::abs(f1.huMoments[6]) - std::abs(f2.huMoments[6])) / stdev.huMoments[6];
+    distance += diff * diff;
 
     return std::sqrt(distance);
 }
