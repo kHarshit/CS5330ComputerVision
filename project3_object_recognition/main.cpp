@@ -13,6 +13,19 @@ using namespace std;
 
 int main()
 {
+    // Load the pre-trained network
+    std::string embeddingType = "dnn"; // "default" or "dnn"
+    std::string filename = "object" + embeddingType + ".txt";
+    cv::dnn::Net net;
+    if (embeddingType == "dnn")
+    {
+        net = cv::dnn::readNetFromONNX("or2d-normmodel-007.onnx");
+        if (net.empty())
+        {
+            std::cerr << "Failed to load the pre-trained network." << std::endl;
+            return -1;
+        }
+    }
     // to open a default camera
     cv::VideoCapture cap(0);
     cv::Mat frame, blur, hsv;
@@ -106,7 +119,6 @@ int main()
         if (key == 'n')
         {
             // store the feature vector for the current object along with its label into a file
-            std::string filename = "object_dbHuMoment.txt";
 
             // iterate through the featuresMap and store the feature vectors
             // map<int, ObjectFeatures> featuresMap where ObjectFeatures is structstruct ObjectFeatures { double percentFilled; double aspectRatio;};
@@ -117,20 +129,37 @@ int main()
                 std::cin >> label;
 
                 std::ofstream file(filename, std::ios::app); // Append mode
-                file << label << "," << featurePair.second.percentFilled << "," << featurePair.second.aspectRatio;
-                for (int i = 0; i < 7; ++i)
+                file << label;
+                if (embeddingType == "dnn")
                 {
-                    file << "," << featurePair.second.huMoments[i];
+                    // Assuming getEmbedding is already defined and adjusts the object's image or ROI to the DNN input requirements
+                    cv::Mat embedding;
+                    cv::Rect bbox( 0, 0, cleanedImg.cols, cleanedImg.rows );
+                    getEmbedding(cleanedImg, embedding, bbox, net, 0); // src should be your source image; adjust accordingly
+
+                    // Serialize DNN embedding vector to file
+                    for (int i = 0; i < embedding.total(); ++i) {
+                        file << "," << embedding.at<float>(i);
+                    }
+                }
+                else
+                {
+                    file << "," << featurePair.second.percentFilled << "," << featurePair.second.aspectRatio;
+                    for (int i = 0; i < 7; ++i)
+                    {
+                        file << "," << featurePair.second.huMoments[i];
+                    }
                 }
                 file << "\n";
                 file.close();
             }
+
+
         }
 
         // 6. Classify new images
-        std::string filename = "object_dbHuMoment.txt";
         // load feature database
-        std::map<std::string, ObjectFeatures> objectFeaturesMap = loadFeatureDatabase(filename);
+        std::map<std::string, ObjectFeatures> objectFeaturesMap = loadFeatureDatabase(filename, embeddingType);
         // calculate standard deviation
         ObjectFeatures stdev = calculateStdDev(objectFeaturesMap);
         // track the last key pressed (enable classification by default)
@@ -144,11 +173,18 @@ int main()
             lastKeyPressed = 'c';
             std::string labelText = "Label ";
             // classify each object in feature map
-            for (const auto &featurePair : featuresMap)
+            for (auto &featurePair : featuresMap)
             {
+                // NOTE: Will only work on single object in the frame
+                // Assuming getEmbedding is already defined and adjusts the object's image or ROI to the DNN input requirements
+                cv::Mat embedding;
+                cv::Rect bbox( 0, 0, cleanedImg.cols, cleanedImg.rows );
+                getEmbedding(cleanedImg, embedding, bbox, net, 0); // src should be your source image; adjust accordingly
+                featurePair.second.dnnEmbedding = embedding;
+
                 // minDistance is the minimum distance between the feature vector of the object and the feature vectors in the database
                 double minDistance = std::numeric_limits<double>::max();
-                std::string classifiedLabel = classifyObject(featurePair.second, objectFeaturesMap, stdev, minDistance);
+                std::string classifiedLabel = classifyObject(featurePair.second, objectFeaturesMap, stdev, minDistance, embeddingType);
                 // std::cout << "Object classified as " << label << " has feature vector: " << featurePair.second.percentFilled << ", " << featurePair.second.aspectRatio << std::endl;
                 // show label on the image in top left corner
                 labelText += std::to_string(featurePair.first) + ": " + classifiedLabel + " ";
@@ -192,6 +228,15 @@ int main()
                     }
                 }
             }
+        }
+
+        // DL object detection
+        char dKeyPressed = true;
+        if (key == 'd' || dKeyPressed == true)
+        {
+            dKeyPressed = true;
+            cv::Mat dnnOutImg = deepLearningObjectDetection(frame, "MobileNetSSD_deploy.prototxt", "MobileNetSSD_deploy.caffemodel");
+            cv::imshow("DL Object Detection", dnnOutImg);
         }
 
         // Display the images

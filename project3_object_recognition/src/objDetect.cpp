@@ -472,25 +472,36 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::M
     return featuresMap;
 }
 
-std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string &filename)
-{
+std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string &filename, const std::string &featureType) {
     std::map<std::string, ObjectFeatures> database;
     std::ifstream file(filename);
     std::string line;
 
-    while (std::getline(file, line))
-    {
+    while (std::getline(file, line)) {
         std::istringstream iss(line);
         std::string label;
         ObjectFeatures features;
         char delimiter; // To consume the comma delimiter after the label
 
-        if (std::getline(iss, label, ',') &&
-            (iss >> features.percentFilled >> delimiter >> features.aspectRatio))
-        {
-            for (int i = 0; i < 7; ++i)
-            {
-                iss >> delimiter >> features.huMoments[i];
+        if (std::getline(iss, label, ',')) {
+            if (featureType == "dnn") {
+                // Load DNN embedding
+                std::vector<float> embedding;
+                float value;
+                while (iss >> delimiter && iss >> value) {
+                    embedding.push_back(value);
+                }
+                // Assuming you convert std::vector<float> to cv::Mat if necessary
+                if (!embedding.empty()) {
+                    features.dnnEmbedding = cv::Mat(embedding, true).reshape(1, 1); // Convert vector to single-row cv::Mat
+                }
+            } else {
+                // Load other features
+                if (iss >> features.percentFilled >> delimiter >> features.aspectRatio) {
+                    for (int i = 0; i < 7; ++i) {
+                        iss >> delimiter >> features.huMoments[i];
+                    }
+                }
             }
             database[label] = features;
         }
@@ -570,13 +581,26 @@ double scaledEuclideanDistance(const ObjectFeatures &f1, const ObjectFeatures &f
     return std::sqrt(distance);
 }
 
-std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const std::map<std::string, ObjectFeatures> &database, const ObjectFeatures &stdev, double minDistance)
+double cosineDistance(const cv::Mat& vec1, const cv::Mat& vec2) {
+    double dot = vec1.dot(vec2);
+    double denom = norm(vec1) * norm(vec2);
+    return 1.0 - (dot / denom); // Cosine similarity ranges from -1 to 1, so we convert to distance
+}
+
+std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const std::map<std::string, ObjectFeatures> &database, const ObjectFeatures &stdev, double minDistance, string embeddingType)
 {
     std::string bestMatch = "Unknown";
 
     for (const auto &entry : database)
     {
-        double distance = scaledEuclideanDistance(unknownObjectFeatures, entry.second, stdev);
+        double distance;
+        if (embeddingType == "dnn")
+        {
+            distance = cosineDistance(unknownObjectFeatures.dnnEmbedding, entry.second.dnnEmbedding);
+        }
+        else{
+            distance = scaledEuclideanDistance(unknownObjectFeatures, entry.second, stdev);
+        }
         // cout << "Distance: " << distance << endl;
 
         if (distance < minDistance)
@@ -651,4 +675,93 @@ void makeMatrixNxN(std::map<std::string, std::map<std::string, int>> &matrix)
             }
         }
     }
+}
+
+int getEmbedding( cv::Mat &src, cv::Mat &embedding, cv::Rect &bbox, cv::dnn::Net &net, int debug ) {
+  const int ORNet_size = 128;
+  cv::Mat padImg;
+  cv::Mat blob;
+	
+  cv::Mat roiImg = src( bbox );
+  int top = bbox.height > 128 ? 10 : (128 - bbox.height)/2 + 10;
+  int left = bbox.width > 128 ? 10 : (128 - bbox.width)/2 + 10;
+  int bottom = top;
+  int right = left;
+	
+  cv::copyMakeBorder( roiImg, padImg, top, bottom, left, right, cv::BORDER_CONSTANT, 0  );
+  cv::resize( padImg, padImg, cv::Size( 128, 128 ) );
+
+  cv::dnn::blobFromImage( src, // input image
+			  blob, // output array
+			  (1.0/255.0) / 0.5, // scale factor
+			  cv::Size( ORNet_size, ORNet_size ), // resize the image to this
+			  128,   // subtract mean prior to scaling
+			  false, // input is a single channel image
+			  true,  // center crop after scaling short side to size
+			  CV_32F ); // output depth/type
+
+  net.setInput( blob );
+  embedding = net.forward( "onnx_node!/fc1/Gemm" );
+
+  if(debug) {
+    cv::imshow( "pad image", padImg );
+    std::cout << embedding << std::endl;
+    cv::waitKey(0);
+  }
+
+  return(0);
+}
+
+cv::Mat deepLearningObjectDetection(cv::Mat img, std::string prototxt_path, std::string model_path) {
+    // Clone the original image
+    cv::Mat img_clone = img.clone();
+
+    // Load the network
+    cv::dnn::Net net = cv::dnn::readNetFromCaffe(prototxt_path, model_path);
+
+    // Prepare input blob
+    cv::Mat blob = cv::dnn::blobFromImage(img, 0.007843, cv::Size(300, 300), 127.5);
+    net.setInput(blob);
+
+    // Forward pass through the network
+    cv::Mat detections = net.forward();
+
+    std::vector<int> indices;
+    std::vector<cv::Rect> boxes;
+    std::vector<int> classIds;
+    std::vector<float> confidences;
+
+    // You would loop over detections, extract bounding box, class, and confidence
+    for (int i = 0; i < detections.size[2]; i++)
+    {
+        float confidence = detections.at<float>(i, 2);
+        if (confidence > 0.2)
+        {
+            int classId = static_cast<int>(detections.at<float>(i, 1));
+            int left = static_cast<int>(detections.at<float>(i, 3) * img.cols);
+            int top = static_cast<int>(detections.at<float>(i, 4) * img.rows);
+            int right = static_cast<int>(detections.at<float>(i, 5) * img.cols);
+            int bottom = static_cast<int>(detections.at<float>(i, 6) * img.rows);
+            boxes.push_back(cv::Rect(left, top, right - left, bottom - top));
+            classIds.push_back(classId);
+            confidences.push_back(confidence);
+        }
+    }
+
+    // Perform non maximum suppression to eliminate redundant overlapping boxes with lower confidences
+    cv::dnn::NMSBoxes(boxes, confidences, 0.2, 0.4, indices);
+
+    for (size_t i = 0; i < indices.size(); ++i)
+    {
+        int idx = indices[i];
+        cv::Rect box = boxes[idx];
+        cv::rectangle(img_clone, box, cv::Scalar(0, 255, 0), 2);
+        std::string label = cv::format("Class: %d, Confidence: %.2f", classIds[idx], confidences[idx]);
+        int baseLine;
+        cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+        cv::putText(img_clone, label, cv::Point(box.x, box.y > labelSize.height ? box.y : labelSize.height), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0));
+    }
+
+    // Return the cloned image with bounding boxes and labels
+    return img_clone;
 }

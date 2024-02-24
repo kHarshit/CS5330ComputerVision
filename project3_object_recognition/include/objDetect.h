@@ -15,6 +15,7 @@ struct ObjectFeatures
     double percentFilled; // Percentage of the bounding box filled by the object
     double aspectRatio;   // Aspect ratio of the bounding box
     double huMoments[7];  // Hu moments
+    cv::Mat dnnEmbedding; // DNN embedding vector
 };
 
 /**
@@ -104,7 +105,7 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::M
  * @param filename name of the file
  * @return std::map<std::string, ObjectFeatures> map of object features
  */
-std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string &filename);
+std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string &filename, const std::string &embeddingType = "default");
 
 /**
  * @brief Calculate the standard deviation of the features in the database
@@ -133,7 +134,7 @@ double scaledEuclideanDistance(const ObjectFeatures &f1, const ObjectFeatures &f
  * @return std::string label of the best match
  */
 std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const std::map<std::string, ObjectFeatures> &database, const ObjectFeatures &stdev,
-                           double minDistance = std::numeric_limits<double>::max());
+                           double minDistance = std::numeric_limits<double>::max(), std::string embeddingType = "default");
 
 /**
  * @brief Update the confusion matrix
@@ -153,4 +154,6 @@ void updateConfusionMatrix(std::map<std::string, std::map<std::string, int>> &ma
  */
 void makeMatrixNxN(std::map<std::string, std::map<std::string, int>> &matrix);
 
+int getEmbedding( cv::Mat &src, cv::Mat &embedding, cv::Rect &bbox, cv::dnn::Net &net, int debug );
+cv::Mat deepLearningObjectDetection(cv::Mat img, std::string prototxt_path, std::string model_path);
 #endif // OBJ_DETECT_H
