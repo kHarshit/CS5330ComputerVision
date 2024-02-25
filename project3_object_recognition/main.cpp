@@ -134,11 +134,12 @@ int main()
                 {
                     // Assuming getEmbedding is already defined and adjusts the object's image or ROI to the DNN input requirements
                     cv::Mat embedding;
-                    cv::Rect bbox( 0, 0, cleanedImg.cols, cleanedImg.rows );
+                    cv::Rect bbox(0, 0, cleanedImg.cols, cleanedImg.rows);
                     getEmbedding(cleanedImg, embedding, bbox, net, 0); // src should be your source image; adjust accordingly
 
                     // Serialize DNN embedding vector to file
-                    for (int i = 0; i < embedding.total(); ++i) {
+                    for (int i = 0; i < embedding.total(); ++i)
+                    {
                         file << "," << embedding.at<float>(i);
                     }
                 }
@@ -153,8 +154,6 @@ int main()
                 file << "\n";
                 file.close();
             }
-
-
         }
 
         // 6. Classify new images
@@ -178,7 +177,7 @@ int main()
                 // NOTE: Will only work on single object in the frame
                 // Assuming getEmbedding is already defined and adjusts the object's image or ROI to the DNN input requirements
                 cv::Mat embedding;
-                cv::Rect bbox( 0, 0, cleanedImg.cols, cleanedImg.rows );
+                cv::Rect bbox(0, 0, cleanedImg.cols, cleanedImg.rows);
                 getEmbedding(cleanedImg, embedding, bbox, net, 0); // src should be your source image; adjust accordingly
                 featurePair.second.dnnEmbedding = embedding;
 

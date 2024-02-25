@@ -472,33 +472,43 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::M
     return featuresMap;
 }
 
-std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string &filename, const std::string &featureType) {
+std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string &filename, const std::string &featureType)
+{
     std::map<std::string, ObjectFeatures> database;
     std::ifstream file(filename);
     std::string line;
 
-    while (std::getline(file, line)) {
+    while (std::getline(file, line))
+    {
         std::istringstream iss(line);
         std::string label;
         ObjectFeatures features;
         char delimiter; // To consume the comma delimiter after the label
 
-        if (std::getline(iss, label, ',')) {
-            if (featureType == "dnn") {
+        if (std::getline(iss, label, ','))
+        {
+            if (featureType == "dnn")
+            {
                 // Load DNN embedding
                 std::vector<float> embedding;
                 float value;
-                while (iss >> delimiter && iss >> value) {
+                while (iss >> delimiter && iss >> value)
+                {
                     embedding.push_back(value);
                 }
                 // Assuming you convert std::vector<float> to cv::Mat if necessary
-                if (!embedding.empty()) {
+                if (!embedding.empty())
+                {
                     features.dnnEmbedding = cv::Mat(embedding, true).reshape(1, 1); // Convert vector to single-row cv::Mat
                 }
-            } else {
+            }
+            else
+            {
                 // Load other features
-                if (iss >> features.percentFilled >> delimiter >> features.aspectRatio) {
-                    for (int i = 0; i < 7; ++i) {
+                if (iss >> features.percentFilled >> delimiter >> features.aspectRatio)
+                {
+                    for (int i = 0; i < 7; ++i)
+                    {
                         iss >> delimiter >> features.huMoments[i];
                     }
                 }
@@ -568,7 +578,7 @@ double scaledEuclideanDistance(const ObjectFeatures &f1, const ObjectFeatures &f
     diff = (f1.aspectRatio - f2.aspectRatio) / stdev.aspectRatio;
     distance += diff * diff;
 
-    for (int i = 0; i < 6; ++i) // First six Hu Moments as usual 
+    for (int i = 0; i < 6; ++i) // First six Hu Moments as usual
     {
         diff = (f1.huMoments[i] - f2.huMoments[i]) / stdev.huMoments[i];
         distance += diff * diff;
@@ -581,7 +591,8 @@ double scaledEuclideanDistance(const ObjectFeatures &f1, const ObjectFeatures &f
     return std::sqrt(distance);
 }
 
-double cosineDistance(const cv::Mat& vec1, const cv::Mat& vec2) {
+double cosineDistance(const cv::Mat &vec1, const cv::Mat &vec2)
+{
     double dot = vec1.dot(vec2);
     double denom = norm(vec1) * norm(vec2);
     return 1.0 - (dot / denom); // Cosine similarity ranges from -1 to 1, so we convert to distance
@@ -598,7 +609,8 @@ std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const st
         {
             distance = cosineDistance(unknownObjectFeatures.dnnEmbedding, entry.second.dnnEmbedding);
         }
-        else{
+        else
+        {
             distance = scaledEuclideanDistance(unknownObjectFeatures, entry.second, stdev);
         }
         // cout << "Distance: " << distance << endl;
@@ -677,46 +689,49 @@ void makeMatrixNxN(std::map<std::string, std::map<std::string, int>> &matrix)
     }
 }
 
-int getEmbedding( cv::Mat &src, cv::Mat &embedding, cv::Rect &bbox, cv::dnn::Net &net, int debug ) {
-  const int ORNet_size = 128;
-  cv::Mat padImg;
-  cv::Mat blob;
-	
-  cv::Mat roiImg = src( bbox );
-  int top = bbox.height > 128 ? 10 : (128 - bbox.height)/2 + 10;
-  int left = bbox.width > 128 ? 10 : (128 - bbox.width)/2 + 10;
-  int bottom = top;
-  int right = left;
-	
-  cv::copyMakeBorder( roiImg, padImg, top, bottom, left, right, cv::BORDER_CONSTANT, 0  );
-  cv::resize( padImg, padImg, cv::Size( 128, 128 ) );
+int getEmbedding(cv::Mat &src, cv::Mat &embedding, cv::Rect &bbox, cv::dnn::Net &net, int debug)
+{
+    const int ORNet_size = 128;
+    cv::Mat padImg;
+    cv::Mat blob;
 
-  cv::dnn::blobFromImage( src, // input image
-			  blob, // output array
-			  (1.0/255.0) / 0.5, // scale factor
-			  cv::Size( ORNet_size, ORNet_size ), // resize the image to this
-			  128,   // subtract mean prior to scaling
-			  false, // input is a single channel image
-			  true,  // center crop after scaling short side to size
-			  CV_32F ); // output depth/type
+    cv::Mat roiImg = src(bbox);
+    int top = bbox.height > 128 ? 10 : (128 - bbox.height) / 2 + 10;
+    int left = bbox.width > 128 ? 10 : (128 - bbox.width) / 2 + 10;
+    int bottom = top;
+    int right = left;
 
-  net.setInput( blob );
-  embedding = net.forward( "onnx_node!/fc1/Gemm" );
+    cv::copyMakeBorder(roiImg, padImg, top, bottom, left, right, cv::BORDER_CONSTANT, 0);
+    cv::resize(padImg, padImg, cv::Size(128, 128));
 
-  if(debug) {
-    cv::imshow( "pad image", padImg );
-    std::cout << embedding << std::endl;
-    cv::waitKey(0);
-  }
+    cv::dnn::blobFromImage(src,                              // input image
+                           blob,                             // output array
+                           (1.0 / 255.0) / 0.5,              // scale factor
+                           cv::Size(ORNet_size, ORNet_size), // resize the image to this
+                           128,                              // subtract mean prior to scaling
+                           false,                            // input is a single channel image
+                           true,                             // center crop after scaling short side to size
+                           CV_32F);                          // output depth/type
 
-  return(0);
+    net.setInput(blob);
+    embedding = net.forward("onnx_node!/fc1/Gemm");
+
+    if (debug)
+    {
+        cv::imshow("pad image", padImg);
+        std::cout << embedding << std::endl;
+        cv::waitKey(0);
+    }
+
+    return (0);
 }
 
-cv::Mat objectDetMobileNetSSD(cv::Mat img, std::string prototxt_path, std::string model_path) {
+cv::Mat objectDetMobileNetSSD(cv::Mat img, std::string prototxt_path, std::string model_path)
+{
     string CLASSES[] = {"background", "aeroplane", "bicycle", "bird", "boat",
-        "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
-        "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
-        "sofa", "train", "tvmonitor"};
+                        "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
+                        "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
+                        "sofa", "train", "tvmonitor"};
 
     // Clone the original image
     cv::Mat imgClone = img.clone();
@@ -732,8 +747,8 @@ cv::Mat objectDetMobileNetSSD(cv::Mat img, std::string prototxt_path, std::strin
     }
 
     cv::Mat img2;
-    cv::resize(img, img2, Size(300,300));
-    cv::Mat inputBlob = cv::dnn::blobFromImage(img2, 0.007843, Size(300,300), Scalar(127.5, 127.5, 127.5), false);
+    cv::resize(img, img2, Size(300, 300));
+    cv::Mat inputBlob = cv::dnn::blobFromImage(img2, 0.007843, Size(300, 300), Scalar(127.5, 127.5, 127.5), false);
 
     net.setInput(inputBlob, "data");
     cv::Mat detection = net.forward("detection_out");
@@ -767,7 +782,7 @@ cv::Mat objectDetMobileNetSSD(cv::Mat img, std::string prototxt_path, std::strin
             String label = CLASSES[idx] + ": " + conf;
             int baseLine = 0;
             Size labelSize = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-            cv::putText(imgClone, label, Point(xLeftBottom, yLeftBottom), cv::FONT_HERSHEY_SIMPLEX, 1.0, Scalar(0,0,0), 3);
+            cv::putText(imgClone, label, Point(xLeftBottom, yLeftBottom), cv::FONT_HERSHEY_SIMPLEX, 1.0, Scalar(0, 0, 0), 3);
         }
     }
 
