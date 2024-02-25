@@ -1,7 +1,19 @@
 /**
  * author: Harshit Kumar, Khushi Neema
  * date: Feb 19, 2024
- * purpose: Implements various object detection algorithms
+ * purpose: Implements various object detection algorithms and functions
+ * 1. Preprocess and threshold the video frame
+ * 2. Cleans noise/holes from the image
+ * 3. Assigns labels to the binary image by utilizing two-pass method
+ * 4. Compute features of the connected components
+ * 5. Load the feature database from a file
+ * 6. Calculate the standard deviation of the features in the database
+ * 7. Calculate the Euclidean distance between two feature vectors
+ * 8. Classify an unknown object by comparing its feature vector to those in the object database
+ * 9. Update the confusion matrix
+ * 10. Make confusion matrix NxN square matrix
+ * 11. Get the embedding of the input image using a pre-trained DNN
+ * 12. Detect objects in the input image using MobileNet-SSD
  *
  */
 
@@ -106,6 +118,7 @@ std::map<int, ObjectFeatures> computeFeatures(const cv::Mat &labeledImage, cv::M
  * @brief Load the feature database from a file
  *
  * @param filename name of the file
+ * @param embeddingType type of embedding: default or dnn
  * @return std::map<std::string, ObjectFeatures> map of object features
  */
 std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string &filename, const std::string &embeddingType = "default");
@@ -134,6 +147,8 @@ double scaledEuclideanDistance(const ObjectFeatures &f1, const ObjectFeatures &f
  * @param unknownObjectFeatures feature vector of the unknown object
  * @param database map of object features
  * @param stdev standard deviation of the features
+ * @param minDistance minimum distance
+ * @param embeddingType type of embedding: default or dnn
  * @return std::string label of the best match
  */
 std::string classifyObject(const ObjectFeatures &unknownObjectFeatures, const std::map<std::string, ObjectFeatures> &database, const ObjectFeatures &stdev,

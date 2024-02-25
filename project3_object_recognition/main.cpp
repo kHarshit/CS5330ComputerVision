@@ -1,3 +1,8 @@
+/**
+ * author: Harshit Kumar, Khushi Neema
+ * date: Feb 19, 2024
+*/
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
@@ -13,13 +18,19 @@ using namespace std;
 
 int main()
 {
-    // Load the pre-trained network
+    // type of embedding to use
     std::string embeddingType = "dnn"; // "default" or "dnn"
+    // database file
     std::string filename = "object" + embeddingType + ".txt";
+    // define the pre-trained networks paths
+    std::string onnxModelPath = "or2d-normmodel-007.onnx";
+    std::string mobileNetSSDPrototxtPath = "MobileNetSSD_deploy.prototxt";
+    std::string mobileNetSSDModelPath = "MobileNetSSD_deploy.caffemodel";
+
     cv::dnn::Net net;
     if (embeddingType == "dnn")
     {
-        net = cv::dnn::readNetFromONNX("or2d-normmodel-007.onnx");
+        net = cv::dnn::readNetFromONNX(onnxModelPath);
         if (net.empty())
         {
             std::cerr << "Failed to load the pre-trained network." << std::endl;
@@ -176,13 +187,16 @@ int main()
             {
                 // NOTE: Will only work on single object in the frame
                 // Assuming getEmbedding is already defined and adjusts the object's image or ROI to the DNN input requirements
-                cv::Mat embedding;
-                cv::Rect bbox(0, 0, cleanedImg.cols, cleanedImg.rows);
-                getEmbedding(cleanedImg, embedding, bbox, net, 0); // src should be your source image; adjust accordingly
-                featurePair.second.dnnEmbedding = embedding;
-
+                if (embeddingType == "dnn")
+                {
+                    // Assuming getEmbedding is already defined and adjusts the object's image or ROI to the DNN input requirements
+                    cv::Mat embedding;
+                    cv::Rect bbox(0, 0, cleanedImg.cols, cleanedImg.rows);
+                    getEmbedding(cleanedImg, embedding, bbox, net, 0); // src should be your source image; adjust accordingly
+                    featurePair.second.dnnEmbedding = embedding;
+                }
                 // minDistance is the minimum distance between the feature vector of the object and the feature vectors in the database
-                double minDistance = std::numeric_limits<double>::max();
+                double minDistance = 6.0;
                 std::string classifiedLabel = classifyObject(featurePair.second, objectFeaturesMap, stdev, minDistance, embeddingType);
                 // std::cout << "Object classified as " << label << " has feature vector: " << featurePair.second.percentFilled << ", " << featurePair.second.aspectRatio << std::endl;
                 // show label on the image in top left corner
@@ -229,12 +243,12 @@ int main()
             }
         }
 
-        // DL object detection
-        char dKeyPressed = true;
+        // Extension: DL object detection
+        static char dKeyPressed = false;
         if (key == 'd' || dKeyPressed == true)
         {
             dKeyPressed = true;
-            cv::Mat dnnOutImg = objectDetMobileNetSSD(frame, "MobileNetSSD_deploy.prototxt", "MobileNetSSD_deploy.caffemodel");
+            cv::Mat dnnOutImg = objectDetMobileNetSSD(frame, mobileNetSSDPrototxtPath, mobileNetSSDModelPath);
             cv::imshow("DL Object Detection", dnnOutImg);
         }
 

@@ -522,8 +522,8 @@ std::map<std::string, ObjectFeatures> loadFeatureDatabase(const std::string &fil
 
 ObjectFeatures calculateStdDev(const std::map<std::string, ObjectFeatures> &database)
 {
-    ObjectFeatures mean = {0.0, 0.0, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
-    ObjectFeatures stdDev = {0.0, 0.0, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}};
+    ObjectFeatures mean = {0.0, 0.0, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, cv::Mat()};
+    ObjectFeatures stdDev = {0.0, 0.0, {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0}, cv::Mat()};
     int count = database.size();
 
     // Calculate sums for each feature
@@ -728,7 +728,7 @@ int getEmbedding(cv::Mat &src, cv::Mat &embedding, cv::Rect &bbox, cv::dnn::Net 
 
 cv::Mat objectDetMobileNetSSD(cv::Mat img, std::string prototxt_path, std::string model_path)
 {
-    string CLASSES[] = {"background", "aeroplane", "bicycle", "bird", "boat",
+    string classNames[] = {"background", "aeroplane", "bicycle", "bird", "boat",
                         "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
                         "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
                         "sofa", "train", "tvmonitor"};
@@ -746,9 +746,9 @@ cv::Mat objectDetMobileNetSSD(cv::Mat img, std::string prototxt_path, std::strin
         exit(-1);
     }
 
-    cv::Mat img2;
-    cv::resize(img, img2, Size(300, 300));
-    cv::Mat inputBlob = cv::dnn::blobFromImage(img2, 0.007843, Size(300, 300), Scalar(127.5, 127.5, 127.5), false);
+    cv::Mat imgResized;
+    cv::resize(img, imgResized, Size(300, 300));
+    cv::Mat inputBlob = cv::dnn::blobFromImage(imgResized, 0.007843, Size(300, 300), Scalar(127.5, 127.5, 127.5), false);
 
     net.setInput(inputBlob, "data");
     cv::Mat detection = net.forward("detection_out");
@@ -756,8 +756,10 @@ cv::Mat objectDetMobileNetSSD(cv::Mat img, std::string prototxt_path, std::strin
 
     std::ostringstream ss;
     float confidenceThreshold = 0.2;
+    // iterate over the detections
     for (int i = 0; i < detectionMat.rows; i++)
     {
+        // filter out weak detections by ensuring the confidence is greater than the threshold
         float confidence = detectionMat.at<float>(i, 2);
 
         if (confidence > confidenceThreshold)
@@ -774,12 +776,12 @@ cv::Mat objectDetMobileNetSSD(cv::Mat img, std::string prototxt_path, std::strin
 
             rectangle(imgClone, object, Scalar(0, 255, 0), 2);
 
-            // cout << CLASSES[idx] << ": " << confidence << endl;
+            // cout << classNames[idx] << ": " << confidence << endl;
 
             ss.str("");
             ss << confidence;
             String conf(ss.str());
-            String label = CLASSES[idx] + ": " + conf;
+            String label = classNames[idx] + ": " + conf;
             int baseLine = 0;
             Size labelSize = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
             cv::putText(imgClone, label, Point(xLeftBottom, yLeftBottom), cv::FONT_HERSHEY_SIMPLEX, 1.0, Scalar(0, 0, 0), 3);
