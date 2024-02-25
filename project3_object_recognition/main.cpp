@@ -19,7 +19,7 @@ using namespace std;
 int main()
 {
     // type of embedding to use
-    std::string embeddingType = "dnn"; // "default" or "dnn"
+    std::string embeddingType = "default"; // "default" or "dnn"
     // database file
     std::string filename = "object" + embeddingType + ".txt";
     // define the pre-trained networks paths
