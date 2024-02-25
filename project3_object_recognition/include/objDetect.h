@@ -10,6 +10,9 @@
 
 #include <opencv2/opencv.hpp>
 
+/**
+ * @brief Struct to store the features of an object
+*/
 struct ObjectFeatures
 {
     double percentFilled; // Percentage of the bounding box filled by the object
@@ -154,6 +157,22 @@ void updateConfusionMatrix(std::map<std::string, std::map<std::string, int>> &ma
  */
 void makeMatrixNxN(std::map<std::string, std::map<std::string, int>> &matrix);
 
-int getEmbedding( cv::Mat &src, cv::Mat &embedding, cv::Rect &bbox, cv::dnn::Net &net, int debug );
-cv::Mat deepLearningObjectDetection(cv::Mat img, std::string prototxt_path, std::string model_path);
+/**
+ * @brief Get the embedding of the input image using a pre-trained DNN
+ * @param cv::Mat src        thresholded and cleaned up image in 8UC1 format
+ * @param cv::Mat ebmedding  holds the embedding vector after the function returns
+ * @param cv::Rect bbox      the axis-oriented bounding box around the region to be identified
+ * @param cv::dnn::Net net   the pre-trained network
+ * @param int debug          1: show the image given to the network and print the embedding, 0: don't show extra info
+ */
+int getEmbedding(cv::Mat &src, cv::Mat &embedding, cv::Rect &bbox, cv::dnn::Net &net, int debug);
+
+/**
+ * @brief Detect objects in the input image using MobileNet-SSD
+ * @param img input image
+ * @param prototxt_path path to the prototxt file
+ * @param model_path path to the model file
+ * @return cv::Mat image with overlayed detected objects
+ */
+cv::Mat objectDetMobileNetSSD(cv::Mat img, std::string prototxt_path, std::string model_path);
 #endif // OBJ_DETECT_H

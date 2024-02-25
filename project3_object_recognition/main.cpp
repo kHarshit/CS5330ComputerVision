@@ -235,7 +235,7 @@ int main()
         if (key == 'd' || dKeyPressed == true)
         {
             dKeyPressed = true;
-            cv::Mat dnnOutImg = deepLearningObjectDetection(frame, "MobileNetSSD_deploy.prototxt", "MobileNetSSD_deploy.caffemodel");
+            cv::Mat dnnOutImg = objectDetMobileNetSSD(frame, "MobileNetSSD_deploy.prototxt", "MobileNetSSD_deploy.caffemodel");
             cv::imshow("DL Object Detection", dnnOutImg);
         }
 

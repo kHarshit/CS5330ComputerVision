@@ -712,56 +712,65 @@ int getEmbedding( cv::Mat &src, cv::Mat &embedding, cv::Rect &bbox, cv::dnn::Net
   return(0);
 }
 
-cv::Mat deepLearningObjectDetection(cv::Mat img, std::string prototxt_path, std::string model_path) {
+cv::Mat objectDetMobileNetSSD(cv::Mat img, std::string prototxt_path, std::string model_path) {
+    string CLASSES[] = {"background", "aeroplane", "bicycle", "bird", "boat",
+        "bottle", "bus", "car", "cat", "chair", "cow", "diningtable",
+        "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
+        "sofa", "train", "tvmonitor"};
+
     // Clone the original image
-    cv::Mat img_clone = img.clone();
+    cv::Mat imgClone = img.clone();
 
     // Load the network
     cv::dnn::Net net = cv::dnn::readNetFromCaffe(prototxt_path, model_path);
-
-    // Prepare input blob
-    cv::Mat blob = cv::dnn::blobFromImage(img, 0.007843, cv::Size(300, 300), 127.5);
-    net.setInput(blob);
-
-    // Forward pass through the network
-    cv::Mat detections = net.forward();
-
-    std::vector<int> indices;
-    std::vector<cv::Rect> boxes;
-    std::vector<int> classIds;
-    std::vector<float> confidences;
-
-    // You would loop over detections, extract bounding box, class, and confidence
-    for (int i = 0; i < detections.size[2]; i++)
+    if (net.empty())
     {
-        float confidence = detections.at<float>(i, 2);
-        if (confidence > 0.2)
+        std::cerr << "Can't load network by using the following files: " << std::endl;
+        std::cerr << "prototxt:   " << prototxt_path << std::endl;
+        std::cerr << "caffemodel: " << model_path << std::endl;
+        exit(-1);
+    }
+
+    cv::Mat img2;
+    cv::resize(img, img2, Size(300,300));
+    cv::Mat inputBlob = cv::dnn::blobFromImage(img2, 0.007843, Size(300,300), Scalar(127.5, 127.5, 127.5), false);
+
+    net.setInput(inputBlob, "data");
+    cv::Mat detection = net.forward("detection_out");
+    cv::Mat detectionMat(detection.size[2], detection.size[3], CV_32F, detection.ptr<float>());
+
+    std::ostringstream ss;
+    float confidenceThreshold = 0.2;
+    for (int i = 0; i < detectionMat.rows; i++)
+    {
+        float confidence = detectionMat.at<float>(i, 2);
+
+        if (confidence > confidenceThreshold)
         {
-            int classId = static_cast<int>(detections.at<float>(i, 1));
-            int left = static_cast<int>(detections.at<float>(i, 3) * img.cols);
-            int top = static_cast<int>(detections.at<float>(i, 4) * img.rows);
-            int right = static_cast<int>(detections.at<float>(i, 5) * img.cols);
-            int bottom = static_cast<int>(detections.at<float>(i, 6) * img.rows);
-            boxes.push_back(cv::Rect(left, top, right - left, bottom - top));
-            classIds.push_back(classId);
-            confidences.push_back(confidence);
+            int idx = static_cast<int>(detectionMat.at<float>(i, 1));
+            int xLeftBottom = static_cast<int>(detectionMat.at<float>(i, 3) * img.cols);
+            int yLeftBottom = static_cast<int>(detectionMat.at<float>(i, 4) * img.rows);
+            int xRightTop = static_cast<int>(detectionMat.at<float>(i, 5) * img.cols);
+            int yRightTop = static_cast<int>(detectionMat.at<float>(i, 6) * img.rows);
+
+            Rect object((int)xLeftBottom, (int)yLeftBottom,
+                        (int)(xRightTop - xLeftBottom),
+                        (int)(yRightTop - yLeftBottom));
+
+            rectangle(imgClone, object, Scalar(0, 255, 0), 2);
+
+            // cout << CLASSES[idx] << ": " << confidence << endl;
+
+            ss.str("");
+            ss << confidence;
+            String conf(ss.str());
+            String label = CLASSES[idx] + ": " + conf;
+            int baseLine = 0;
+            Size labelSize = getTextSize(label, FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
+            cv::putText(imgClone, label, Point(xLeftBottom, yLeftBottom), cv::FONT_HERSHEY_SIMPLEX, 1.0, Scalar(0,0,0), 3);
         }
     }
 
-    // Perform non maximum suppression to eliminate redundant overlapping boxes with lower confidences
-    cv::dnn::NMSBoxes(boxes, confidences, 0.2, 0.4, indices);
-
-    for (size_t i = 0; i < indices.size(); ++i)
-    {
-        int idx = indices[i];
-        cv::Rect box = boxes[idx];
-        cv::rectangle(img_clone, box, cv::Scalar(0, 255, 0), 2);
-        std::string label = cv::format("Class: %d, Confidence: %.2f", classIds[idx], confidences[idx]);
-        int baseLine;
-        cv::Size labelSize = cv::getTextSize(label, cv::FONT_HERSHEY_SIMPLEX, 0.5, 1, &baseLine);
-        cv::putText(img_clone, label, cv::Point(box.x, box.y > labelSize.height ? box.y : labelSize.height), cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(0, 255, 0));
-    }
-
     // Return the cloned image with bounding boxes and labels
-    return img_clone;
+    return imgClone;
 }
