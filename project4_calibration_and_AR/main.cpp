@@ -19,7 +19,7 @@ int main()
         printf("Unable to open the video camera");
         return -1;
     }
-    
+    std::vector<cv::Point2f> corner_set;
     while(true)
     {
         capdev >> frame;
@@ -28,7 +28,7 @@ int main()
             printf("Blank Frame grabbed");
             return -1;
         }
-        Drawchessboardcorner(frame,boardSize);      //to find and display chessboard corners
+        corner_set=Drawchessboardcorner(frame,boardSize);      //to find and display chessboard corners
         cv::imshow("Display Window",frame);
 
         char k = waitKey(10);

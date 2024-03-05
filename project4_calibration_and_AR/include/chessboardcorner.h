@@ -16,7 +16,8 @@
 * @brief Creates coordinates of each corner and draws those corners in the image
 * @param frame Input image
 * @param boardSize size of the chessboard
+* @return list of all the corners in the chessboard
 */
 
-void Drawchessboardcorner(cv::Mat frame, cv::Size boardSize);
+std::vector<cv::Point2f>  Drawchessboardcorner(cv::Mat frame, cv::Size boardSize);
 #endif

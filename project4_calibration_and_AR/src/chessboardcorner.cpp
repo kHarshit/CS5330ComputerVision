@@ -14,7 +14,7 @@
 
 using namespace cv;
 
-void Drawchessboardcorner(cv::Mat frame, cv::Size boardSize)
+std::vector<cv::Point2f> Drawchessboardcorner(cv::Mat frame, cv::Size boardSize)
 {
     std::vector<cv::Point2f> corner_set;
     cv::Mat gray;
@@ -29,4 +29,5 @@ void Drawchessboardcorner(cv::Mat frame, cv::Size boardSize)
         std::cout<<"Number of the corners"<<corner_set.size()<<std::endl;
         std::cout<<"First Coordinate: "<<corner_set[0]<<std::endl;
     }
+    return corner_set;
 }
