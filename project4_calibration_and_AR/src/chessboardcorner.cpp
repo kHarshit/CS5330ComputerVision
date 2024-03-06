@@ -26,8 +26,7 @@ std::vector<cv::Point2f> Drawchessboardcorner(cv::Mat frame, cv::Size boardSize)
         cv::cornerSubPix(gray,corner_set,cv::Size(11,11),cv::Size(-1,-1),cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.001));
         //std::cout<<corner_set;
         cv::drawChessboardCorners(frame,boardSize,corner_set,true);
-        std::cout<<"Number of the corners"<<corner_set.size()<<std::endl;
-        std::cout<<"First Coordinate: "<<corner_set[0]<<std::endl;
+        
     }
     return corner_set;
 }
