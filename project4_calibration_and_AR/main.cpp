@@ -31,6 +31,7 @@ int main()
     camera_matrix.at<double>(0,2)=frame.cols/2;
     camera_matrix.at<double>(1,2)=frame.rows/2;
     cv::Mat distortion_coefficients = cv::Mat::zeros(5, 1, CV_64FC1);
+    int flag=0;
     while(true)
     {
         capdev >> frame;
@@ -80,14 +81,16 @@ int main()
                     std::cout << "Frame " << i << " size: " << point_list[i].size() << " (Number of points)" << std::endl;
                 }
             } 
-            else {
+            else 
+            {
                 std::cout << "Point_set is empty. Skipping..." << std::endl;
             }
             
             std::cout<<"Callibration points saved"<<std::endl;
+            flag+=1;
 
         }
-        if(k=='c')
+        if(flag>=5)
         {
             //Callibrating camera
             std::cout<<"Previous Callibrated Camera"<<camera_matrix;
@@ -98,9 +101,11 @@ int main()
             std::cout << "Camera Matrix (after calibration):\n" << camera_matrix << std::endl;
             std::cout << "Distortion Coefficients (after calibration):\n" << distortion_coefficients << std::endl;
             std::cout << "Reprojection Error: " << error << std::endl;
-        }
-        cv::imshow("Display Window",frame);
+            
 
+        }
+        
+        cv::imshow("Display Window",frame);
         if(k=='q')
         {                 //If the user presses 'q', end the program
             break;
