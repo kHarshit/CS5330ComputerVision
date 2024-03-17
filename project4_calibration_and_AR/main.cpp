@@ -5,6 +5,8 @@
 #include <opencv2/imgproc.hpp>
 #include <opencv2/calib3d.hpp>
 #include "chessboardcorner.h"
+
+using namespace std;
 using namespace cv;
 
 int main(int argc, char** argv)
@@ -41,7 +43,7 @@ int main(int argc, char** argv)
             return -1;
         }
         //Task 1
-        corner_set=Drawchessboardcorner(frame,boardSize);      //to find and display chessboard corners
+        bool foundCorners = drawchessboardcorner(frame,boardSize, corner_set);      //to find and display chessboard corners
         
 
         //Task 2
@@ -112,17 +114,15 @@ int main(int argc, char** argv)
 
             //Task 4
 
-            // Define object points in real world space
-            std::vector<cv::Point3f> object_points;
-            // Fill object_points with the real world coordinates of the corners on your chessboard
-
             // Detect target and get corners
-            std::vector<cv::Point2f> corner_set;
-            cv::Mat gray;
-            cv::cvtColor(frame,gray,cv::COLOR_BGR2GRAY);
-            bool found = findChessboardCorners( gray, boardSize, corner_set, cv::CALIB_CB_ADAPTIVE_THRESH );
+            if (foundCorners) {
+                // Define object points in real world space
+                std::vector<cv::Point3f> object_points;
+                // Fill object_points with the real world coordinates of the corners on your chessboard
+                for(int i = 0; i < boardSize.height; ++i)
+                    for(int j = 0; j < boardSize.width; ++j)
+                        object_points.push_back(cv::Point3f(j, i, 0.0f));
 
-            if (found) {
                 // Get board's pose
                 cv::Mat rvec, tvec;
                 cv::solvePnP(object_points, corner_set, camera_matrix, distortion_coefficients, rvec, tvec);

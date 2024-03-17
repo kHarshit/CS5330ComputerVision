@@ -19,5 +19,5 @@
 * @return list of all the corners in the chessboard
 */
 
-std::vector<cv::Point2f>  Drawchessboardcorner(cv::Mat frame, cv::Size boardSize);
+bool drawchessboardcorner(cv::Mat frame, cv::Size boardSize, std::vector<cv::Point2f> &corner_set);
 #endif

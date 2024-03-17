@@ -14,9 +14,8 @@
 
 using namespace cv;
 
-std::vector<cv::Point2f> Drawchessboardcorner(cv::Mat frame, cv::Size boardSize)
+bool drawchessboardcorner(cv::Mat frame, cv::Size boardSize, std::vector<cv::Point2f> &corner_set)
 {
-    std::vector<cv::Point2f> corner_set;
     cv::Mat gray;
     cv::cvtColor(frame,gray,cv::COLOR_BGR2GRAY);
 
@@ -28,5 +27,5 @@ std::vector<cv::Point2f> Drawchessboardcorner(cv::Mat frame, cv::Size boardSize)
         cv::drawChessboardCorners(frame,boardSize,corner_set,true);
         
     }
-    return corner_set;
+    return found;
 }
