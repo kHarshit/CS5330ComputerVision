@@ -29,3 +29,19 @@ bool drawchessboardcorner(cv::Mat frame, cv::Size boardSize, std::vector<cv::Poi
     }
     return found;
 }
+
+void calculatePose(const std::vector<cv::Point2f>& corner_set, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& boardSize) {
+    // Define object points in real world space
+    std::vector<cv::Point3f> object_points;
+    for(int i = 0; i < boardSize.height; ++i)
+        for(int j = 0; j < boardSize.width; ++j)
+            object_points.push_back(cv::Point3f(j, i, 0.0f));
+
+    // Get board's pose
+    cv::Mat rvec, tvec;
+    cv::solvePnP(object_points, corner_set, camera_matrix, distortion_coefficients, rvec, tvec);
+
+    // Print rotation and translation
+    std::cout << "Rotation: " << rvec << std::endl;
+    std::cout << "Translation: " << tvec << std::endl;
+}

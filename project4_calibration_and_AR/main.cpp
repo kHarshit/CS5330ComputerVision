@@ -113,23 +113,8 @@ int main(int argc, char** argv)
             
 
             //Task 4
-
-            // Detect target and get corners
             if (foundCorners) {
-                // Define object points in real world space
-                std::vector<cv::Point3f> object_points;
-                // Fill object_points with the real world coordinates of the corners on your chessboard
-                for(int i = 0; i < boardSize.height; ++i)
-                    for(int j = 0; j < boardSize.width; ++j)
-                        object_points.push_back(cv::Point3f(j, i, 0.0f));
-
-                // Get board's pose
-                cv::Mat rvec, tvec;
-                cv::solvePnP(object_points, corner_set, camera_matrix, distortion_coefficients, rvec, tvec);
-
-                // Print rotation and translation
-                std::cout << "Rotation: " << rvec << std::endl;
-                std::cout << "Translation: " << tvec << std::endl;
+                calculatePose(corner_set, camera_matrix, distortion_coefficients, boardSize);
             }
         }
         
