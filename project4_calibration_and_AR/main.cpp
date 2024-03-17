@@ -7,7 +7,7 @@
 #include "chessboardcorner.h"
 using namespace cv;
 
-int main()
+int main(int argc, char** argv)
 {
      // Wait for a keystroke in the window
     cv::VideoCapture capdev(0);
@@ -90,6 +90,7 @@ int main()
             flag+=1;
 
         }
+        // Task 3
         if(flag>=5)
         {
             //Callibrating camera
@@ -101,8 +102,35 @@ int main()
             std::cout << "Camera Matrix (after calibration):\n" << camera_matrix << std::endl;
             std::cout << "Distortion Coefficients (after calibration):\n" << distortion_coefficients << std::endl;
             std::cout << "Reprojection Error: " << error << std::endl;
+
+            // Write intrinsic parameters to a file
+            cv::FileStorage fs("intrinsic_parameters.yml", cv::FileStorage::WRITE);
+            fs << "camera_matrix" << camera_matrix;
+            fs << "distortion_coefficients" << distortion_coefficients;
+            fs.release();
             
 
+            //Task 4
+
+            // Define object points in real world space
+            std::vector<cv::Point3f> object_points;
+            // Fill object_points with the real world coordinates of the corners on your chessboard
+
+            // Detect target and get corners
+            std::vector<cv::Point2f> corner_set;
+            cv::Mat gray;
+            cv::cvtColor(frame,gray,cv::COLOR_BGR2GRAY);
+            bool found = findChessboardCorners( gray, boardSize, corner_set, cv::CALIB_CB_ADAPTIVE_THRESH );
+
+            if (found) {
+                // Get board's pose
+                cv::Mat rvec, tvec;
+                cv::solvePnP(object_points, corner_set, camera_matrix, distortion_coefficients, rvec, tvec);
+
+                // Print rotation and translation
+                std::cout << "Rotation: " << rvec << std::endl;
+                std::cout << "Translation: " << tvec << std::endl;
+            }
         }
         
         cv::imshow("Display Window",frame);

@@ -1,7 +1,7 @@
 /**
  * author: Harshit Kumar, Khushi Neema
  * date: Mar 5th, 2024
- * purpose: Implements various object detection algorithms
+ * purpose: Implements various Calibration and Augmented Reality functionalities
  *
  */
 #include "chessboardcorner.h"
