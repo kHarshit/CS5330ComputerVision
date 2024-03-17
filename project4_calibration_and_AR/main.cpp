@@ -95,22 +95,7 @@ int main(int argc, char** argv)
         // Task 3
         if(flag>=5)
         {
-            //Callibrating camera
-            std::cout<<"Previous Callibrated Camera"<<camera_matrix;
-            std::cout<<"Previous Distortion Coefficients"<<distortion_coefficients;
-
-            double error=cv::calibrateCamera(point_list,corner_list,frame.size(),camera_matrix,distortion_coefficients,cv::noArray(),cv::noArray(),cv::CALIB_FIX_ASPECT_RATIO);
-
-            std::cout << "Camera Matrix (after calibration):\n" << camera_matrix << std::endl;
-            std::cout << "Distortion Coefficients (after calibration):\n" << distortion_coefficients << std::endl;
-            std::cout << "Reprojection Error: " << error << std::endl;
-
-            // Write intrinsic parameters to a file
-            cv::FileStorage fs("intrinsic_parameters.yml", cv::FileStorage::WRITE);
-            fs << "camera_matrix" << camera_matrix;
-            fs << "distortion_coefficients" << distortion_coefficients;
-            fs.release();
-            
+            calibrateCameraAndSaveParameters(point_list, corner_list, frame.size(), camera_matrix, distortion_coefficients);            
 
             //Task 4
             if (foundCorners) {

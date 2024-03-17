@@ -22,6 +22,17 @@
 bool drawchessboardcorner(cv::Mat frame, cv::Size boardSize, std::vector<cv::Point2f> &corner_set);
 
 /**
+ * @brief Calibrates the camera and saves the parameters
+ * @param point_list list of all the points in the chessboard
+ * @param corner_list list of all the corners in the chessboard
+ * @param frame_size size of the frame
+ * @param camera_matrix camera matrix
+ * @param distortion_coefficients distortion coefficients
+ * @return void
+*/
+void calibrateCameraAndSaveParameters(std::vector<std::vector<cv::Vec3f>>& point_list, std::vector<std::vector<cv::Point2f>>& corner_list, cv::Size frame_size, cv::Mat& camera_matrix, cv::Mat& distortion_coefficients);
+
+/**
  * @brief Calculates the pose of the chessboard
  * @param corner_set list of all the corners in the chessboard
  * @param camera_matrix camera matrix

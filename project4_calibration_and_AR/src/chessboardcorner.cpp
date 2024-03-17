@@ -30,6 +30,24 @@ bool drawchessboardcorner(cv::Mat frame, cv::Size boardSize, std::vector<cv::Poi
     return found;
 }
 
+void calibrateCameraAndSaveParameters(std::vector<std::vector<cv::Vec3f>>& point_list, std::vector<std::vector<cv::Point2f>>& corner_list, cv::Size frame_size, cv::Mat& camera_matrix, cv::Mat& distortion_coefficients) {
+    // Calibrating camera
+    std::cout << "Previous Calibrated Camera" << camera_matrix;
+    std::cout << "Previous Distortion Coefficients" << distortion_coefficients;
+
+    double error = cv::calibrateCamera(point_list, corner_list, frame_size, camera_matrix, distortion_coefficients, cv::noArray(), cv::noArray(), cv::CALIB_FIX_ASPECT_RATIO);
+
+    std::cout << "Camera Matrix (after calibration):\n" << camera_matrix << std::endl;
+    std::cout << "Distortion Coefficients (after calibration):\n" << distortion_coefficients << std::endl;
+    std::cout << "Reprojection Error: " << error << std::endl;
+
+    // Write intrinsic parameters to a file
+    cv::FileStorage fs("intrinsic_parameters.yml", cv::FileStorage::WRITE);
+    fs << "camera_matrix" << camera_matrix;
+    fs << "distortion_coefficients" << distortion_coefficients;
+    fs.release();
+}
+
 void calculatePose(const std::vector<cv::Point2f>& corner_set, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& boardSize) {
     // Define object points in real world space
     std::vector<cv::Point3f> object_points;
