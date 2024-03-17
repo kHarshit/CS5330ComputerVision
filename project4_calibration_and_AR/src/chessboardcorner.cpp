@@ -61,17 +61,32 @@ void calculatePose(const std::vector<cv::Point2f>& corner_set, const cv::Mat& ca
 
 void projectPointsAndDraw(const std::vector<cv::Point2f>& corner_set, const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& boardSize, cv::Mat& image) {
     // Define object points in real world space
-    std::vector<cv::Point3f> object_points;
-    for(int i = 0; i < boardSize.height; ++i)
-        for(int j = 0; j < boardSize.width; ++j)
-            object_points.push_back(cv::Point3f(j, i, 0.0f));
+    // std::vector<cv::Point3f> object_points;
+    // for(int i = 0; i < boardSize.height; ++i)
+    //     for(int j = 0; j < boardSize.width; ++j)
+    //         object_points.push_back(cv::Point3f(j, i, 0.0f));
 
-    // Project 3D points to image plane
-    std::vector<cv::Point2f> projected_points;
-    cv::projectPoints(object_points, rvec, tvec, camera_matrix, distortion_coefficients, projected_points);
+    // // Project 3D points to image plane
+    // std::vector<cv::Point2f> projected_points;
+    // cv::projectPoints(object_points, rvec, tvec, camera_matrix, distortion_coefficients, projected_points);
 
     // Draw projected points on the image
-    for (size_t i = 0; i < projected_points.size(); ++i) {
-        cv::circle(image, projected_points[i], 3, cv::Scalar(0, 0, 255), -1);
-    }
+    // for (size_t i = 0; i < projected_points.size(); ++i) {
+    //     cv::circle(image, projected_points[i], 3, cv::Scalar(0, 0, 255), -1);
+    // }
+
+    // Project 3D Points to 2D or Draw 3D Axes
+    std::vector<cv::Point3f> axisPoints = {
+        cv::Point3f(0.0f, 0.0f, 0.0f),  // Origin
+        cv::Point3f(2.0f, 0.0f, 0.0f),  // X Axis
+        cv::Point3f(0.0f, 2.0f, 0.0f),  // Y Axis
+        cv::Point3f(0.0f, 0.0f, -2.0f)  // Z Axis (into the board)
+    };
+    std::vector<cv::Point2f> imagePoints;
+    cv::projectPoints(axisPoints, rvec, tvec, camera_matrix, distortion_coefficients, imagePoints);
+
+    // Draw the axes lines
+    cv::line(image, imagePoints[0], imagePoints[1], cv::Scalar(0, 0, 255), 3);  // X Axis in Red
+    cv::line(image, imagePoints[0], imagePoints[2], cv::Scalar(0, 255, 0), 3);  // Y Axis in Green
+    cv::line(image, imagePoints[0], imagePoints[3], cv::Scalar(255, 0, 0), 3);  // Z Axis in Blue
 }
