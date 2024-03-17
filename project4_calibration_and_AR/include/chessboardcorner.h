@@ -38,6 +38,22 @@ void calibrateCameraAndSaveParameters(std::vector<std::vector<cv::Vec3f>>& point
  * @param camera_matrix camera matrix
  * @param distortion_coefficients distortion coefficients
  * @param boardSize size of the chessboard
+ * @param rvec rotation vector
+ * @param tvec translation vector
+ * @return void
 */
-void calculatePose(const std::vector<cv::Point2f>& corner_set, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& boardSize);
+void calculatePose(const std::vector<cv::Point2f>& corner_set, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& boardSize, cv::Mat& rvec, cv::Mat& tvec);
+
+/**
+ * @brief Projects the points and draws them on the frame
+ * @param corner_set list of all the corners in the chessboard
+ * @param rvec rotation vector
+ * @param tvec translation vector
+ * @param camera_matrix camera matrix
+ * @param distortion_coefficients distortion coefficients
+ * @param boardSize size of the chessboard
+ * @param image input frame
+ * @return void
+*/
+void projectPointsAndDraw(const std::vector<cv::Point2f>& corner_set, const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& boardSize, cv::Mat& image);
 #endif

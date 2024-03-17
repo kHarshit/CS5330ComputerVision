@@ -95,11 +95,18 @@ int main(int argc, char** argv)
         // Task 3
         if(flag>=5)
         {
+            // Task 4
             calibrateCameraAndSaveParameters(point_list, corner_list, frame.size(), camera_matrix, distortion_coefficients);            
 
-            //Task 4
+            //Task 5
             if (foundCorners) {
-                calculatePose(corner_set, camera_matrix, distortion_coefficients, boardSize);
+                cv::Mat rvec, tvec;
+                calculatePose(corner_set, camera_matrix, distortion_coefficients, boardSize, rvec, tvec);
+                std::cout << "Rotation: " << rvec << std::endl;
+                std::cout << "Translation: " << tvec << std::endl;
+
+                projectPointsAndDraw(corner_set, rvec, tvec, camera_matrix, distortion_coefficients, boardSize, frame);
+
             }
         }
         

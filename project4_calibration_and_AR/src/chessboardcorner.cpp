@@ -48,7 +48,7 @@ void calibrateCameraAndSaveParameters(std::vector<std::vector<cv::Vec3f>>& point
     fs.release();
 }
 
-void calculatePose(const std::vector<cv::Point2f>& corner_set, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& boardSize) {
+void calculatePose(const std::vector<cv::Point2f>& corner_set, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& boardSize, cv::Mat& rvec, cv::Mat& tvec) {
     // Define object points in real world space
     std::vector<cv::Point3f> object_points;
     for(int i = 0; i < boardSize.height; ++i)
@@ -56,10 +56,22 @@ void calculatePose(const std::vector<cv::Point2f>& corner_set, const cv::Mat& ca
             object_points.push_back(cv::Point3f(j, i, 0.0f));
 
     // Get board's pose
-    cv::Mat rvec, tvec;
     cv::solvePnP(object_points, corner_set, camera_matrix, distortion_coefficients, rvec, tvec);
+}
 
-    // Print rotation and translation
-    std::cout << "Rotation: " << rvec << std::endl;
-    std::cout << "Translation: " << tvec << std::endl;
+void projectPointsAndDraw(const std::vector<cv::Point2f>& corner_set, const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& boardSize, cv::Mat& image) {
+    // Define object points in real world space
+    std::vector<cv::Point3f> object_points;
+    for(int i = 0; i < boardSize.height; ++i)
+        for(int j = 0; j < boardSize.width; ++j)
+            object_points.push_back(cv::Point3f(j, i, 0.0f));
+
+    // Project 3D points to image plane
+    std::vector<cv::Point2f> projected_points;
+    cv::projectPoints(object_points, rvec, tvec, camera_matrix, distortion_coefficients, projected_points);
+
+    // Draw projected points on the image
+    for (size_t i = 0; i < projected_points.size(); ++i) {
+        cv::circle(image, projected_points[i], 3, cv::Scalar(0, 0, 255), -1);
+    }
 }
