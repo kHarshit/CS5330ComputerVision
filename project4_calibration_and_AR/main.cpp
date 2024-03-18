@@ -106,7 +106,7 @@ int main(int argc, char** argv)
                 std::cout << "Translation: " << tvec << std::endl;
 
                 projectPointsAndDraw(corner_set, rvec, tvec, camera_matrix, distortion_coefficients, boardSize, frame);
-
+                createObject(rvec, tvec, camera_matrix, distortion_coefficients, boardSize, frame);
             }
         }
         
