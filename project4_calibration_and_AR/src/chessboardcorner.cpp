@@ -30,6 +30,40 @@ bool drawchessboardcorner(cv::Mat frame, cv::Size boardSize, std::vector<cv::Poi
     return found;
 }
 
+void saveCalibrationPoints(vector<cv::Point2f>& corner_set, vector<vector<cv::Point2f>>& corner_list, vector<cv::Vec3f>& point_set, vector<vector<cv::Vec3f>>& point_list, int& flag, Size boardSize) {
+    if(!corner_set.empty())
+    {
+        std::cout<<"Number of the corners"<<corner_set.size()<<std::endl;
+        std::cout<<"First Coordinate: "<<corner_set[0]<<std::endl;   
+        corner_list.push_back(corner_set);
+
+        for (size_t i = 0; i < corner_set.size(); ++i) 
+        {
+            int x, y;
+            x = static_cast<int>(i % boardSize.width);
+            y = static_cast<int>(i / boardSize.width);
+            point_set.push_back(cv::Vec3f(x, -y, 0.0f));
+        }
+
+        if (!point_set.empty()) {
+            point_list.push_back(point_set);
+            point_set.clear();
+            std::cout << "Size of point_list: " << point_list.size() << " (Number of frames)" << std::endl;
+
+            for (size_t i = 0; i < point_list.size(); ++i) {
+                std::cout << "Frame " << i << " size: " << point_list[i].size() << " (Number of points)" << std::endl;
+            }
+        } 
+        else 
+        {
+            std::cout << "Point_set is empty. Skipping..." << std::endl;
+        }
+
+        std::cout<<"Calibration points saved"<<std::endl;
+        flag+=1;
+    }
+}
+
 void calibrateCameraAndSaveParameters(std::vector<std::vector<cv::Vec3f>>& point_list, std::vector<std::vector<cv::Point2f>>& corner_list, cv::Size frame_size, cv::Mat& camera_matrix, cv::Mat& distortion_coefficients) {
     // Calibrating camera
     std::cout << "Previous Calibrated Camera" << camera_matrix;

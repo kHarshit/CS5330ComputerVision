@@ -10,6 +10,9 @@
 
 #include <opencv2/opencv.hpp>
 
+using namespace std;
+using namespace cv;
+
 
 
 /**
@@ -20,6 +23,18 @@
  * @return true if the corners are found, false otherwise
 */
 bool drawchessboardcorner(cv::Mat frame, cv::Size boardSize, std::vector<cv::Point2f> &corner_set);
+
+/**
+ * @brief Saves the calibration points
+ * @param corner_set list of all the corners in the chessboard
+ * @param corner_list list of all the corners in the chessboard
+ * @param point_set list of all the points in the chessboard
+ * @param point_list list of all the points in the chessboard
+ * @param flag flag to check if the points are saved
+ * @param boardSize size of the chessboard
+ * @return void
+*/
+void saveCalibrationPoints(vector<cv::Point2f>& corner_set, vector<vector<cv::Point2f>>& corner_list, vector<cv::Vec3f>& point_set, vector<vector<cv::Vec3f>>& point_list, int& flag, Size boardSize);
 
 /**
  * @brief Calibrates the camera and saves the parameters
