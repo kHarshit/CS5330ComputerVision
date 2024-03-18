@@ -34,8 +34,8 @@ void calibrateCameraAndSaveParameters(std::vector<std::vector<cv::Vec3f>>& point
     // Calibrating camera
     std::cout << "Previous Calibrated Camera" << camera_matrix;
     std::cout << "Previous Distortion Coefficients" << distortion_coefficients;
-
-    double error = cv::calibrateCamera(point_list, corner_list, frame_size, camera_matrix, distortion_coefficients, cv::noArray(), cv::noArray(), cv::CALIB_FIX_ASPECT_RATIO);
+    std::vector<cv::Mat> rvecs, tvecs;
+    double error = cv::calibrateCamera(point_list, corner_list, frame_size, camera_matrix, distortion_coefficients, rvecs,tvecs, cv::CALIB_FIX_ASPECT_RATIO);
 
     std::cout << "Camera Matrix (after calibration):\n" << camera_matrix << std::endl;
     std::cout << "Distortion Coefficients (after calibration):\n" << distortion_coefficients << std::endl;
@@ -180,5 +180,67 @@ void createObject(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camer
         cv::line(image, projected_points[11], projected_points[12], cv::Scalar(0, 255, 0), 2);
         cv::circle(image,projected_points[8],40.0,cv::Scalar(0, 255, 0), 2);
 
+    // std::vector<cv::Point3f> house_points ={
+    //     cv::Point3f(5.0f,2.0f,0.0f),    //house left start
+    //     cv::Point3f(5.25f,2.0f,0.0f),   //gate left start
+    //     cv::Point3f(5.75f,2.0f,0.0f),    //gate right end
+    //     cv::Point3f(6.0f,2.0f,0.0f),  
 
+    //     cv::Point3f(5.0f,1.0f,0.0f),    //house left start
+    //     cv::Point3f(5.25f,1.5f,0.0f),   //gate left start
+    //     cv::Point3f(5.75f,1.5f,0.0f),    //gate right end
+    //     cv::Point3f(6.0f,1.0f,0.0f),
+
+    //     cv::Point3f(), 
+
+    //     cv::Point3f(5.0f,2.0f,4.0f),    //house left start
+    //     cv::Point3f(6.0f,2.0f,4.0f), 
+
+    //     cv::Point3f(5.0f,1.0f,4.0f),    //house left start
+    //     cv::Point3f(6.0f,1.0f,4.0f), 
+          
+    //     cv:: Point3f(5.5f,0.5f,5.0f),
+
+        
+    // };
+    std::vector<cv::Point3f> house_coords = {
+    cv::Point3f(0.0f, 0.0f, 0.0f),    // Base left
+    cv::Point3f(6.0f, 0.0f, 0.0f),    // Base right
+    cv::Point3f(6.0f, 0.0f, -4.0f),   // Base right back
+    cv::Point3f(0.0f, 0.0f, -4.0f),   // Base left back
+    cv::Point3f(3.0f, 0.0f, -6.0f),   // Roof center back
+    cv::Point3f(3.0f, 4.0f, -2.0f),   // Roof top
+    cv::Point3f(2.0f, 2.0f, -1.0f),   // Door left
+    cv::Point3f(4.0f, 2.0f, -1.0f),   // Door right
+    cv::Point3f(2.0f, 3.0f, -1.0f),   // Door top
+    cv::Point3f(1.0f, 1.0f, -2.0f),   // Window left
+    cv::Point3f(2.0f, 1.0f, -2.0f),   // Window right
+    cv::Point3f(1.0f, 2.0f, -2.0f),   // Window top
+    cv::Point3f(2.0f, 2.0f, -2.0f)    // Window bottom
+};
+    std::vector<cv::Point2f> projected_points1;
+    cv::projectPoints(house_coords, rvec, tvec, camera_matrix, distortion_coefficients, projected_points1);
+
+    // Draw the base
+    cv::line(image, projected_points1[0], projected_points1[1], cv::Scalar(255, 0, 0), 2); // Base left to right
+    cv::line(image, projected_points1[1], projected_points1[2], cv::Scalar(255, 0, 0), 2); // Base right to right back
+    cv::line(image, projected_points1[2], projected_points1[3], cv::Scalar(255, 0, 0), 2); // Base right back to left back
+    cv::line(image, projected_points1[3], projected_points1[0], cv::Scalar(255, 0, 0), 2); // Base left back to left
+
+    // Draw the roof
+    cv::line(image, projected_points1[4], projected_points1[5], cv::Scalar(255, 0, 0), 2); // Roof center back to top
+    cv::line(image, projected_points1[3], projected_points1[4], cv::Scalar(255, 0, 0), 2); // Base left back to roof center back
+    cv::line(image, projected_points1[2], projected_points1[4], cv::Scalar(255, 0, 0), 2); // Base right back to roof center back
+
+    // Draw the door
+    cv::line(image, projected_points1[6], projected_points1[7], cv::Scalar(255, 0, 0), 2); // Door left to right
+    cv::line(image, projected_points1[6], projected_points1[8], cv::Scalar(255, 0, 0), 2); // Door left to top
+    cv::line(image, projected_points1[7], projected_points1[8], cv::Scalar(255, 0, 0), 2); // Door right to top
+
+    // Draw the window
+    cv::line(image, projected_points1[9], projected_points1[10], cv::Scalar(255, 0, 0), 2); // Window left to right
+    cv::line(image, projected_points1[9], projected_points1[11], cv::Scalar(255, 0, 0), 2); // Window left to top
+    cv::line(image, projected_points1[10], projected_points1[11], cv::Scalar(255, 0, 0), 2); // Window right to top
+    cv::line(image, projected_points1[10], projected_points1[12], cv::Scalar(255, 0, 0), 2); // Window right to bottom
+    cv::line(image, projected_points1[9], projected_points1[12], cv::Scalar(255, 0, 0), 2); // Window left to bottom
 }

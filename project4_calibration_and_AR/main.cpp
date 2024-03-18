@@ -110,6 +110,7 @@ int main(int argc, char** argv)
             //calibrateCameraAndSaveParameters(point_list, corner_list, frame.size(), camera_matrix, distortion_coefficients);            
 
             //Task 5
+            //foundCorners=false;
             if (foundCorners) {
                 cv::Mat rvec, tvec;
                 calculatePose(corner_set, camera_matrix, distortion_coefficients, boardSize, rvec, tvec);
