@@ -128,6 +128,28 @@ void projectPointsAndDraw(const std::vector<cv::Point2f>& corner_set, const cv::
 void createObject(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& boardSize, cv::Mat& image)
 {
 
+
+    // Choose the color based on the rotation vector (orientation)
+    // Convert rotation vector to rotation matrix
+    cv::Mat rotation_matrix;
+    cv::Rodrigues(rvec, rotation_matrix);
+
+    // Create a 3x4 projection matrix
+    cv::Mat projection_matrix = cv::Mat::zeros(3, 4, CV_64F);
+    rotation_matrix.copyTo(projection_matrix(cv::Rect(0, 0, 3, 3)));
+    tvec.copyTo(projection_matrix(cv::Rect(3, 0, 1, 3)));
+
+    // Decompose the projection matrix
+    cv::Mat camera_matrix_copy, rvec_copy, tvec_copy;
+    cv::decomposeProjectionMatrix(projection_matrix, camera_matrix_copy, rvec_copy, tvec_copy);
+
+    // Normalize Euler angles to [0, 1]
+    cv::normalize(rvec_copy, rvec_copy, 0, 1, cv::NORM_MINMAX);
+
+    // Define color based on Euler angles
+    cv::Scalar color(rvec_copy.at<double>(0) * 255, rvec_copy.at<double>(1) * 255, rvec_copy.at<double>(2) * 255);
+
+
     std::vector<cv::Point3f> person_standing ={
         cv::Point3f(4.0f,3.0f,0.0f),    //legs left
         cv::Point3f(5.0f,3.0f,0.0f),   //legs right
@@ -195,50 +217,111 @@ void createObject(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camer
     cv::projectPoints(house_coords, rvec, tvec, camera_matrix, distortion_coefficients, projected_points1);
 
     // Draw the base
-    cv::line(image, projected_points1[0], projected_points1[1], cv::Scalar(255, 0, 0), 2); // Base left to right
-    cv::line(image, projected_points1[1], projected_points1[2], cv::Scalar(255, 0, 0), 2); // Base right to right back
-    cv::line(image, projected_points1[2], projected_points1[3], cv::Scalar(255, 0, 0), 2); // Base right back to left back
-    cv::line(image, projected_points1[3], projected_points1[0], cv::Scalar(255, 0, 0), 2); // Base left back to left
+    cv::line(image, projected_points1[0], projected_points1[1], color, 2); // Base left to right
+    cv::line(image, projected_points1[1], projected_points1[2], color, 2); // Base right to right back
+    cv::line(image, projected_points1[2], projected_points1[3], color, 2); // Base right back to left back
+    cv::line(image, projected_points1[3], projected_points1[0], color, 2); // Base left back to left
 
     //Draw base 2
-    cv::line(image, projected_points1[11], projected_points1[12], cv::Scalar(255, 0, 0), 2); // Base left to right
-    cv::line(image, projected_points1[12], projected_points1[13], cv::Scalar(255, 0, 0), 2); // Base right to right back
-    cv::line(image, projected_points1[13], projected_points1[14], cv::Scalar(255, 0, 0), 2); // Base right back to left back
-    cv::line(image, projected_points1[14], projected_points1[11], cv::Scalar(255, 0, 0), 2); // Base left back to left
+    cv::line(image, projected_points1[11], projected_points1[12], color, 2); // Base left to right
+    cv::line(image, projected_points1[12], projected_points1[13], color, 2); // Base right to right back
+    cv::line(image, projected_points1[13], projected_points1[14], color, 2); // Base right back to left back
+    cv::line(image, projected_points1[14], projected_points1[11], color, 2); // Base left back to left
 
     //Connecting both bases
-    cv::line(image, projected_points1[0], projected_points1[11], cv::Scalar(255, 0, 0), 2); 
-    cv::line(image, projected_points1[1], projected_points1[12], cv::Scalar(255, 0, 0), 2);
-    cv::line(image, projected_points1[2], projected_points1[13], cv::Scalar(255, 0, 0), 2);  
-    cv::line(image, projected_points1[3], projected_points1[14], cv::Scalar(255, 0, 0), 2); 
+    cv::line(image, projected_points1[0], projected_points1[11], color, 2); 
+    cv::line(image, projected_points1[1], projected_points1[12], color, 2);
+    cv::line(image, projected_points1[2], projected_points1[13], color, 2);  
+    cv::line(image, projected_points1[3], projected_points1[14], color, 2); 
     // Draw the roof
-    //cv::line(image, projected_points1[4], projected_points1[5], cv::Scalar(255, 0, 0), 2); // Roof center back to top
-    cv::line(image, projected_points1[3], projected_points1[4], cv::Scalar(255, 0, 0), 2); // Base left back to roof center back
-    cv::line(image, projected_points1[2], projected_points1[4], cv::Scalar(255, 0, 0), 2); // Base right back to roof center back
-    cv::line(image, projected_points1[13], projected_points1[4], cv::Scalar(255, 0, 0), 2); 
-    cv::line(image, projected_points1[14], projected_points1[4], cv::Scalar(255, 0, 0), 2); 
+    //cv::line(image, projected_points1[4], projected_points1[5], color, 2); // Roof center back to top
+    cv::line(image, projected_points1[3], projected_points1[4], color, 2); // Base left back to roof center back
+    cv::line(image, projected_points1[2], projected_points1[4], color, 2); // Base right back to roof center back
+    cv::line(image, projected_points1[13], projected_points1[4], color, 2); 
+    cv::line(image, projected_points1[14], projected_points1[4], color, 2); 
 
     // Draw the door
-    cv::line(image, projected_points1[6], projected_points1[7], cv::Scalar(255, 0, 0), 2); // Door left to right
-    cv::line(image, projected_points1[6], projected_points1[8], cv::Scalar(255, 0, 0), 2); // Door left to top
-    cv::line(image, projected_points1[7], projected_points1[9], cv::Scalar(255, 0, 0), 2); // Door right to top
-    cv::line(image, projected_points1[8], projected_points1[9], cv::Scalar(255, 0, 0), 2); //Door top connect
+    cv::line(image, projected_points1[6], projected_points1[7], color, 2); // Door left to right
+    cv::line(image, projected_points1[6], projected_points1[8], color, 2); // Door left to top
+    cv::line(image, projected_points1[7], projected_points1[9], color, 2); // Door right to top
+    cv::line(image, projected_points1[8], projected_points1[9], color, 2); //Door top connect
 
     //Draw the door 2
-     cv::line(image, projected_points1[15], projected_points1[16], cv::Scalar(255, 0, 0), 2); // Door left to right
-    cv::line(image, projected_points1[16], projected_points1[17], cv::Scalar(255, 0, 0), 2); // Door left to top
-    cv::line(image, projected_points1[17], projected_points1[18], cv::Scalar(255, 0, 0), 2); // Door right to top
-    cv::line(image, projected_points1[18], projected_points1[15], cv::Scalar(255, 0, 0), 2); //Door top connect
+     cv::line(image, projected_points1[15], projected_points1[16], color, 2); // Door left to right
+    cv::line(image, projected_points1[16], projected_points1[17], color, 2); // Door left to top
+    cv::line(image, projected_points1[17], projected_points1[18], color, 2); // Door right to top
+    cv::line(image, projected_points1[18], projected_points1[15], color, 2); //Door top connect
 
     //Connect doors
     //Connecting both bases
-    cv::line(image, projected_points1[6], projected_points1[15], cv::Scalar(255, 0, 0), 2); 
-    cv::line(image, projected_points1[7], projected_points1[16], cv::Scalar(255, 0, 0), 2);
-    cv::line(image, projected_points1[8], projected_points1[18], cv::Scalar(255, 0, 0), 2);  
-    cv::line(image, projected_points1[9], projected_points1[17], cv::Scalar(255, 0, 0), 2); 
+    cv::line(image, projected_points1[6], projected_points1[15], color, 2); 
+    cv::line(image, projected_points1[7], projected_points1[16], color, 2);
+    cv::line(image, projected_points1[8], projected_points1[18], color, 2);  
+    cv::line(image, projected_points1[9], projected_points1[17], color, 2); 
 
 
-    cv::circle(image,projected_points1[10],20.0,cv::Scalar(255, 0, 0), 2);
-    //cv::circle(image,projected_points1[15],20.0,cv::Scalar(255, 0, 0), 2);
+    cv::circle(image,projected_points1[10],20.0,color, 2);
+    //cv::circle(image,projected_points1[15],20.0,color, 2);
 }
 
+
+void blurOutsideChessboardRegion(const cv::Size& boardSize, const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat& image) {
+    // Define the chessboard corners in 3D space
+    std::vector<cv::Point3f> chessboard_corners = {
+        cv::Point3f(0.0f, 0.0f, 0.0f),
+        cv::Point3f(boardSize.width - 1, 0.0f, 0.0f),
+        cv::Point3f(boardSize.width - 1, boardSize.height - 1, 0.0f),
+        cv::Point3f(0.0f, boardSize.height - 1, 0.0f)
+    };
+
+    // Project the 3D chessboard corners into 2D image space
+    std::vector<cv::Point2f> projected_corners;
+    cv::projectPoints(chessboard_corners, rvec, tvec, camera_matrix, distortion_coefficients, projected_corners);
+
+    // Create a mask for the chessboard region
+    cv::Mat mask = cv::Mat::zeros(image.size(), CV_8U);
+    std::vector<cv::Point> corners_2d;
+    for (const auto& pt : projected_corners) {
+        corners_2d.push_back(cv::Point(static_cast<int>(pt.x), static_cast<int>(pt.y)));
+    }
+    cv::fillConvexPoly(mask, corners_2d, cv::Scalar(255, 255, 255));
+
+    // Invert the mask to select the area outside the chessboard
+    cv::bitwise_not(mask, mask);
+
+    // Blur the region outside the chessboard
+    cv::Mat blurred_image;
+    cv::GaussianBlur(image, blurred_image, cv::Size(21, 21), 0);
+    blurred_image.copyTo(image, mask);
+}
+
+void blendChessboardRegion(const cv::Size& boardSize, const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat& image, const cv::Mat& texture) {
+    // Define the chessboard corners in 3D space
+    std::vector<cv::Point3f> chessboard_corners = {
+        cv::Point3f(0.0f, 0.0f, 0.0f),
+        cv::Point3f(boardSize.width - 1, 0.0f, 0.0f),
+        cv::Point3f(boardSize.width - 1, boardSize.height - 1, 0.0f),
+        cv::Point3f(0.0f, boardSize.height - 1, 0.0f)
+    };
+
+    // Project the 3D chessboard corners into 2D image space
+    std::vector<cv::Point2f> projected_corners;
+    cv::projectPoints(chessboard_corners, rvec, tvec, camera_matrix, distortion_coefficients, projected_corners);
+
+    // Create a mask for the chessboard region
+    cv::Mat mask = cv::Mat::zeros(image.size(), CV_8U);
+    std::vector<cv::Point> corners_2d;
+    for (const auto& pt : projected_corners) {
+        corners_2d.push_back(cv::Point(static_cast<int>(pt.x), static_cast<int>(pt.y)));
+    }
+    cv::fillConvexPoly(mask, corners_2d, cv::Scalar(255, 255, 255));
+
+    // Resize the texture to the size of the image
+    cv::Mat resized_texture;
+    cv::resize(texture, resized_texture, image.size());
+
+    // Blend the region of the chessboard with the texture
+    cv::Mat blended_image;
+    cv::addWeighted(image, 0.5, resized_texture, 0.5, 0, blended_image);
+    blended_image.copyTo(image, mask);
+}

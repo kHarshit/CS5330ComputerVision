@@ -76,6 +76,12 @@ int main(int argc, char** argv)
                 std::cout << "Translation: " << tvec << std::endl;
 
                 projectPointsAndDraw(corner_set, rvec, tvec, camera_matrix, distortion_coefficients, boardSize, frame);
+
+                // Blur the outside chessboard region
+                blurOutsideChessboardRegion(boardSize, rvec, tvec, camera_matrix, distortion_coefficients, frame);
+                // Blend the chessboard with grass
+                cv::Mat texture = cv::imread("/Users/harshit/Downloads/grass.jpg");
+                blendChessboardRegion(boardSize, rvec, tvec, camera_matrix, distortion_coefficients, frame, texture);
                 createObject(rvec, tvec, camera_matrix, distortion_coefficients, boardSize, frame);
             }
         }

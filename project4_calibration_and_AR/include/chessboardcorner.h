@@ -85,6 +85,28 @@ void projectPointsAndDraw(const std::vector<cv::Point2f>& corner_set, const cv::
 */
 void createObject(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& boardSize, cv::Mat& image);
 
+/**
+ * @brief Blurs the outside chessboard region
+ * @param boardSize size of the chessboard
+ * @param rvec rotation vector
+ * @param tvec translation vector
+ * @param camera_matrix camera matrix
+ * @param distortion_coefficients distortion coefficients
+ * @param image input frame
+ * @return void
+*/
+void blurOutsideChessboardRegion(const cv::Size& boardSize, const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat& image);
 
-
+/**
+ * @brief Blends the chessboard region
+ * @param boardSize size of the chessboard
+ * @param rvec rotation vector
+ * @param tvec translation vector
+ * @param camera_matrix camera matrix
+ * @param distortion_coefficients distortion coefficients
+ * @param image input frame
+ * @param texture texture to be blended
+ * @return void
+*/
+void blendChessboardRegion(const cv::Size& boardSize, const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat& image, const cv::Mat& texture);
 #endif
