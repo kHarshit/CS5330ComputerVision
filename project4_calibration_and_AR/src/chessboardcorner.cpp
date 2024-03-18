@@ -150,13 +150,13 @@ void createObject(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camer
         cv::Point3f(5.0f,3.0f,-2.0f),    //body right start
         cv::Point3f(4.0f,3.0f,-6.0f),   //body left end
         cv::Point3f(5.0f,3.0f,-6.0f),   // body right end
-        cv::Point3f(4.5f,3.0f,-6.0f),
-        cv::Point3f(4.5f,3.0f,-6.25f),
-        cv::Point3f(4.5f,3.0f,-7.25f),
-        cv::Point3f(4.25f,3.0f,-6.25f),
-        cv::Point3f(4.75f,3.0f,-6.25f),
-        cv::Point3f(4.25f,3.0f,-7.25f),
-        cv::Point3f(4.75f,3.0f,-7.25f),
+        cv::Point3f(4.5f,3.0f,-6.0f),   // neck start
+        cv::Point3f(4.5f,3.0f,-6.25f),  // neck end
+        cv::Point3f(4.5f,3.0f,-7.25f),  // head center
+        cv::Point3f(5.75f,2.50f,-5.0f), //elbow right
+        cv::Point3f(7.0f,2.80f,-6.25f),  //wrist right
+        cv::Point3f(2.75f,2.40f,-4.75f),    //elbow left
+        cv::Point3f(3.75f,3.7f,-3.8f)   //wrist left
     };
 
         std::vector<cv::Point2f> projected_points;
@@ -174,9 +174,11 @@ void createObject(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camer
         // cv::line(image, projected_points[8], projected_points[9], cv::Scalar(0, 255, 0), 2);    // Left hip to Left foot
         // cv::line(image, projected_points[8], projected_points[10], cv::Scalar(0, 255, 0), 2);
         // cv::line(image, projected_points[9], projected_points[11], cv::Scalar(0, 255, 0), 2);
-        // cv::line(image, projected_points[11], projected_points[10], cv::Scalar(0, 255, 0), 2);
+        cv::line(image, projected_points[5], projected_points[9], cv::Scalar(0, 255, 0), 2);
+        cv::line(image, projected_points[9], projected_points[10], cv::Scalar(0, 255, 0), 2);
+        cv::line(image, projected_points[4], projected_points[11], cv::Scalar(0, 255, 0), 2);
+        cv::line(image, projected_points[11], projected_points[12], cv::Scalar(0, 255, 0), 2);
         cv::circle(image,projected_points[8],40.0,cv::Scalar(0, 255, 0), 2);
-            // Right hip to Right foot
 
 
 }
