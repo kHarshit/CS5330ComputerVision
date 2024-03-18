@@ -92,11 +92,22 @@ int main(int argc, char** argv)
             flag+=1;
 
         }
+        #if 1
+            flag=6;
+            cv::FileStorage fs("intrinsic_parameters.yml", cv::FileStorage::READ);
+            if (!fs.isOpened()) {
+                std::cerr << "Error: Unable to open the file for reading." << std::endl;
+                return 0;
+            }
+            fs["camera_matrix"] >> camera_matrix;
+            fs["distortion_coefficients"] >> distortion_coefficients;
+            fs.release();
+        #endif
         // Task 3
         if(flag>=5)
         {
             // Task 4
-            calibrateCameraAndSaveParameters(point_list, corner_list, frame.size(), camera_matrix, distortion_coefficients);            
+            //calibrateCameraAndSaveParameters(point_list, corner_list, frame.size(), camera_matrix, distortion_coefficients);            
 
             //Task 5
             if (foundCorners) {

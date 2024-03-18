@@ -95,25 +95,88 @@ void createObject(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camer
 {
     //Creating a BUILDING block object 
 
-    std::vector<cv::Point3f> house_points = {
-    // Define the vertices of the house relative to its center
-    cv::Point3f(-1.5f, -1.5f, 0.0f),     // Bottom left corner of the house
-    cv::Point3f(1.5f, -1.5f, 0.0f),      // Bottom right corner of the house
-    cv::Point3f(1.5f, 1.5f, 0.0f),       // Top right corner of the house
-    cv::Point3f(-1.5f, 1.5f, 0.0f),      // Top left corner of the house
-    cv::Point3f(0.0f, 3.0f, 0.0f)        // Roof peak of the house
+    // std::vector<cv::Point3f> house_points = {
+    // // Define the vertices of the house relative to its center
+    // cv::Point3f(-1.5f, -1.5f, 0.0f),     // Bottom left corner of the house
+    // cv::Point3f(1.5f, -1.5f, 0.0f),      // Bottom right corner of the house
+    // cv::Point3f(1.5f, 1.5f, 0.0f),       // Top right corner of the house
+    // cv::Point3f(-1.5f, 1.5f, 0.0f),      // Top left corner of the house
+    // cv::Point3f(0.0f, 3.0f, 0.0f)        // Roof peak of the house
+    // };
+
+    // std::vector<cv::Point2f> projected_points;
+    // cv::projectPoints(house_points, rvec, tvec, camera_matrix, distortion_coefficients, projected_points);
+
+    // cv::line(image, projected_points[0], projected_points[1], cv::Scalar(0, 0, 255), 2);  // Bottom
+    // cv::line(image, projected_points[1], projected_points[2], cv::Scalar(0, 0, 255), 2);  // Right
+    // cv::line(image, projected_points[2], projected_points[3], cv::Scalar(0, 0, 255), 2);  // Top
+    // cv::line(image, projected_points[3], projected_points[0], cv::Scalar(0, 0, 255), 2);  // Left
+    // cv::line(image, projected_points[0], projected_points[4], cv::Scalar(0, 0, 255), 2);  // Bottom-left to Roof
+    // cv::line(image, projected_points[1], projected_points[4], cv::Scalar(0, 0, 255), 2);  // Bottom-right to Roof
+    // cv::line(image, projected_points[2], projected_points[4], cv::Scalar(0, 0, 255), 2);  // Top-right to Roof
+    // cv::line(image, projected_points[3], projected_points[4], cv::Scalar(0, 0, 255), 2);  // Top-left to Roof
+
+    // Define the center of the chessboard
+    cv::Point3f chessboard_center(4.0f, 3.0f, 0.0f);
+    // Scale factor
+    float scale_factor = 6.0f;
+
+    // Define the 3D coordinates for a person standing on the chessboard
+    std::vector<cv::Point3f> person_points = {
+        // Head
+    cv::Point3f(chessboard_center.x, chessboard_center.y, scale_factor * 1.8f),        // Head center
+    
+    // Body
+    cv::Point3f(chessboard_center.x, chessboard_center.y, scale_factor * 1.2f),        // Body center
+    cv::Point3f(chessboard_center.x - 0.3f * scale_factor, chessboard_center.y, scale_factor * 0.8f), // Left shoulder
+    cv::Point3f(chessboard_center.x + 0.3f * scale_factor, chessboard_center.y, scale_factor * 0.8f), // Right shoulder
+    cv::Point3f(chessboard_center.x - 0.3f * scale_factor, chessboard_center.y, scale_factor * 0.4f), // Left hip
+    cv::Point3f(chessboard_center.x + 0.3f * scale_factor, chessboard_center.y, scale_factor * 0.4f), // Right hip
+    
+    // Arms
+    cv::Point3f(chessboard_center.x - 0.6f * scale_factor, chessboard_center.y, scale_factor * 1.0f), // Left hand
+    cv::Point3f(chessboard_center.x + 0.6f * scale_factor, chessboard_center.y, scale_factor * 1.0f), // Right hand
+    
+    // Legs
+    cv::Point3f(chessboard_center.x - 0.3f * scale_factor, chessboard_center.y, 0.0f), // Left foot
+    cv::Point3f(chessboard_center.x + 0.3f * scale_factor, chessboard_center.y, 0.0f)  // Right foot
     };
 
-    std::vector<cv::Point2f> projected_points;
-    cv::projectPoints(house_points, rvec, tvec, camera_matrix, distortion_coefficients, projected_points);
 
-    cv::line(image, projected_points[0], projected_points[1], cv::Scalar(0, 0, 255), 2);  // Bottom
-    cv::line(image, projected_points[1], projected_points[2], cv::Scalar(0, 0, 255), 2);  // Right
-    cv::line(image, projected_points[2], projected_points[3], cv::Scalar(0, 0, 255), 2);  // Top
-    cv::line(image, projected_points[3], projected_points[0], cv::Scalar(0, 0, 255), 2);  // Left
-    cv::line(image, projected_points[0], projected_points[4], cv::Scalar(0, 0, 255), 2);  // Bottom-left to Roof
-    cv::line(image, projected_points[1], projected_points[4], cv::Scalar(0, 0, 255), 2);  // Bottom-right to Roof
-    cv::line(image, projected_points[2], projected_points[4], cv::Scalar(0, 0, 255), 2);  // Top-right to Roof
-    cv::line(image, projected_points[3], projected_points[4], cv::Scalar(0, 0, 255), 2);  // Top-left to Roof
+    std::vector<cv::Point3f> person_standing ={
+        cv::Point3f(4.0f,3.0f,0.0f),    //legs left
+        cv::Point3f(5.0f,3.0f,0.0f),   //legs right
+        cv::Point3f(4.0f,3.0f,-2.0f),    //body left start
+        cv::Point3f(5.0f,3.0f,-2.0f),    //body right start
+        cv::Point3f(4.0f,3.0f,-6.0f),   //body left end
+        cv::Point3f(5.0f,3.0f,-6.0f),   // body right end
+        cv::Point3f(4.5f,3.0f,-6.0f),
+        cv::Point3f(4.5f,3.0f,-6.25f),
+        cv::Point3f(4.5f,3.0f,-7.25f),
+        cv::Point3f(4.25f,3.0f,-6.25f),
+        cv::Point3f(4.75f,3.0f,-6.25f),
+        cv::Point3f(4.25f,3.0f,-7.25f),
+        cv::Point3f(4.75f,3.0f,-7.25f),
+    };
+
+        std::vector<cv::Point2f> projected_points;
+        cv::projectPoints(person_standing, rvec, tvec, camera_matrix, distortion_coefficients, projected_points);
+
+
+        // Draw the person
+        cv::line(image, projected_points[0], projected_points[2], cv::Scalar(0, 255, 0), 2);    // Head to Body
+        cv::line(image, projected_points[1], projected_points[3], cv::Scalar(0, 255, 0), 2);    // Body to Left shoulder
+        cv::line(image, projected_points[2], projected_points[3], cv::Scalar(0, 255, 0), 2);    // Body to Right shoulder
+        cv::line(image, projected_points[2], projected_points[4], cv::Scalar(0, 255, 0), 2);    // Left shoulder to Left hip
+        cv::line(image, projected_points[3], projected_points[5], cv::Scalar(0, 255, 0), 2);    // Right shoulder to Right hip
+        cv::line(image, projected_points[4], projected_points[5], cv::Scalar(0, 255, 0), 2);    // Left shoulder to Left hand
+        cv::line(image, projected_points[6], projected_points[7], cv::Scalar(0, 255, 0), 2);    // Right shoulder to Right hand
+        // cv::line(image, projected_points[8], projected_points[9], cv::Scalar(0, 255, 0), 2);    // Left hip to Left foot
+        // cv::line(image, projected_points[8], projected_points[10], cv::Scalar(0, 255, 0), 2);
+        // cv::line(image, projected_points[9], projected_points[11], cv::Scalar(0, 255, 0), 2);
+        // cv::line(image, projected_points[11], projected_points[10], cv::Scalar(0, 255, 0), 2);
+        cv::circle(image,projected_points[8],40.0,cv::Scalar(0, 255, 0), 2);
+            // Right hip to Right foot
+
 
 }
