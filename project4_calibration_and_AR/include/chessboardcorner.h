@@ -109,4 +109,17 @@ void blurOutsideChessboardRegion(const cv::Size& boardSize, const cv::Mat& rvec,
  * @return void
 */
 void blendChessboardRegion(const cv::Size& boardSize, const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat& image, const cv::Mat& texture);
+
+/**
+ * @brief Blends the outside chessboard region
+ * @param boardSize size of the chessboard
+ * @param rvec rotation vector
+ * @param tvec translation vector
+ * @param camera_matrix camera matrix
+ * @param distortion_coefficients distortion coefficients
+ * @param image input frame
+ * @param pebbles texture to be blended
+ * @return void
+*/
+void blendOutsideChessboardRegion(const cv::Size& boardSize, const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat& image, const cv::Mat& pebbles);
 #endif

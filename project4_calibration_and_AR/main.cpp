@@ -82,6 +82,9 @@ int main(int argc, char** argv)
                 // Blend the chessboard with grass
                 cv::Mat texture = cv::imread("../grass.jpg");
                 blendChessboardRegion(boardSize, rvec, tvec, camera_matrix, distortion_coefficients, frame, texture);
+                // Blend the outside chessboard with pebbles
+                cv::Mat desert = cv::imread("../desert.jpg");
+                blendOutsideChessboardRegion(boardSize, rvec, tvec, camera_matrix, distortion_coefficients, frame, desert);
                 createObject(rvec, tvec, camera_matrix, distortion_coefficients, boardSize, frame);
             }
         }

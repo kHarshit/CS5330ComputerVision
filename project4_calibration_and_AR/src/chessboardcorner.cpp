@@ -322,6 +322,40 @@ void blendChessboardRegion(const cv::Size& boardSize, const cv::Mat& rvec, const
 
     // Blend the region of the chessboard with the texture
     cv::Mat blended_image;
-    cv::addWeighted(image, 0.2, resized_texture, 0.8, 0, blended_image);
+    cv::addWeighted(image, 0.1, resized_texture, 0.9, 0, blended_image);
+    blended_image.copyTo(image, mask);
+}
+
+void blendOutsideChessboardRegion(const cv::Size& boardSize, const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat& image, const cv::Mat& pebbles) {
+    // Define the chessboard corners in 3D space
+    std::vector<cv::Point3f> chessboard_corners = {
+        cv::Point3f(0.0f, 0.0f, 0.0f),
+        cv::Point3f(boardSize.width - 1, 0.0f, 0.0f),
+        cv::Point3f(boardSize.width - 1, boardSize.height - 1, 0.0f),
+        cv::Point3f(0.0f, boardSize.height - 1, 0.0f)
+    };
+
+    // Project the 3D chessboard corners into 2D image space
+    std::vector<cv::Point2f> projected_corners;
+    cv::projectPoints(chessboard_corners, rvec, tvec, camera_matrix, distortion_coefficients, projected_corners);
+
+    // Create a mask for the chessboard region
+    cv::Mat mask = cv::Mat::zeros(image.size(), CV_8U);
+    std::vector<cv::Point> corners_2d;
+    for (const auto& pt : projected_corners) {
+        corners_2d.push_back(cv::Point(static_cast<int>(pt.x), static_cast<int>(pt.y)));
+    }
+    cv::fillConvexPoly(mask, corners_2d, cv::Scalar(255, 255, 255));
+
+    // Invert the mask to select the area outside the chessboard
+    cv::bitwise_not(mask, mask);
+
+    // Resize the pebbles image to the size of the image
+    cv::Mat resized_pebbles;
+    cv::resize(pebbles, resized_pebbles, image.size());
+
+    // Blend the region outside the chessboard with the pebbles image
+    cv::Mat blended_image;
+    cv::addWeighted(image, 0.1, resized_pebbles, 0.9, 0, blended_image);
     blended_image.copyTo(image, mask);
 }
