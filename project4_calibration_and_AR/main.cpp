@@ -80,7 +80,7 @@ int main(int argc, char** argv)
                 // Blur the outside chessboard region
                 blurOutsideChessboardRegion(boardSize, rvec, tvec, camera_matrix, distortion_coefficients, frame);
                 // Blend the chessboard with grass
-                cv::Mat texture = cv::imread("/Users/harshit/Downloads/grass.jpg");
+                cv::Mat texture = cv::imread("../grass.jpg");
                 blendChessboardRegion(boardSize, rvec, tvec, camera_matrix, distortion_coefficients, frame, texture);
                 createObject(rvec, tvec, camera_matrix, distortion_coefficients, boardSize, frame);
             }
