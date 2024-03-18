@@ -322,6 +322,6 @@ void blendChessboardRegion(const cv::Size& boardSize, const cv::Mat& rvec, const
 
     // Blend the region of the chessboard with the texture
     cv::Mat blended_image;
-    cv::addWeighted(image, 0.5, resized_texture, 0.5, 0, blended_image);
+    cv::addWeighted(image, 0.2, resized_texture, 0.8, 0, blended_image);
     blended_image.copyTo(image, mask);
 }
