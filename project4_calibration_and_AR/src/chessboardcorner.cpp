@@ -90,3 +90,30 @@ void projectPointsAndDraw(const std::vector<cv::Point2f>& corner_set, const cv::
     cv::line(image, imagePoints[0], imagePoints[2], cv::Scalar(0, 255, 0), 3);  // Y Axis in Green
     cv::line(image, imagePoints[0], imagePoints[3], cv::Scalar(255, 0, 0), 3);  // Z Axis in Blue
 }
+
+void createObject(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, const cv::Size& boardSize, cv::Mat& image)
+{
+    //Creating a BUILDING block object 
+
+    std::vector<cv::Point3f> house_points = {
+    // Define the vertices of the house relative to its center
+    cv::Point3f(-1.5f, -1.5f, 0.0f),     // Bottom left corner of the house
+    cv::Point3f(1.5f, -1.5f, 0.0f),      // Bottom right corner of the house
+    cv::Point3f(1.5f, 1.5f, 0.0f),       // Top right corner of the house
+    cv::Point3f(-1.5f, 1.5f, 0.0f),      // Top left corner of the house
+    cv::Point3f(0.0f, 3.0f, 0.0f)        // Roof peak of the house
+    };
+
+    std::vector<cv::Point2f> projected_points;
+    cv::projectPoints(house_points, rvec, tvec, camera_matrix, distortion_coefficients, projected_points);
+
+    cv::line(image, projected_points[0], projected_points[1], cv::Scalar(0, 0, 255), 2);  // Bottom
+    cv::line(image, projected_points[1], projected_points[2], cv::Scalar(0, 0, 255), 2);  // Right
+    cv::line(image, projected_points[2], projected_points[3], cv::Scalar(0, 0, 255), 2);  // Top
+    cv::line(image, projected_points[3], projected_points[0], cv::Scalar(0, 0, 255), 2);  // Left
+    cv::line(image, projected_points[0], projected_points[4], cv::Scalar(0, 0, 255), 2);  // Bottom-left to Roof
+    cv::line(image, projected_points[1], projected_points[4], cv::Scalar(0, 0, 255), 2);  // Bottom-right to Roof
+    cv::line(image, projected_points[2], projected_points[4], cv::Scalar(0, 0, 255), 2);  // Top-right to Roof
+    cv::line(image, projected_points[3], projected_points[4], cv::Scalar(0, 0, 255), 2);  // Top-left to Roof
+
+}
