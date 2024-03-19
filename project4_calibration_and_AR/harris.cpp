@@ -49,7 +49,7 @@ int main() {
         for (int i = 0; i < dst_norm.rows; i++) {
             for (int j = 0; j < dst_norm.cols; j++) {
                 if ((int)dst_norm.at<float>(i, j) > thresh) {
-                    circle(frame, Point(j, i), 5, Scalar(0, 0, 255), 2, 8, 0);
+                    circle(frame, Point(j, i), 5, Scalar(255, 0, 0), 2, 8, 0);
                 }
             }
         }

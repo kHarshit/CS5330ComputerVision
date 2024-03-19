@@ -30,13 +30,13 @@ int main(int argc, char** argv)
     //Initializing 3x3 Matrix
 
     cv::Mat camera_matrix=cv::Mat::eye(3,3, CV_64FC1);
-    camera_matrix.at<double>(0,2)=frame.cols/2;
-    camera_matrix.at<double>(1,2)=frame.rows/2;
     cv::Mat distortion_coefficients = cv::Mat::zeros(5, 1, CV_64FC1);
     int flag=0;
     while(true)
     {
         capdev >> frame;
+        camera_matrix.at<double>(0,2)=frame.cols/2;
+        camera_matrix.at<double>(1,2)=frame.rows/2;
         char k = waitKey(10);
         if(frame.empty()){
             printf("Blank Frame grabbed");
@@ -50,6 +50,7 @@ int main(int argc, char** argv)
         {
             saveCalibrationPoints(corner_set, corner_list, point_set, point_list, flag, boardSize);
         }
+        // load intrinsic parameters
         #if 1
             flag=6;
             cv::FileStorage fs("intrinsic_parameters.yml", cv::FileStorage::READ);
