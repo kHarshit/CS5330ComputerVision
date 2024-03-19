@@ -148,6 +148,7 @@ void createObject(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camer
 
     // Define color based on Euler angles
     cv::Scalar color(rvec_copy.at<double>(0) * 255, rvec_copy.at<double>(1) * 255, rvec_copy.at<double>(2) * 255);
+    cv::Scalar color2(rvec_copy.at<double>(1) * 255, rvec_copy.at<double>(0) * 255, rvec_copy.at<double>(2) * 255);
 
 
     std::vector<cv::Point3f> person_standing ={
@@ -171,26 +172,26 @@ void createObject(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camer
 
 
         // Draw the person
-        cv::line(image, projected_points[0], projected_points[2], cv::Scalar(0, 255, 0), 2);    // Head to Body
-        cv::line(image, projected_points[1], projected_points[3], cv::Scalar(0, 255, 0), 2);    // Body to Left shoulder
-        cv::line(image, projected_points[2], projected_points[3], cv::Scalar(0, 255, 0), 2);    // Body to Right shoulder
-        cv::line(image, projected_points[2], projected_points[4], cv::Scalar(0, 255, 0), 2);    // Left shoulder to Left hip
-        cv::line(image, projected_points[3], projected_points[5], cv::Scalar(0, 255, 0), 2);    // Right shoulder to Right hip
-        cv::line(image, projected_points[4], projected_points[5], cv::Scalar(0, 255, 0), 2);    // Left shoulder to Left hand
-        cv::line(image, projected_points[6], projected_points[7], cv::Scalar(0, 255, 0), 2);    // Right shoulder to Right hand
-        // cv::line(image, projected_points[8], projected_points[9], cv::Scalar(0, 255, 0), 2);    // Left hip to Left foot
-        // cv::line(image, projected_points[8], projected_points[10], cv::Scalar(0, 255, 0), 2);
-        // cv::line(image, projected_points[9], projected_points[11], cv::Scalar(0, 255, 0), 2);
-        cv::line(image, projected_points[5], projected_points[9], cv::Scalar(0, 255, 0), 2);
-        cv::line(image, projected_points[9], projected_points[10], cv::Scalar(0, 255, 0), 2);
-        cv::line(image, projected_points[4], projected_points[11], cv::Scalar(0, 255, 0), 2);
-        cv::line(image, projected_points[11], projected_points[12], cv::Scalar(0, 255, 0), 2);
-        cv::circle(image,projected_points[8],40.0,cv::Scalar(0, 255, 0), 2);
+        cv::line(image, projected_points[0], projected_points[2], cv::Scalar(0, 0, 255), 2);    // Head to Body
+        cv::line(image, projected_points[1], projected_points[3], cv::Scalar(0, 0, 255), 2);    // Body to Left shoulder
+        cv::line(image, projected_points[2], projected_points[3], cv::Scalar(0, 0, 255), 2);    // Body to Right shoulder
+        cv::line(image, projected_points[2], projected_points[4], cv::Scalar(0, 0, 255), 2);    // Left shoulder to Left hip
+        cv::line(image, projected_points[3], projected_points[5], cv::Scalar(0, 0, 255), 2);    // Right shoulder to Right hip
+        cv::line(image, projected_points[4], projected_points[5], cv::Scalar(0, 0, 255), 2);    // Left shoulder to Left hand
+        cv::line(image, projected_points[6], projected_points[7], cv::Scalar(0, 0, 255), 2);    // Right shoulder to Right hand
+        // cv::line(image, projected_points[8], projected_points[9], cv::Scalar(0, 0, 255), 2);    // Left hip to Left foot
+        // cv::line(image, projected_points[8], projected_points[10], cv::Scalar(0, 0, 255), 2);
+        // cv::line(image, projected_points[9], projected_points[11], cv::Scalar(0, 0, 255), 2);
+        cv::line(image, projected_points[5], projected_points[9], cv::Scalar(0, 0, 255), 2);
+        cv::line(image, projected_points[9], projected_points[10], cv::Scalar(0, 0, 255), 2);
+        cv::line(image, projected_points[4], projected_points[11], cv::Scalar(0, 0, 255), 2);
+        cv::line(image, projected_points[11], projected_points[12], cv::Scalar(0, 0, 255), 2);
+        cv::circle(image,projected_points[8],40.0,cv::Scalar(0, 0, 255), 2);
 
         std::vector<std::vector<cv::Point>> body_contours = {
         {projected_points[2], projected_points[3], projected_points[4], projected_points[5]}};
 
-        cv::fillPoly(image, body_contours, cv::Scalar(0, 255, 0));
+        cv::fillPoly(image, body_contours, cv::Scalar(0, 0, 255));
 
     std::vector<cv::Point3f> house_coords = {
         cv::Point3f(0.0f, 0.0f, 0.0f),    // Base left
@@ -266,8 +267,49 @@ void createObject(const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camer
 
     cv::circle(image,projected_points1[10],20.0,color, 2);
     //cv::circle(image,projected_points1[15],20.0,color, 2);
-}
 
+    std::vector<std::vector<cv::Point>> house_base_contours = {
+        {projected_points1[0], projected_points1[1], projected_points1[2], projected_points1[3]} // House base
+    };
+    std::vector<std::vector<cv::Point>> house_base2_contours = {
+        {projected_points1[11], projected_points1[12], projected_points1[13], projected_points1[14]} // House base
+    };
+
+    std::vector<std::vector<cv::Point>> house_base3_contours = {
+        {projected_points1[0], projected_points1[11], projected_points1[3], projected_points1[14]} // House base
+    };
+    std::vector<std::vector<cv::Point>> house_base4_contours = {
+        {projected_points1[1], projected_points1[12], projected_points1[13], projected_points1[2]} // House base
+    };
+    // roof contours
+    std::vector<std::vector<cv::Point>> house_roof_contours = {
+        {projected_points1[3], projected_points1[4], projected_points1[2], projected_points1[13], projected_points1[14]} // House roof
+    };
+    // door contours
+    std::vector<std::vector<cv::Point>> house_door1_contours = {
+        {projected_points1[6], projected_points1[7], projected_points1[9], projected_points1[8]} // House door 1
+    };
+    std::vector<std::vector<cv::Point>> house_door2_contours = {
+        {projected_points1[15], projected_points1[16], projected_points1[17], projected_points1[18]} // House door 2
+    };
+
+    // Create a copy of the original image
+    cv::Mat overlay;
+    image.copyTo(overlay);
+
+    // Fill the polygons on the copy
+    cv::fillPoly(overlay, house_base_contours, color);
+    cv::fillPoly(overlay, house_base2_contours, color);
+    cv::fillPoly(overlay, house_base3_contours, color);
+    cv::fillPoly(overlay, house_base4_contours, color);
+    cv::fillPoly(overlay, house_roof_contours, color2);
+    cv::fillPoly(overlay, house_door1_contours, color2);
+    cv::fillPoly(overlay, house_door2_contours, color2);
+
+    // Blend the original image and the copy
+    double alpha = 0.5; // Set the opacity
+    cv::addWeighted(overlay, alpha, image, 1 - alpha, 0, image);
+}
 
 void blurOutsideChessboardRegion(const cv::Size& boardSize, const cv::Mat& rvec, const cv::Mat& tvec, const cv::Mat& camera_matrix, const cv::Mat& distortion_coefficients, cv::Mat& image) {
     // Define the chessboard corners in 3D space
