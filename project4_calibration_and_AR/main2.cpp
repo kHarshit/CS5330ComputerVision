@@ -1,3 +1,10 @@
+/**
+ * author: Harshit Kumar, Khushi Neema
+ * date: Mar 5th, 2024
+ * purpose: Multiple target detection and augmentation
+ *
+ */
+
 #include <opencv2/core.hpp>
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
