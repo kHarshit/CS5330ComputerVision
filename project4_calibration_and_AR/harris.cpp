@@ -22,10 +22,10 @@ int main() {
     namedWindow("Harris Corners", WINDOW_AUTOSIZE);
 
     // Parameters for Harris corner detection
-    int blockSize = 2; // Size of the neighborhood considered for corner detection
+    int blockSize = 5; // Size of the neighborhood considered for corner detection
     int apertureSize = 3; // Aperture parameter for the Sobel operator.
     double k = 0.04; // Harris detector free parameter
-    int thresh = 200; // Threshold for detecting corners
+    int thresh = 100; // Threshold for detecting corners
 
     Mat frame;
     while (true) {
