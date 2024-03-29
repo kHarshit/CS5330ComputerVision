@@ -4,6 +4,7 @@ import torch.optim as optim
 import torchvision
 import matplotlib.pyplot as plt
 
+
 class MyNetwork(nn.Module):
     def __init__(self):
         super(MyNetwork, self).__init__()
