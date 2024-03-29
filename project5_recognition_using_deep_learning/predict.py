@@ -12,9 +12,19 @@ model.load_state_dict(torch.load('mnist_model.pth'))
 model.eval()
 
 # Define transformations for new inputs
+# transform = transforms.Compose([
+#     transforms.Grayscale(),
+#     transforms.Resize((28, 28)),
+#     transforms.ToTensor(),
+#     transforms.Lambda(lambda x: 1 - x),  # Invert pixel intensities
+#     transforms.Normalize((0.1307,), (0.3081,))
+# ])
+
 transform = transforms.Compose([
     transforms.Grayscale(),
     transforms.Resize((28, 28)),
+    #transforms.RandomRotation(degrees=15),  # Rotate by +/- 15 degrees
+    transforms.RandomHorizontalFlip(),  # Horizontally flip with 50% probability
     transforms.ToTensor(),
     transforms.Lambda(lambda x: 1 - x),  # Invert pixel intensities
     transforms.Normalize((0.1307,), (0.3081,))
