@@ -7,7 +7,7 @@ from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
-from main import MyNetwork
+from MyNetwork import MyNetwork
 
 # Load the trained MNIST model
 model = MyNetwork()

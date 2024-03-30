@@ -4,7 +4,8 @@ from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from PIL import Image
-from main import MyNetwork
+
+from MyNetwork import MyNetwork
 
 # Load the trained model
 model = MyNetwork()
