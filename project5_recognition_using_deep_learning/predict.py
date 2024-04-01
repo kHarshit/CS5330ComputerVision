@@ -1,11 +1,17 @@
+"""
+@author: Khushi Neema, Harshit Kumar
+@brief: Predict on new handwritten digit images using a trained MNIST model.
+"""
+
 import torch
 import torchvision.transforms as transforms
 from torchvision.datasets import MNIST
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 from PIL import Image
+import glob
 
-from MyNetwork import MyNetwork
+from project5_recognition_using_deep_learning.models.MyNetwork import MyNetwork
 
 # Load the trained model
 model = MyNetwork()
@@ -69,9 +75,7 @@ def test_on_mnist_test_set():
         print(f"Example {i+1}: Predicted={predicted.item()}, Actual={label.item()}")
 
 # Paths to new handwritten digit images
-new_images_paths = ['images/IMG_4002.jpg','images/IMG_4003.jpg','images/IMG_4004.jpg','images/IMG_4005.jpg',
-                    'images/IMG_4006.jpg','images/IMG_4007.jpg','images/IMG_4008.jpg','images/IMG_4009.jpg',
-                    'images/IMG_4010.jpg']
+new_images_paths = glob.glob('.data/images/*.jpg')
 
 # Display predictions on new handwritten digit images
 display_predictions(new_images_paths, transform)

@@ -1,3 +1,8 @@
+"""
+@author: Harshit Kumar, Khushi Neema
+@brief: Run an experiment to compare different configurations of a CNN on the Fashion MNIST dataset.
+"""
+
 import torch
 import torch.nn as nn
 import torchvision
@@ -6,8 +11,8 @@ import torch.optim as optim
 import time
 import pickle
 
-from FashionMnistCNN import FashionMnistCNN
-from utils import train_network
+from models.FashionMnistCNN import FashionMnistCNN
+from utils import train_test_network
 
 # Define transformations
 transform = transforms.Compose([
@@ -43,7 +48,7 @@ for i, config in enumerate(configs):
     start_time = time.time()
     optimizer = optim.AdamW(model.parameters(), lr=0.001)
     criterion = nn.CrossEntropyLoss()
-    train_losses, test_losses, train_acc, test_acc = train_network(train_loader, test_loader, model, optimizer, criterion)
+    train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion)
     training_time = time.time() - start_time
     # Record results
     results[config] = {'train_losses': train_losses, 'test_losses': test_losses, 'train_acc': train_acc, 'test_acc': test_acc, 'training_time': training_time}

@@ -1,13 +1,18 @@
+"""
+@author: Harshit Kumar, Khushi Neema
+@brief: Train and test a simple neural network on the Greek dataset.
+"""
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torchvision
 import torchvision.transforms as transforms
 from torchvision.datasets import ImageFolder
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
 
-from MyNetwork import MyNetwork
+from models.MyNetwork import MyNetwork
+from utils import train_network
 
 # Load the trained MNIST model
 model = MyNetwork()
@@ -42,35 +47,8 @@ greek_train_loader = DataLoader(greek_dataset, batch_size=5, shuffle=True)
 optimizer = optim.Adam(model.fc2.parameters(), lr=0.001)
 criterion = nn.CrossEntropyLoss()
 
-# Training function 
-def train(model, loader, optimizer, criterion, epochs=10):
-    train_losses = []
-    train_acc = []
-    for epoch in range(epochs):
-        model.train()
-        running_loss = 0.0
-        correct_train = 0
-        total_train = 0
-        for images, labels in loader:
-            optimizer.zero_grad()
-            outputs = model(images)
-            loss = criterion(outputs, labels)
-            loss.backward()
-            optimizer.step()
-            running_loss += loss.item()
-            _, predicted = torch.max(outputs, 1)
-            correct_train += (predicted == labels).sum().item()
-            total_train += labels.size(0)
-        train_losses.append(running_loss / len(loader))
-        train_acc.append(correct_train / total_train)
-
-        print(f"Epoch {epoch + 1}/{epochs}, "
-              f"Train Loss: {train_losses[-1]:.4f}, Train Acc: {train_acc[-1]:.4f}")
-
-    return train_losses, train_acc
-
 # Train the network
-train_losses, train_acc = train(model, greek_train_loader, optimizer, criterion)
+train_losses, train_acc = train_network(model, greek_train_loader, optimizer, criterion)
 
 # plot the training loss and accuracy
 plt.figure(figsize=(10, 4))

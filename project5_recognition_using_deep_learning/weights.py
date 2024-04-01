@@ -1,3 +1,8 @@
+"""
+@author: Khushi Neema, Harshit Kumar
+@brief: Visualize the filters of the first convolutional layer of a CNN trained on the MNIST dataset.
+"""
+
 import torch
 from main import MyNetwork
 import matplotlib.pyplot as plt
