@@ -5,7 +5,7 @@
 
 import torch
 
-def train_test_network(model, train_loader, test_loader, optimizer, criterion, epochs=5):
+def train_test_network(model, train_loader, test_loader, optimizer, criterion, device, epochs=1):
     """
     Train and test the model for a number of epochs.
 
@@ -31,6 +31,7 @@ def train_test_network(model, train_loader, test_loader, optimizer, criterion, e
         correct_train = 0
         total_train = 0
         for data, target in train_loader:
+            data, target = data.to(device), target.to(device)
             optimizer.zero_grad()
             output = model(data)
             loss = criterion(output, target)
@@ -49,6 +50,7 @@ def train_test_network(model, train_loader, test_loader, optimizer, criterion, e
         total_test = 0
         with torch.no_grad():
             for data, target in test_loader:
+                data, target = data.to(device), target.to(device)
                 output = model(data)
                 test_loss += criterion(output, target).item()
                 _, predicted = torch.max(output, 1)
@@ -63,7 +65,7 @@ def train_test_network(model, train_loader, test_loader, optimizer, criterion, e
     
     return train_losses, test_losses, train_acc, test_acc
 
-def train_network(model, loader, optimizer, criterion, epochs=10):
+def train_network(model, loader, optimizer, criterion, device, epochs=10):
     """
     Train the model for a number of epochs.
 
@@ -86,6 +88,7 @@ def train_network(model, loader, optimizer, criterion, epochs=10):
         correct_train = 0
         total_train = 0
         for images, labels in loader:
+            images, labels = images.to(device), labels.to(device)
             optimizer.zero_grad()
             outputs = model(images)
             loss = criterion(outputs, labels)
