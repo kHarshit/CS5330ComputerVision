@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torchvision
 import matplotlib.pyplot as plt
-
+from torch.utils.tensorboard import SummaryWriter
 from models.MyNetwork import MyNetwork
 from utils import train_test_network
 
@@ -25,6 +25,15 @@ def main():
     
     # Initialize network, optimizer, and criterion
     model = MyNetwork()
+
+    if(0):
+        #To see the diagram of the model architecture
+        model = MyNetwork()
+        dummy_input = torch.randn(1, 1, 28, 28)
+        writer = SummaryWriter()
+        writer.add_graph(model, dummy_input)
+        writer.close()
+
     optimizer = optim.Adam(model.parameters(), lr=0.001)
     criterion = nn.CrossEntropyLoss()
     
