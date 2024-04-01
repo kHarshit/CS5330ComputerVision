@@ -5,7 +5,7 @@
 
 import torch
 
-def train_test_network(model, train_loader, test_loader, optimizer, criterion, device, epochs=1):
+def train_test_network(model, train_loader, test_loader, optimizer, criterion, device, epochs=10):
     """
     Train and test the model for a number of epochs.
 
