@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 from PIL import Image
 import glob
 
-from project5_recognition_using_deep_learning.models.MyNetwork import MyNetwork
+from models.MyNetwork import MyNetwork
 
 # Load the trained model
 model = MyNetwork()
@@ -75,10 +75,10 @@ def test_on_mnist_test_set():
         print(f"Example {i+1}: Predicted={predicted.item()}, Actual={label.item()}")
 
 # Paths to new handwritten digit images
-new_images_paths = glob.glob('.data/images/*.jpg')
+new_images_paths = glob.glob('./data/images/*.jpg')
 
 # Display predictions on new handwritten digit images
-display_predictions(new_images_paths, transform)
+display_predictions(new_images_paths[:-1], transform)
 
 # Test the model on the MNIST test set
 test_on_mnist_test_set()
