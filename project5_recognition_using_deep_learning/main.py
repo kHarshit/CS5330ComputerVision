@@ -38,7 +38,8 @@ def main():
     criterion = nn.CrossEntropyLoss()
     
     # Train the network
-    train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion)
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion, device)
     
     # Plot training and testing errors
     plt.figure(figsize=(10, 5))
