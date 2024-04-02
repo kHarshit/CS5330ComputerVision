@@ -8,6 +8,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision.datasets import MNIST
 import matplotlib.pyplot as plt
+from torch.utils.tensorboard import SummaryWriter
 
 from models.ConvAutoencoder import ConvAutoencoder
 from utils import train_autoencoder
@@ -25,6 +26,12 @@ test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
 # instatntiate the model
 model = ConvAutoencoder()
 print(model)
+if 0:
+    #To see the diagram of the model architecture
+    dummy_input = torch.randn(1, 1, 28, 28)
+    writer = SummaryWriter('runs/autoencoder_model')
+    writer.add_graph(model, dummy_input)
+    writer.close()
 
 # specify loss function
 criterion = nn.MSELoss()

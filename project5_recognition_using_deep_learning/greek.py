@@ -16,6 +16,7 @@ from PIL import Image
 
 from models.MyNetwork import MyNetwork
 from utils import train_network
+from torch.utils.tensorboard import SummaryWriter
 
 
 # read command line arguments
@@ -38,6 +39,15 @@ for param in model.parameters():
 
 # Replace the last layer to recognize 3 classes (alpha, beta, gamma)
 model.fc2 = nn.Linear(50, 3)
+
+print(model)
+
+# tensorboard
+if 0:
+    dummy_input = torch.randn(1, 1, 28, 28)
+    writer = SummaryWriter('runs/greek_model')
+    writer.add_graph(model, dummy_input)
+    writer.close()
 
 class GreekTransform:
     def __call__(self, x):

@@ -43,12 +43,12 @@ def main():
     plt.show()
     # Initialize network, optimizer, and criterion
     model = MyNetwork()
+    print(model)
 
     if(0):
         #To see the diagram of the model architecture
-        model = MyNetwork()
         dummy_input = torch.randn(1, 1, 28, 28)
-        writer = SummaryWriter()
+        writer = SummaryWriter('runs/mnist_model')
         writer.add_graph(model, dummy_input)
         writer.close()
 
