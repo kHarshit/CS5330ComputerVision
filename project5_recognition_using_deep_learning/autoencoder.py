@@ -7,6 +7,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader
 from torchvision.datasets import MNIST
+import matplotlib.pyplot as plt
 
 from models.ConvAutoencoder import ConvAutoencoder
 from utils import train_autoencoder
@@ -14,11 +15,12 @@ from utils import train_autoencoder
 # convert to tensor
 transform = transforms.ToTensor()
 
+batch_size = 64
 # load the training and test datasets
 train_set = MNIST(root='./data', train=True, download=True, transform=transform)
 test_set = MNIST(root='./data', train=False, download=True, transform=transform)
-train_loader = DataLoader(train_set, batch_size=64, shuffle=True)
-test_loader = DataLoader(test_set, batch_size=64, shuffle=False)
+train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True)
+test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False)
 
 # instatntiate the model
 model = ConvAutoencoder()
@@ -33,7 +35,7 @@ optimizer = optim.Adam(model.parameters(), lr=0.001)
 # number of epochs to train the model
 n_epochs = 30
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-train_acc, test_acc = train_autoencoder(model, train_loader, optimizer, criterion, device, n_epochs)
+train_acc = train_autoencoder(model, train_loader, optimizer, criterion, device, n_epochs)
 
 # save model
 torch.save(model.state_dict(), 'conv_autoencoder.pth')
