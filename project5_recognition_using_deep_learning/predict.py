@@ -20,7 +20,7 @@ model.eval()
 
 # Define transformations for new inputs
 transform_test = transforms.Compose([
-    # transforms.Grayscale(),
+    #transforms.Grayscale(),
     # transforms.Resize((28, 28)),
     transforms.ToTensor(),
     # transforms.Lambda(lambda x: 1 - x),  # Invert pixel intensities
@@ -44,8 +44,12 @@ def predict_single_image(image_path, transform):
     image = Image.open(image_path)
     image = transform(image).unsqueeze(0)  # Add batch dimension
     output = model(image)
-    _, predicted = torch.max(output, 1)
-    return predicted.item()
+    probabilities = torch.softmax(output, dim=1)
+    predicted_class = torch.argmax(output, dim=1)
+    print(f"Network output probabilities: {probabilities.squeeze().detach().numpy().round(2)}")
+    print(f"Predicted class: {predicted_class.item()}, Actual class: {int(image_path.split('/')[-1][0])}")  # Assuming the label is part of the filename
+    return int(image_path.split('/')[-1][0])
+
 
 
 def display_predictions(image_paths, transform):
