@@ -1,6 +1,6 @@
 """
 @author: Khushi Neema, Harshit Kumar
-@brief: Train and test a simple neural network on the MNIST dataset.
+@brief: Run an experiment to compare different configurations of a CNN on the Fashion MNIST dataset.
 """
 
 import torch
