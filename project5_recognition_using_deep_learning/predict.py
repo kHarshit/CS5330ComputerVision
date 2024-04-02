@@ -55,16 +55,17 @@ def predict_single_image(image_path, transform):
 def display_predictions(image_paths, transform):
     plt.figure(figsize=(10, 6))
     for i, image_path in enumerate(image_paths, 1):
-        if i>=10:
+        if i>10:
             break
         image = Image.open(image_path)
         transformed_image = transform(image)
         prediction = predict_single_image(image_path, transform)
         print(prediction)
-        plt.subplot(3, 3, i)  # Ensure that the third argument is within the range [1, 9]
-        plt.imshow(transformed_image.squeeze().numpy(), cmap='gray')
-        plt.title(f'Prediction: {prediction}')
-        plt.axis('off')
+        if i<10:
+            plt.subplot(3, 3, i)  # Ensure that the third argument is within the range [1, 9]
+            plt.imshow(transformed_image.squeeze().numpy(), cmap='gray')
+            plt.title(f'Prediction: {prediction}')
+            plt.axis('off')
     plt.tight_layout()
     plt.show()
 
@@ -77,15 +78,19 @@ def test_on_mnist_test_set():
     
     # Iterate over the first 10 examples in the test set
     for i, (image, label) in enumerate(test_loader,1):
-        if i >= 10:
+        if i > 10:
             break
         output = model(image)
-        _, predicted = torch.max(output, 1)
-        print(f"Example {i+1}: Predicted={predicted.item()}, Actual={label.item()}")
-        plt.subplot(3,3,i)
-        plt.imshow(image.squeeze().numpy(), cmap='grey')
-        plt.title(f'Prediction: {label.item()}')
-        plt.axis('off')
+        #_, predicted = torch.max(output, 1)
+        probabilities = torch.softmax(output, dim=1)
+        predicted_class = torch.argmax(output, dim=1)
+        print(f"Network output probabilities: {probabilities.squeeze().detach().numpy().round(2)}")
+        print(f"Predicted class: {predicted_class.item()}, Actual class: {label.item()}")
+        if i<10:
+            plt.subplot(3,3,i)
+            plt.imshow(image.squeeze().numpy(), cmap='grey')
+            plt.title(f'Prediction: {label.item()}')
+            plt.axis('off')
     plt.tight_layout()
     plt.show()
 
