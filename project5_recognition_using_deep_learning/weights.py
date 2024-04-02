@@ -31,7 +31,7 @@ for i in range(10):
 plt.figure(figsize=(10, 8))
 for i in range(10):
     plt.subplot(3, 4, i+1)
-    plt.imshow(weight_firstlayer[i, 0].detach().numpy(), cmap='gray')
+    plt.imshow(weight_firstlayer[i, 0].detach().numpy())
     plt.title('Filter ' + str(i+1))
     plt.xticks([])
     plt.yticks([])
@@ -64,7 +64,7 @@ with torch.no_grad():
 plt.figure(figsize=(10, 8))
 for i in range(10):
     plt.subplot(3, 4, i+1)
-    plt.imshow(filtered_images[i], cmap='gray')
+    plt.imshow(filtered_images[i])
     plt.title('Filtered Image ' + str(i+1))
     plt.xticks([])
     plt.yticks([])
