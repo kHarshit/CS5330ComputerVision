@@ -23,6 +23,24 @@ def main():
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=True)
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=1000, shuffle=False)
     
+
+    '''
+    A: Getting MNIST dataset
+    '''
+    test_dataset = torchvision.datasets.MNIST(root='./data', train=False, download=True)
+
+    # Extract the first six examples from the test set
+    first_six_examples = [test_dataset[i][0] for i in range(6)]
+
+    # Plot the first six examples in a grid
+    fig, axes = plt.subplots(1, 6, figsize=(15, 3))
+
+    for i, example in enumerate(first_six_examples):
+        axes[i].imshow(example, cmap='gray')
+        axes[i].set_title(f'Label: {test_dataset[i][1]}')
+        axes[i].axis('off')
+
+    plt.show()
     # Initialize network, optimizer, and criterion
     model = MyNetwork()
 
