@@ -71,6 +71,7 @@ def display_predictions(image_paths, transform):
 
 # Test the model on the MNIST test set
 def test_on_mnist_test_set():
+    plt.figure(figsize=(10,6))
     mnist_test_set = MNIST(root='./data', train=False, download=True, transform=transform_test)
     test_loader = DataLoader(mnist_test_set, batch_size=1, shuffle=False)
     
@@ -81,6 +82,12 @@ def test_on_mnist_test_set():
         output = model(image)
         _, predicted = torch.max(output, 1)
         print(f"Example {i+1}: Predicted={predicted.item()}, Actual={label.item()}")
+        plt.subplot(3,3,i)
+        plt.imshow(image.squeeze().numpy(), cmap='grey')
+        plt.title(f'Prediction: {label.item()}')
+        plt.axis('off')
+    plt.tight_layout()
+    plt.show()
 
 # Paths to new handwritten digit images
 new_images_paths = glob.glob('./data/images/*.jpeg')
