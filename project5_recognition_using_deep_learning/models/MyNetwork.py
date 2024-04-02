@@ -1,4 +1,8 @@
 import torch.nn as nn
+import torch
+# from torchviz import make_dot
+import matplotlib.pyplot as plt 
+
 
 class MyNetwork(nn.Module):
     def __init__(self):
@@ -18,3 +22,5 @@ class MyNetwork(nn.Module):
         x = nn.functional.relu(self.fc1(x))
         x = nn.functional.log_softmax(self.fc2(x), dim=1)
         return x
+
+

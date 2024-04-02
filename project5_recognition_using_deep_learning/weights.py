@@ -23,20 +23,20 @@ train_set = MNIST(root='./data', train=True, download=True, transform=transform)
 
 weight_firstlayer=model.conv1.weight
 
-# print("Shape of conv1 weights:", weight_firstlayer.shape)
-# for i in range(10):
-#     print("Filter", i+1, "weights:", weight_firstlayer[i, 0])
+print("Shape of conv1 weights:", weight_firstlayer.shape)
+for i in range(10):
+    print("Filter", i+1, "weights:", weight_firstlayer[i, 0])
 
-# # Visualize the ten filters
-# plt.figure(figsize=(10, 8))
-# for i in range(10):
-#     plt.subplot(3, 4, i+1)
-#     plt.imshow(weight_firstlayer[i, 0].detach().numpy(), cmap='gray')
-#     plt.title('Filter ' + str(i+1))
-#     plt.xticks([])
-#     plt.yticks([])
-# plt.tight_layout()
-# plt.show()
+# Visualize the ten filters
+plt.figure(figsize=(10, 8))
+for i in range(10):
+    plt.subplot(3, 4, i+1)
+    plt.imshow(weight_firstlayer[i, 0].detach().numpy())
+    plt.title('Filter ' + str(i+1))
+    plt.xticks([])
+    plt.yticks([])
+plt.tight_layout()
+plt.show()
 
 
 
@@ -64,7 +64,7 @@ with torch.no_grad():
 plt.figure(figsize=(10, 8))
 for i in range(10):
     plt.subplot(3, 4, i+1)
-    plt.imshow(filtered_images[i], cmap='gray')
+    plt.imshow(filtered_images[i])
     plt.title('Filtered Image ' + str(i+1))
     plt.xticks([])
     plt.yticks([])
