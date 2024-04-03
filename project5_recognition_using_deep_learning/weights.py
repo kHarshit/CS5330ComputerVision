@@ -59,11 +59,12 @@ with torch.no_grad():
 
         # Append the filtered image to the list
         filtered_images.append(filtered_image)
+        filtered_images.append(weight_firstlayer[i, 0].detach().numpy())
 
 # Generate a plot of the 10 filtered images
 plt.figure(figsize=(10, 8))
-for i in range(10):
-    plt.subplot(3, 4, i+1)
+for i in range(20):
+    plt.subplot(5, 4, i+1)
     plt.imshow(filtered_images[i])
     plt.title('Filtered Image ' + str(i+1))
     plt.xticks([])
