@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torchvision
+import numpy as np
 import matplotlib.pyplot as plt
 from torch.utils.tensorboard import SummaryWriter
 from models.MyNetwork import MyNetwork
@@ -57,7 +58,7 @@ def main():
     
     # Train the network
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion, device)
+    train_losses, test_losses, train_acc, test_acc, train_counter = train_test_network(model, train_loader, test_loader, optimizer, criterion, device, 10)
     
     # Plot training and testing errors
     plt.figure(figsize=(10, 5))
@@ -76,6 +77,20 @@ def main():
     plt.ylabel('Accuracy')
     plt.legend()
     
+    plt.show()
+
+    # Training losses
+    train_examples, train_loss_values = zip(*train_counter)
+    plt.plot(train_examples, train_loss_values, label='Train Loss', color='blue')
+
+    # Calculate the cumulative number of examples seen in testing for plotting
+    test_loss_x_values = [len(train_set) * (i+1) for i in range(len(test_losses))]
+    plt.scatter(test_loss_x_values, test_losses, color='red', zorder=5, label='Test Loss')
+
+    plt.title("Loss vs Examples")
+    plt.xlabel("Number of training examples seen")
+    plt.ylabel("Loss")
+    plt.legend()
     plt.show()
     
     # Save the trained model

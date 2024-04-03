@@ -68,7 +68,7 @@ def evaluate_batch_sizes(train_set, test_set, batch_sizes, transform):
         optimizer = optim.AdamW(model.parameters(), lr=0.001)
         criterion = nn.CrossEntropyLoss()
         
-        train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion, device, 5)
+        train_losses, test_losses, train_acc, test_acc, _ = train_test_network(model, train_loader, test_loader, optimizer, criterion, device, 5)
         
         results[(batch_size, 'relu')] = {'test_acc': test_acc[-1], 'train_acc': train_acc[-1], 'train_loss': train_losses[-1], 'test_loss': test_losses[-1]}
         
@@ -107,7 +107,7 @@ def evaluate_activation_functions(train_set, test_set, activations, best_batch_s
         optimizer = optim.AdamW(model.parameters(), lr=0.001)
         criterion = nn.CrossEntropyLoss()
         
-        train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion, device, 5)
+        train_losses, test_losses, train_acc, test_acc, _ = train_test_network(model, train_loader, test_loader, optimizer, criterion, device, 5)
         
         results[(best_batch_size, activation)] = {'test_acc': test_acc[-1], 'train_acc': train_acc[-1], 'train_loss': train_losses[-1], 'test_loss': test_losses[-1]}
         
@@ -154,7 +154,7 @@ def grid_search(train_set, test_set, conv_layers, num_filters, dropout_rates, be
                 optimizer = optim.AdamW(model.parameters(), lr=0.001)
                 criterion = nn.CrossEntropyLoss()
                 
-                train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion, device, 5)
+                train_losses, test_losses, train_acc, test_acc, _ = train_test_network(model, train_loader, test_loader, optimizer, criterion, device, 5)
                 
                 results[config] = {'test_acc': test_acc[-1], 'train_acc': train_acc[-1], 'train_loss': train_losses[-1], 'test_loss': test_losses[-1]}
 

@@ -18,11 +18,16 @@ def train_test_network(model, train_loader, test_loader, optimizer, criterion, d
 	Returns:
 	list: Training losses for each epoch
 	list: Testing losses for each epoch
+	list: Training accuracies for each epoch
+	list: Testing accuracies for each epoch
+	list: Training counter for each epoch
 	"""
 	train_losses = []
 	test_losses = []
 	train_acc = []
 	test_acc = []
+	train_counter = []
+	num_examples_seen = 0  # Initialize the count of examples
 	for epoch in range(1, epochs + 1):
 		model.train()
 		running_loss = 0.0
@@ -39,6 +44,8 @@ def train_test_network(model, train_loader, test_loader, optimizer, criterion, d
 			_, predicted = torch.max(output, 1)
 			correct_train += (predicted == target).sum().item()
 			total_train += target.size(0)
+			num_examples_seen += target.size(0)  # Update count
+			train_counter.append((num_examples_seen, loss.item()))  # Log loss with count
 		train_losses.append(running_loss / len(train_loader))
 		train_acc.append(correct_train / total_train)
 		
@@ -61,7 +68,7 @@ def train_test_network(model, train_loader, test_loader, optimizer, criterion, d
 			  f"Train Loss: {train_losses[-1]:.4f}, Train Acc: {train_acc[-1]:.4f}, "
 			  f"Test Loss: {test_losses[-1]:.4f}, Test Acc: {test_acc[-1]:.4f}")
 	
-	return train_losses, test_losses, train_acc, test_acc
+	return train_losses, test_losses, train_acc, test_acc, train_counter
 
 def train_network(model, loader, optimizer, criterion, device, epochs=10):
 	"""
@@ -77,9 +84,12 @@ def train_network(model, loader, optimizer, criterion, device, epochs=10):
 	Returns:
 	list: Training losses for each epoch
 	list: Training accuracies for each epoch
+	list: Training counter for each epoch
 	"""
 	train_losses = []
 	train_acc = []
+	train_counter = []
+	num_examples_seen = 0  # Initialize the count of examples
 	for epoch in range(epochs):
 		model.train()
 		running_loss = 0.0
@@ -96,13 +106,15 @@ def train_network(model, loader, optimizer, criterion, device, epochs=10):
 			_, predicted = torch.max(outputs, 1)
 			correct_train += (predicted == labels).sum().item()
 			total_train += labels.size(0)
+			num_examples_seen += labels.size(0)  # Update count
+			train_counter.append((num_examples_seen, loss.item()))  # Log loss with count
 		train_losses.append(running_loss / len(loader))
 		train_acc.append(correct_train / total_train)
 
 		print(f"Epoch {epoch + 1}/{epochs}, "
 			  f"Train Loss: {train_losses[-1]:.4f}, Train Acc: {train_acc[-1]:.4f}")
 
-	return train_losses, train_acc
+	return train_losses, train_acc, train_counter
 
 def train_autoencoder(model, loader, optimizer, criterion, device, epochs=10):
 	"""

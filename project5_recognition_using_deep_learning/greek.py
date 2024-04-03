@@ -80,6 +80,16 @@ def plot_metrics():
     plt.ylabel('Accuracy')
     plt.show()
 
+    # Training losses
+    train_examples, train_loss_values = zip(*train_counter)
+    plt.plot(train_examples, train_loss_values, label='Train Loss')
+
+    plt.title("Loss vs Examples")
+    plt.xlabel("Number of training examples seen")
+    plt.ylabel("Loss")
+    plt.legend()
+    plt.show()
+
 class_names = {0: 'alpha', 1: 'beta', 2: 'gamma'}
 
 def predict_single_image(image_path, transform):
@@ -120,7 +130,7 @@ if args.mode == 'train':
     criterion = nn.CrossEntropyLoss()
 
     # Train the network
-    train_losses, train_acc = train_network(model, greek_train_loader, optimizer, criterion, device, 15)
+    train_losses, train_acc, train_counter = train_network(model, greek_train_loader, optimizer, criterion, device, 15)
 
     # Save the trained model
     torch.save(model.state_dict(), 'greek_model.pth')
