@@ -66,7 +66,7 @@ plt.figure(figsize=(10, 8))
 for i in range(20):
     plt.subplot(5, 4, i+1)
     plt.imshow(filtered_images[i])
-    plt.title('Filtered Image ' + str(i+1))
+    # plt.title('Filtered Image ' + str(i+1))
     plt.xticks([])
     plt.yticks([])
 plt.tight_layout()
