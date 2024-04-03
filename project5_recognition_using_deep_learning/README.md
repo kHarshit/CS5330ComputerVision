@@ -13,3 +13,5 @@ In this project, we constructed and trained a neural network to perform digit re
 * For extension part 2: use live_detect.py
 * For extension part 3: use autoencoder.py
 * For extension part4: use pretrained_weights.py
+
+The models are in models/ and training functions in utils.py.
