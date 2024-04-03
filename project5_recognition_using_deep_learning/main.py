@@ -19,15 +19,14 @@ def main():
         torchvision.transforms.ToTensor(),
         torchvision.transforms.Normalize((0.1307,), (0.3081,))
     ])
+
+    # Load the MNIST dataset
     train_set = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
     test_set = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     train_loader = torch.utils.data.DataLoader(train_set, batch_size=64, shuffle=True)
     test_loader = torch.utils.data.DataLoader(test_set, batch_size=1000, shuffle=False)
     
-
-    '''
-    A: Getting MNIST dataset
-    '''
+    # get MNIST for visualization
     test_dataset = torchvision.datasets.MNIST(root='./data', train=False, download=True)
 
     # Extract the first six examples from the test set

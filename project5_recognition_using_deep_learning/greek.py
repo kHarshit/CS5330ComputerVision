@@ -19,53 +19,10 @@ from utils import train_network
 from torch.utils.tensorboard import SummaryWriter
 
 
-# read command line arguments
-parser = argparse.ArgumentParser(description='Train a simple neural network on the Greek dataset.')
-parser.add_argument('--mode', type=str, default='train', help='Mode to run the script in: train or predict')
-
-args = parser.parse_args()
-
-# set device
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
-# Load the trained MNIST model
-model = MyNetwork()
-model.load_state_dict(torch.load('mnist_model.pth'))
-# model.eval()
-
-# Freeze the entire network's parameters
-for param in model.parameters():
-    param.requires_grad = False
-
-# Replace the last layer to recognize 3 classes (alpha, beta, gamma)
-model.fc2 = nn.Linear(50, 3)
-
-print(model)
-
-# tensorboard
-if 0:
-    dummy_input = torch.randn(1, 1, 28, 28)
-    writer = SummaryWriter('runs/greek_model')
-    writer.add_graph(model, dummy_input)
-    writer.close()
-
-class GreekTransform:
-    def __call__(self, x):
-        x = transforms.functional.rgb_to_grayscale(x)
-        x = transforms.functional.affine(x, 0, (0, 0), 36/128, 0)
-        x = transforms.functional.center_crop(x, (28, 28))
-        return transforms.functional.invert(x)
-
-transform = transforms.Compose([
-                                transforms.Grayscale(),
-                                transforms.Resize((128, 128)),
-                                transforms.ToTensor(),
-                                GreekTransform(),
-                                transforms.Normalize((0.1307,), (0.3081,))
-                                ])
-
-def plot_metrics():
-    # plot the training loss and accuracy
+def plot_metrics(train_losses, train_acc, train_counter):
+    """
+    Plot the training loss and accuracy.
+    """
     plt.figure(figsize=(10, 4))
     plt.subplot(1, 2, 1)
     plt.plot(train_losses)
@@ -93,6 +50,13 @@ def plot_metrics():
 class_names = {0: 'alpha', 1: 'beta', 2: 'gamma'}
 
 def predict_single_image(image_path, transform):
+    """
+    Predict the class of a single image.
+    
+    Args:
+    image_path (str): Path to the image file.
+    transform (torchvision.transforms.Compose): Image transformation to apply.
+    """
     image = Image.open(image_path)
     image = transform(image).unsqueeze(0)  # Add batch dimension
     output = model(image)
@@ -102,6 +66,13 @@ def predict_single_image(image_path, transform):
 
 
 def display_predictions(image_paths, transform):
+    """
+    Display predictions on new handwritten Greek images.
+    
+    Args:
+    image_paths (list): List of paths to the image files.
+    transform (torchvision.transforms.Compose): Image transformation to apply.
+    """
     plt.figure(figsize=(10, 6))
     for i, image_path in enumerate(image_paths, 1):
         if i>=10:
@@ -118,31 +89,77 @@ def display_predictions(image_paths, transform):
     plt.show()
 
 
-if args.mode == 'train':
-    training_set_path = './data/greek_train/'
+if __name__ == "__main__":
+    # read command line arguments
+    parser = argparse.ArgumentParser(description='Train a simple neural network on the Greek dataset.')
+    parser.add_argument('--mode', type=str, default='train', help='Mode to run the script in: train or predict')
 
-    greek_dataset = ImageFolder(root=training_set_path,
-                                transform=transform)
+    args = parser.parse_args()
 
-    greek_train_loader = DataLoader(greek_dataset, batch_size=5, shuffle=True)
+    # set device
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-    optimizer = optim.Adam(model.fc2.parameters(), lr=0.001)
-    criterion = nn.CrossEntropyLoss()
+    # Load the trained MNIST model
+    model = MyNetwork()
+    model.load_state_dict(torch.load('mnist_model.pth'))
+    # model.eval()
 
-    # Train the network
-    train_losses, train_acc, train_counter = train_network(model, greek_train_loader, optimizer, criterion, device, 15)
+    # Freeze the entire network's parameters
+    for param in model.parameters():
+        param.requires_grad = False
 
-    # Save the trained model
-    torch.save(model.state_dict(), 'greek_model.pth')
+    # Replace the last layer to recognize 3 classes (alpha, beta, gamma)
+    model.fc2 = nn.Linear(50, 3)
 
-    # plot the training loss and accuracy
-    plot_metrics()
+    print(model)
 
-elif args.mode == 'predict':
-    model.load_state_dict(torch.load('greek_model.pth'))
-    model.eval()
-    # Paths to new handwritten greek images
-    new_images_paths = glob.glob('./data/greek_handdrawn/*.png')
+    # tensorboard
+    if 0:
+        dummy_input = torch.randn(1, 1, 28, 28)
+        writer = SummaryWriter('runs/greek_model')
+        writer.add_graph(model, dummy_input)
+        writer.close()
 
-    # Display predictions on new handwritten digit images
-    display_predictions(new_images_paths, transform)
+    class GreekTransform:
+        def __call__(self, x):
+            x = transforms.functional.rgb_to_grayscale(x)
+            x = transforms.functional.affine(x, 0, (0, 0), 36/128, 0)
+            x = transforms.functional.center_crop(x, (28, 28))
+            return transforms.functional.invert(x)
+
+    transform = transforms.Compose([
+                                    transforms.Grayscale(),
+                                    transforms.Resize((128, 128)),
+                                    transforms.ToTensor(),
+                                    GreekTransform(),
+                                    transforms.Normalize((0.1307,), (0.3081,))
+                                    ])
+
+    if args.mode == 'train':
+        training_set_path = './data/greek_train/'
+
+        greek_dataset = ImageFolder(root=training_set_path,
+                                    transform=transform)
+
+        greek_train_loader = DataLoader(greek_dataset, batch_size=5, shuffle=True)
+
+        optimizer = optim.Adam(model.fc2.parameters(), lr=0.001)
+        criterion = nn.CrossEntropyLoss()
+
+        # Train the network
+        train_losses, train_acc, train_counter = train_network(model, greek_train_loader, optimizer, criterion, device, 15)
+
+        # Save the trained model
+        torch.save(model.state_dict(), 'greek_model.pth')
+
+        # plot the training loss and accuracy
+        plot_metrics(train_losses, train_acc, train_counter)
+
+    elif args.mode == 'predict':
+        model.load_state_dict(torch.load('greek_model.pth'))
+        model.eval()
+        # Paths to new handwritten greek images
+        new_images_paths = glob.glob('./data/greek_handdrawn/*.png')
+
+        # Display predictions on new handwritten digit images
+        display_predictions(new_images_paths, transform)

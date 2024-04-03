@@ -13,34 +13,15 @@ import glob
 import numpy as np
 from models.MyNetwork import MyNetwork
 
-# Load the trained model
-model = MyNetwork()
-model.load_state_dict(torch.load('mnist_model.pth'))
-model.eval()
 
-# Define transformations for new inputs
-transform_test = transforms.Compose([
-    #transforms.Grayscale(),
-    # transforms.Resize((28, 28)),
-    transforms.ToTensor(),
-    # transforms.Lambda(lambda x: 1 - x),  # Invert pixel intensities
-    transforms.Normalize((0.1307,), (0.3081,))
-])
-
-transform = transforms.Compose([
-    transforms.Grayscale(),
-    transforms.Resize((28, 28)),
-    # transforms.Lambda(lambda img: img.rotate(-90)),
-    #transforms.RandomHorizontalFlip(),  # Horizontally flip with 50% probability
-    transforms.ToTensor(),
-    # transforms.RandomRotation(35),
-    # transforms.functional.rotate(angle=90),
-    # transforms.Lambda(lambda x: 1 - x),  # Invert pixel intensities
-    transforms.Normalize((0.1307,), (0.3081,))
-])
-
-# Function to predict on a single image
 def predict_single_image(image_path, transform):
+    """
+    Predict the class of a single image.
+
+    Args:
+    image_path (str): Path to the image file.
+    transform (torchvision.transforms.Compose): Image transformation to apply.
+    """
     image = Image.open(image_path)
     image = transform(image).unsqueeze(0)  # Add batch dimension
     output = model(image)
@@ -50,9 +31,14 @@ def predict_single_image(image_path, transform):
     print(f"Predicted class: {predicted_class.item()}, Actual class: {int(image_path.split('/')[-1][0])}")  # Assuming the label is part of the filename
     return int(image_path.split('/')[-1][0])
 
-
-
 def display_predictions(image_paths, transform):
+    """
+    Display predictions on new handwritten digit images.
+
+    Args:
+    image_paths (list): List of paths to the image files.
+    transform (torchvision.transforms.Compose): Image transformation to apply.
+    """
     plt.figure(figsize=(10, 6))
     for i, image_path in enumerate(image_paths, 1):
         if i>10:
@@ -94,11 +80,39 @@ def test_on_mnist_test_set():
     plt.tight_layout()
     plt.show()
 
-# Paths to new handwritten digit images
-new_images_paths = glob.glob('./data/images/*.jpeg')
+if __name__ == "__main__":
+    # Define transformations for test set images
+    transform_test = transforms.Compose([
+        #transforms.Grayscale(),
+        # transforms.Resize((28, 28)),
+        transforms.ToTensor(),
+        # transforms.Lambda(lambda x: 1 - x),  # Invert pixel intensities
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
 
-# Display predictions on new handwritten digit images
-display_predictions(new_images_paths[:-1], transform)
+    # Define transformations for new handwritten digit images
+    transform = transforms.Compose([
+        transforms.Grayscale(),
+        transforms.Resize((28, 28)),
+        # transforms.Lambda(lambda img: img.rotate(-90)),
+        #transforms.RandomHorizontalFlip(),  # Horizontally flip with 50% probability
+        transforms.ToTensor(),
+        # transforms.RandomRotation(35),
+        # transforms.functional.rotate(angle=90),
+        # transforms.Lambda(lambda x: 1 - x),  # Invert pixel intensities
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
 
-# Test the model on the MNIST test set
-test_on_mnist_test_set()
+    # Load the trained model
+    model = MyNetwork()
+    model.load_state_dict(torch.load('mnist_model.pth'))
+    model.eval()
+
+    # Paths to new handwritten digit images
+    new_images_paths = glob.glob('./data/images/*.jpeg')
+
+    # Display predictions on new handwritten digit images
+    display_predictions(new_images_paths[:-1], transform)
+
+    # Test the model on the MNIST test set
+    test_on_mnist_test_set()

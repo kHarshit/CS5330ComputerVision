@@ -17,31 +17,8 @@ import seaborn as sns
 from models.FashionMnistCNN import FashionMnistCNN
 from utils import train_test_network
 
-# Define transformations
-transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.5,), (0.5,))
-])
 
-# Load datasets
-train_set = torchvision.datasets.FashionMNIST(root='./data', train=True, download=True, transform=transform)
-test_set = torchvision.datasets.FashionMNIST(root='./data', train=False, download=True, transform=transform)
-
-# Experiment configurations
-batch_sizes = [32, 64, 128, 256, 512]
-activations = ['relu', 'tanh', 'sigmoid', 'leaky_relu']
-conv_layers = [1, 2, 4]
-num_filters = [16, 32, 64, 128, 256]
-dropout_rates = [0.0, 0.2, 0.5, 0.8]
-
-# check for gpu
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-print(f"Using device: {device}")
-
-# dictionary to store results
-results = {}
-
-def evaluate_batch_sizes(train_set, test_set, batch_sizes, transform):
+def evaluate_batch_sizes(train_set, test_set, batch_sizes):
     """
     Evaluate different batch sizes on the given dataset.
 
@@ -49,7 +26,6 @@ def evaluate_batch_sizes(train_set, test_set, batch_sizes, transform):
     - train_set: Dataset to train the model on
     - test_set: Dataset to test the model on
     - batch_sizes: List of batch sizes to evaluate
-    - transform: Transformation to apply to the images
 
     Returns:
     - best_batch_size: The batch size that resulted in the highest test accuracy
@@ -80,7 +56,7 @@ def evaluate_batch_sizes(train_set, test_set, batch_sizes, transform):
     print(f"Best batch size: {best_batch_size} with accuracy: {best_acc}")
     return best_batch_size
 
-def evaluate_activation_functions(train_set, test_set, activations, best_batch_size, transform):
+def evaluate_activation_functions(train_set, test_set, activations, best_batch_size):
     """
     Evaluate different activation functions on the given dataset.
 
@@ -89,7 +65,6 @@ def evaluate_activation_functions(train_set, test_set, activations, best_batch_s
     - test_set: Dataset to test the model on
     - activations: List of activation functions to evaluate
     - best_batch_size: The batch size that resulted in the highest test accuracy
-    - transform: Transformation to apply to the images
 
     Returns:
     - best_activation: The activation function that resulted in the highest test accuracy
@@ -119,7 +94,7 @@ def evaluate_activation_functions(train_set, test_set, activations, best_batch_s
     print(f"Best activation function: {best_activation} with accuracy: {best_acc}")
     return best_activation
 
-def grid_search(train_set, test_set, conv_layers, num_filters, dropout_rates, best_batch_size, best_activation, transform):
+def grid_search(train_set, test_set, conv_layers, num_filters, dropout_rates, best_batch_size, best_activation):
     """
     Apply grid search to find the best combination of hyperparameters.
 
@@ -131,7 +106,6 @@ def grid_search(train_set, test_set, conv_layers, num_filters, dropout_rates, be
     - dropout_rates: List of dropout rates to evaluate
     - best_batch_size: The batch size that resulted in the highest test accuracy
     - best_activation: The activation function that resulted in the highest test accuracy
-    - transform: Transformation to apply to the images
 
     Returns:
     - None
@@ -159,70 +133,95 @@ def grid_search(train_set, test_set, conv_layers, num_filters, dropout_rates, be
                 results[config] = {'test_acc': test_acc[-1], 'train_acc': train_acc[-1], 'train_loss': train_losses[-1], 'test_loss': test_losses[-1]}
 
 
-# Step 1: Evaluate batch sizes
-print("Evaluating batch sizes...")
-best_batch_size = evaluate_batch_sizes(train_set, test_set, batch_sizes, transform)
+if __name__ == '__main__':
+    # Define transformations
+    transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5,), (0.5,))
+    ])
 
-# Step 2: Evaluate activation functions with the best batch size
-print(f"Evaluating activation functions with best batch size: {best_batch_size}...")
-best_activation = evaluate_activation_functions(train_set, test_set, activations, best_batch_size, transform)
+    # Load datasets
+    train_set = torchvision.datasets.FashionMNIST(root='./data', train=True, download=True, transform=transform)
+    test_set = torchvision.datasets.FashionMNIST(root='./data', train=False, download=True, transform=transform)
 
-# Step 3: Grid search on remaining parameters with the best batch size and activation function
-print(f"Performing grid search with best batch size: {best_batch_size} and best activation function: {best_activation}...")
-grid_search(train_set, test_set, conv_layers, num_filters, dropout_rates, best_batch_size, best_activation, transform)
+    # Experiment configurations
+    batch_sizes = [32, 64, 128, 256, 512]
+    activations = ['relu', 'tanh', 'sigmoid', 'leaky_relu']
+    conv_layers = [1, 2, 4]
+    num_filters = [16, 32, 64, 128, 256]
+    dropout_rates = [0.0, 0.2, 0.5, 0.8]
 
-# get best model from results
-best_model = max(results, key=lambda x: results[x]['test_acc'])
+    # check for gpu
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    print(f"Using device: {device}")
 
-# Save the comprehensive results to a file for later analysis
-print('Saving results to model_config_exp.pkl')
-with open('model_config_exp.pkl', 'wb') as f:
-    pickle.dump(results, f)
+    # dictionary to store results
+    results = {}
 
-# Load the results
-with open('model_config_exp.pkl', 'rb') as f:
-    results = pickle.load(f)
+    # Step 1: Evaluate batch sizes
+    print("Evaluating batch sizes...")
+    best_batch_size = evaluate_batch_sizes(train_set, test_set, batch_sizes)
 
-best_model = max(results, key=lambda x: results[x]['test_acc'])
-print(f"Best model: {best_model} with test accuracy: {results[best_model]['test_acc']}")
+    # Step 2: Evaluate activation functions with the best batch size
+    print(f"Evaluating activation functions with best batch size: {best_batch_size}...")
+    best_activation = evaluate_activation_functions(train_set, test_set, activations, best_batch_size)
 
-# Prepare a DataFrame for seaborn
-data = []
-for config in results:
-    conv_layer, num_filter, dropout_rate, best_batch_size, best_activation = config
-    test_acc = results[config]['test_acc']
-    train_acc = results[config]['train_acc']
-    test_loss = results[config]['test_loss']
-    train_loss = results[config]['train_loss']
-    data.append([conv_layer, num_filter, dropout_rate, best_batch_size, best_activation, test_acc, train_acc, test_loss, train_loss])
-df = pd.DataFrame(data, columns=['Conv Layer', 'Num Filter', 'Dropout Rate', 'Batch Size', 'Activation', 'Test Accuracy', 'Train Accuracy', 'Test Loss', 'Train Loss'])
+    # Step 3: Grid search on remaining parameters with the best batch size and activation function
+    print(f"Performing grid search with best batch size: {best_batch_size} and best activation function: {best_activation}...")
+    grid_search(train_set, test_set, conv_layers, num_filters, dropout_rates, best_batch_size, best_activation)
 
-# Box plot of test accuracies vs dropout rates
-plt.figure(figsize=(10, 6))
-sns.boxplot(x='Dropout Rate', y='Test Accuracy', data=df)
-plt.title('Box Plot of Test Accuracies vs Dropout Rates')
-plt.savefig('dropout_rate.png')
-plt.show()
+    # get best model from results
+    best_model = max(results, key=lambda x: results[x]['test_acc'])
 
-# box plot of test accuracies vs number of filters
-plt.figure(figsize=(10, 6))
-sns.boxplot(x='Num Filter', y='Test Accuracy', data=df)
-plt.title('Box Plot of Test Accuracies vs Number of Filters')
-plt.savefig('num_filter.png')
-plt.show()
+    # Save the comprehensive results to a file for later analysis
+    print('Saving results to model_config_exp.pkl')
+    with open('model_config_exp.pkl', 'wb') as f:
+        pickle.dump(results, f)
 
-# box plot of test accuracies vs conv layers
-plt.figure(figsize=(10, 6))
-sns.boxplot(x='Conv Layer', y='Test Accuracy', data=df)
-plt.title('Box Plot of Test Accuracies vs Conv Layers')
-plt.savefig('conv_layer.png')
-plt.show()
+    # Load the results
+    with open('model_config_exp.pkl', 'rb') as f:
+        results = pickle.load(f)
 
-# plot of test accuracies vs index
-plt.figure(figsize=(10, 6))
-plt.plot(df['Test Accuracy'])
-plt.title('Test Accuracies vs Index')
-plt.xlabel('Index')
-plt.ylabel('Test Accuracy')
-plt.savefig('test_accuracy.png')
-plt.show()
+    best_model = max(results, key=lambda x: results[x]['test_acc'])
+    print(f"Best model: {best_model} with test accuracy: {results[best_model]['test_acc']}")
+
+    # Prepare a DataFrame for seaborn
+    data = []
+    for config in results:
+        conv_layer, num_filter, dropout_rate, best_batch_size, best_activation = config
+        test_acc = results[config]['test_acc']
+        train_acc = results[config]['train_acc']
+        test_loss = results[config]['test_loss']
+        train_loss = results[config]['train_loss']
+        data.append([conv_layer, num_filter, dropout_rate, best_batch_size, best_activation, test_acc, train_acc, test_loss, train_loss])
+    df = pd.DataFrame(data, columns=['Conv Layer', 'Num Filter', 'Dropout Rate', 'Batch Size', 'Activation', 'Test Accuracy', 'Train Accuracy', 'Test Loss', 'Train Loss'])
+
+    # Box plot of test accuracies vs dropout rates
+    plt.figure(figsize=(10, 6))
+    sns.boxplot(x='Dropout Rate', y='Test Accuracy', data=df)
+    plt.title('Box Plot of Test Accuracies vs Dropout Rates')
+    plt.savefig('dropout_rate.png')
+    plt.show()
+
+    # box plot of test accuracies vs number of filters
+    plt.figure(figsize=(10, 6))
+    sns.boxplot(x='Num Filter', y='Test Accuracy', data=df)
+    plt.title('Box Plot of Test Accuracies vs Number of Filters')
+    plt.savefig('num_filter.png')
+    plt.show()
+
+    # box plot of test accuracies vs conv layers
+    plt.figure(figsize=(10, 6))
+    sns.boxplot(x='Conv Layer', y='Test Accuracy', data=df)
+    plt.title('Box Plot of Test Accuracies vs Conv Layers')
+    plt.savefig('conv_layer.png')
+    plt.show()
+
+    # plot of test accuracies vs index
+    plt.figure(figsize=(10, 6))
+    plt.plot(df['Test Accuracy'])
+    plt.title('Test Accuracies vs Index')
+    plt.xlabel('Index')
+    plt.ylabel('Test Accuracy')
+    plt.savefig('test_accuracy.png')
+    plt.show()
