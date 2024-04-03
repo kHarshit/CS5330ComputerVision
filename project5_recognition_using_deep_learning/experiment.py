@@ -10,6 +10,9 @@ import torchvision.transforms as transforms
 import torch.optim as optim
 import time
 import pickle
+import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
 
 from models.FashionMnistCNN import FashionMnistCNN
 from utils import train_test_network
@@ -27,7 +30,7 @@ test_set = torchvision.datasets.FashionMNIST(root='./data', train=False, downloa
 # Experiment configurations
 batch_sizes = [32, 64, 128, 256, 512]
 activations = ['relu', 'tanh', 'sigmoid', 'leaky_relu']
-conv_layers = [1, 2, 4, 6]
+conv_layers = [1, 2, 4]
 num_filters = [16, 32, 64, 128, 256]
 dropout_rates = [0.0, 0.2, 0.5, 0.8]
 
@@ -65,7 +68,7 @@ def evaluate_batch_sizes(train_set, test_set, batch_sizes, transform):
         optimizer = optim.AdamW(model.parameters(), lr=0.001)
         criterion = nn.CrossEntropyLoss()
         
-        train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion, device)
+        train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion, device, 5)
         
         results[(batch_size, 'relu')] = {'test_acc': test_acc[-1], 'train_acc': train_acc[-1], 'train_loss': train_losses[-1], 'test_loss': test_losses[-1]}
         
@@ -104,7 +107,7 @@ def evaluate_activation_functions(train_set, test_set, activations, best_batch_s
         optimizer = optim.AdamW(model.parameters(), lr=0.001)
         criterion = nn.CrossEntropyLoss()
         
-        train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion, device)
+        train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion, device, 5)
         
         results[(best_batch_size, activation)] = {'test_acc': test_acc[-1], 'train_acc': train_acc[-1], 'train_loss': train_losses[-1], 'test_loss': test_losses[-1]}
         
@@ -151,7 +154,7 @@ def grid_search(train_set, test_set, conv_layers, num_filters, dropout_rates, be
                 optimizer = optim.AdamW(model.parameters(), lr=0.001)
                 criterion = nn.CrossEntropyLoss()
                 
-                train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion, device)
+                train_losses, test_losses, train_acc, test_acc = train_test_network(model, train_loader, test_loader, optimizer, criterion, device, 5)
                 
                 results[config] = {'test_acc': test_acc[-1], 'train_acc': train_acc[-1], 'train_loss': train_losses[-1], 'test_loss': test_losses[-1]}
 
@@ -168,11 +171,6 @@ best_activation = evaluate_activation_functions(train_set, test_set, activations
 print(f"Performing grid search with best batch size: {best_batch_size} and best activation function: {best_activation}...")
 grid_search(train_set, test_set, conv_layers, num_filters, dropout_rates, best_batch_size, best_activation, transform)
 
-# Functions used in the steps above would be defined to conduct the respective evaluations
-# These should initialize the model with the given parameters, train it, and evaluate its performance
-# based on the dataset splits. You'd then select the best performing parameters based on your criteria
-# (e.g., highest accuracy, shortest training time, etc.).
-
 # get best model from results
 best_model = max(results, key=lambda x: results[x]['test_acc'])
 
@@ -180,3 +178,51 @@ best_model = max(results, key=lambda x: results[x]['test_acc'])
 print('Saving results to model_config_exp.pkl')
 with open('model_config_exp.pkl', 'wb') as f:
     pickle.dump(results, f)
+
+# Load the results
+with open('model_config_exp.pkl', 'rb') as f:
+    results = pickle.load(f)
+
+best_model = max(results, key=lambda x: results[x]['test_acc'])
+print(f"Best model: {best_model} with test accuracy: {results[best_model]['test_acc']}")
+
+# Prepare a DataFrame for seaborn
+data = []
+for config in results:
+    conv_layer, num_filter, dropout_rate, best_batch_size, best_activation = config
+    test_acc = results[config]['test_acc']
+    train_acc = results[config]['train_acc']
+    test_loss = results[config]['test_loss']
+    train_loss = results[config]['train_loss']
+    data.append([conv_layer, num_filter, dropout_rate, best_batch_size, best_activation, test_acc, train_acc, test_loss, train_loss])
+df = pd.DataFrame(data, columns=['Conv Layer', 'Num Filter', 'Dropout Rate', 'Batch Size', 'Activation', 'Test Accuracy', 'Train Accuracy', 'Test Loss', 'Train Loss'])
+
+# Box plot of test accuracies vs dropout rates
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Dropout Rate', y='Test Accuracy', data=df)
+plt.title('Box Plot of Test Accuracies vs Dropout Rates')
+plt.savefig('dropout_rate.png')
+plt.show()
+
+# box plot of test accuracies vs number of filters
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Num Filter', y='Test Accuracy', data=df)
+plt.title('Box Plot of Test Accuracies vs Number of Filters')
+plt.savefig('num_filter.png')
+plt.show()
+
+# box plot of test accuracies vs conv layers
+plt.figure(figsize=(10, 6))
+sns.boxplot(x='Conv Layer', y='Test Accuracy', data=df)
+plt.title('Box Plot of Test Accuracies vs Conv Layers')
+plt.savefig('conv_layer.png')
+plt.show()
+
+# plot of test accuracies vs index
+plt.figure(figsize=(10, 6))
+plt.plot(df['Test Accuracy'])
+plt.title('Test Accuracies vs Index')
+plt.xlabel('Index')
+plt.ylabel('Test Accuracy')
+plt.savefig('test_accuracy.png')
+plt.show()
