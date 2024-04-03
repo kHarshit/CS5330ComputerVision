@@ -4,7 +4,7 @@ In this project, we constructed and trained a neural network to perform digit re
 
 ## Usage
 
-* For task 1: use main.py 
+* For task 1: use main.py to train and predict.py for prediction on test images
 * For task 2: use weights.py
 * For task 3: use greek.py and to predict handwritten greek letters pass the argument as:  
     python greek.py --mode=predict  (mode can be either train or predict)
