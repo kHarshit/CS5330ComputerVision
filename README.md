@@ -1,5 +1,15 @@
 # CS5330ComputerVision
+
 CS5330 Pattern Recognition and Computer Vision
+
+* Project 1: Video Special Effects
+* Project 2: Content Based Image Retrieval
+* Project 3: Object Recognition
+* Project 4: Calibration and Augmented Reality
+![ar_video](./project4_calibration_and_AR/ar_video.mov)
+![ar_photo](./assets/ar_cs5330.png)
+* Project 5: Pattern Recognition using Deep Learning
+
 
 To build and run a particular project,
 
